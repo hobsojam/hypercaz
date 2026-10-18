@@ -28,26 +28,43 @@ const VOICES: Record<Sfx, Voice[]> = {
   boss: [{ type: 'square', from: 110, to: 70, dur: 0.5, vol: 0.12 }],
 };
 
+// Rapid-fire sounds are rate-limited so big squads don't stack dozens of
+// voices and clip.
+const MIN_GAP: Partial<Record<Sfx, number>> = { shot: 0.05, hit: 0.05 };
+
 export class GameAudio {
   muted = false;
   private ctx: AudioContext | null = null;
-  private lastShot = 0;
+  private last: Partial<Record<Sfx, number>> = {};
+  private createContext: () => AudioContext;
 
+  constructor(createContext: () => AudioContext = () => new AudioContext()) {
+    this.createContext = createContext;
+  }
+
+  // Call from inside a real user-gesture handler: Safari only lets audio
+  // start (or resume) while the gesture is in progress.
   unlock(): void {
-    if (this.ctx) return;
-    try {
-      this.ctx = new AudioContext();
-    } catch {
-      this.ctx = null;
+    if (!this.ctx) {
+      try {
+        this.ctx = this.createContext();
+      } catch {
+        this.ctx = null;
+        return;
+      }
     }
+    if (this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
   }
 
   play(s: Sfx): void {
     const ctx = this.ctx;
     if (!ctx || this.muted) return;
-    if (s === 'shot') {
-      if (ctx.currentTime - this.lastShot < 0.05) return;
-      this.lastShot = ctx.currentTime;
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+    const gap = MIN_GAP[s];
+    if (gap !== undefined) {
+      const last = this.last[s];
+      if (last !== undefined && ctx.currentTime - last < gap) return;
+      this.last[s] = ctx.currentTime;
     }
     let t = ctx.currentTime;
     for (const v of VOICES[s]) {

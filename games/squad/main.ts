@@ -41,6 +41,11 @@ async function boot(): Promise<void> {
     levels,
     progress,
   };
+  // Unlock audio inside the real gesture handlers, not later in the game
+  // loop, so Safari allows it.
+  const unlockAudio = () => audio.unlock();
+  window.addEventListener('pointerdown', unlockAudio);
+  window.addEventListener('keydown', unlockAudio);
   game.stack.push(new TitleScene(game));
 
   let updated = false;
