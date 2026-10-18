@@ -1,4 +1,4 @@
-import { AssetStore, parseManifest } from '../../engine/assets.ts';
+import { AssetStore, parseManifest, urlResolver } from '../../engine/assets.ts';
 import { GameAudio } from '../../engine/audio.ts';
 import { fitLetterbox, Input, type Letterbox } from '../../engine/input.ts';
 import { startLoop } from '../../engine/loop.ts';
@@ -30,7 +30,8 @@ async function boot(): Promise<void> {
   const progress = loadProgress(storage);
   const audio = new GameAudio();
   audio.muted = progress.muted;
-  const assets = await AssetStore.load(parseManifest(manifestJson), new URL('./assets/', import.meta.url).href);
+  const assetUrls = import.meta.glob<string>('./assets/*.{png,svg}', { eager: true, query: '?url', import: 'default' });
+  const assets = await AssetStore.load(parseManifest(manifestJson), urlResolver(assetUrls, './assets/'));
   const game: Game = {
     stack: new SceneStack(),
     input: new Input(() => letterbox),

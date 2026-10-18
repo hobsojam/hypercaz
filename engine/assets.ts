@@ -66,19 +66,33 @@ export function frameAt(entry: AssetEntry, time: number): number {
   return Math.floor(time * entry.fps + 1e-9) % entry.frames;
 }
 
+export type UrlResolver = (file: string) => string | null;
+
+// Maps manifest file names to bundler-produced URLs, e.g. from
+// import.meta.glob('./assets/*.png', { query: '?url', import: 'default', eager: true }).
+// Going through the bundler is what gets the files copied into the build.
+export function urlResolver(urls: Record<string, string>, prefix: string): UrlResolver {
+  return (file) => urls[prefix + file] ?? null;
+}
+
 export class AssetStore {
   private entries = new Map<string, AssetEntry>();
   private images = new Map<string, HTMLImageElement>();
   private warned = new Set<string>();
 
-  static async load(manifest: Manifest, baseUrl: string): Promise<AssetStore> {
+  static async load(manifest: Manifest, resolve: UrlResolver): Promise<AssetStore> {
     const store = new AssetStore();
     await Promise.all(
       manifest.entries.map(async (e) => {
         store.entries.set(e.id, e);
         if (!e.file) return;
+        const url = resolve(e.file);
+        if (!url) {
+          console.warn(`asset ${e.id}: ${e.file} not found in the build, using placeholder`);
+          return;
+        }
         const img = new Image();
-        img.src = new URL(e.file, baseUrl).href;
+        img.src = url;
         try {
           await img.decode();
           store.images.set(e.id, img);

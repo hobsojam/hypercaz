@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
-import { type AssetEntry, frameAt, parseManifest } from '../../engine/assets.ts';
+import { type AssetEntry, frameAt, parseManifest, urlResolver } from '../../engine/assets.ts';
 
 const real = JSON.parse(readFileSync(join(import.meta.dirname, '../../games/squad/assets/manifest.json'), 'utf8'));
 
@@ -28,4 +28,10 @@ test('frameAt loops through frames at the entry fps', () => {
   expect(frameAt(e, 0.35)).toBe(3);
   expect(frameAt(e, 0.45)).toBe(0);
   expect(frameAt({ fps: 0, frames: 1 } as AssetEntry, 12)).toBe(0);
+});
+
+test('asset URLs resolve through the bundler map, not a base path', () => {
+  const resolve = urlResolver({ './assets/soldier_run.png': '/assets/soldier_run-abc123.png' }, './assets/');
+  expect(resolve('soldier_run.png')).toBe('/assets/soldier_run-abc123.png');
+  expect(resolve('missing.png')).toBeNull();
 });
