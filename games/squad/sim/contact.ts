@@ -10,7 +10,7 @@ export function changeCount(state: GameState, delta: number, x: number, z: numbe
   squad.peak = Math.max(squad.peak, squad.count);
   const applied = squad.count - before;
   if (applied !== 0) state.events.push({ type: applied > 0 ? 'gain' : 'lose', amount: Math.abs(applied), x, z });
-  if (squad.count === 0 && state.phase !== 'lost') {
+  if (squad.count === 0 && (state.phase === 'advance' || state.phase === 'boss')) {
     state.phase = 'lost';
     state.events.push({ type: 'lost' });
   }
@@ -27,7 +27,7 @@ export function soldiersHit(state: GameState, slots: Slot[], x: number, halfW: n
 export function updateContacts(state: GameState): void {
   const removed = new Set<Entity>();
   for (const e of state.entities) {
-    if (state.phase === 'lost') break;
+    if (state.phase === 'lost' || state.phase === 'won') break;
     const slots = formationSlots(state.squad.count);
     const { x } = state.squad;
     switch (e.type) {

@@ -1,4 +1,4 @@
-import { BULLET_RANGE, BULLET_SPEED, FIRE_INTERVAL, MAX_BULLETS_PER_SEC } from './constants.ts';
+import { BOSS_HALF_D, BOSS_HALF_W, BULLET_RANGE, BULLET_SPEED, FIRE_INTERVAL, MAX_BULLETS_PER_SEC } from './constants.ts';
 import { changeCount } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import type { Entity, GameState } from './state.ts';
@@ -41,6 +41,10 @@ export function updateCombat(state: GameState, dt: number): void {
       applyHit(state, target, b.damage);
       continue;
     }
+    if (hitsBoss(state, swept)) {
+      applyBossHit(state, b.damage);
+      continue;
+    }
     b.z = swept.zTo;
     if (b.z <= BULLET_RANGE) survivors.push(b);
   }
@@ -77,4 +81,21 @@ function applyHit(state: GameState, e: Entity, damage: number): void {
   state.entities = state.entities.filter((x) => x !== e);
   state.events.push({ type: 'destroyed', x: e.x, z: e.z, target: e.type });
   if (e.type === 'cage') changeCount(state, e.value, e.x, e.z);
+}
+
+function hitsBoss(state: GameState, b: SweptBullet): boolean {
+  const boss = state.boss;
+  return !!boss && state.phase === 'boss' && hitTest(b, { x: boss.x, z: boss.z, halfW: BOSS_HALF_W, halfD: BOSS_HALF_D });
+}
+
+function applyBossHit(state: GameState, damage: number): void {
+  const boss = state.boss!;
+  boss.hp -= damage;
+  boss.flash = 0.1;
+  state.events.push({ type: 'hit', x: boss.x, z: boss.z, target: 'boss' });
+  if (boss.hp > 0) return;
+  boss.hp = 0;
+  state.phase = 'won';
+  state.projectiles = [];
+  state.events.push({ type: 'bossDead', x: boss.x, z: boss.z }, { type: 'won' });
 }
