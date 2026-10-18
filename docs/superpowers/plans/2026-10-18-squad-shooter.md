@@ -91,7 +91,7 @@ tests/…                       mirrors source paths
 **Interfaces:**
 - Produces: `createRng(seed: number): number` (returns the initial state), `nextFloat(state: number): [value: number, nextState: number]` with value in [0, 1). A pure, state-passing design so the sim can keep `rngState` in `GameState`.
 
-- [ ] **Step 1: Create branch** with `git checkout -b feat/squad-shooter`.
+- [ ] **Step 1: Check the branch.** `git branch --show-current` must print `feat/squad-shooter` (the branch already exists and holds the plan).
 - [ ] **Step 2: Scaffold.** `npm init -y`, then `npm i -D vite typescript vitest eslint @eslint/js typescript-eslint @types/node`.
   - `package.json`: `"type": "module"`, `"private": true`. Scripts: `dev: vite`, `build: tsc --noEmit && vite build`, `test: vitest run`, `lint: eslint .`, `check-assets: node scripts/check-assets.ts games/squad/assets`.
   - `tsconfig.json`: `strict`, `target ES2022`, `module ESNext`, `moduleResolution bundler`, `resolveJsonModule`, `allowImportingTsExtensions`, `noEmit`, `erasableSyntaxOnly`, `lib ["ES2022","DOM"]`, `types ["node"]`. Include `engine`, `games`, `scripts`, `tests`.
