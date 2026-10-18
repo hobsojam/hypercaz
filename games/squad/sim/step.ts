@@ -66,6 +66,7 @@ function makeEntity(state: GameState, s: Spawn): Entity {
     halfD: SIZES[s.type].halfD,
     kind: s.kind,
     kills: s.kills,
+    max: s.max,
     resolved: false,
     flash: 0,
   };

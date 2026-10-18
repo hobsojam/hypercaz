@@ -73,7 +73,9 @@ function applyHit(state: GameState, e: Entity, damage: number): void {
   e.flash = 0.1;
   state.events.push({ type: 'hit', x: e.x, z: e.z, target: e.type });
   if (e.type === 'gate') {
-    e.value += Math.round(damage);
+    // +1 per hit regardless of damage, up to the gate's cap; otherwise a big
+    // squad snowballs gates into thousands of soldiers.
+    e.value = Math.min(e.max, e.value + 1);
     return;
   }
   e.hp -= damage;

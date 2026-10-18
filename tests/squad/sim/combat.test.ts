@@ -56,6 +56,17 @@ describe('hits', () => {
     expect(s.bullets).toHaveLength(0);
   });
 
+  it('gate values stop rising at their cap, one per hit whatever the damage', () => {
+    const s = createState(makeLevel({ speed: 1, spawns: [{ z: 10, x: 0, type: 'gate', width: 0.4, value: 2, max: 6 }] }), 1);
+    step(s, { targetX: 0 }, DT);
+    s.bullets = [{ x: 0, z: 9.6, damage: 20 }];
+    step(s, { targetX: 0 }, DT);
+    expect(s.entities[0].value).toBe(3);
+    s.bullets = Array.from({ length: 10 }, () => ({ x: 0, z: 9.5, damage: 1 }));
+    step(s, { targetX: 0 }, DT);
+    expect(s.entities[0].value).toBe(6);
+  });
+
   it('bullets pass through hazards', () => {
     const s = createState(
       makeLevel({

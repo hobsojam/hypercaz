@@ -21,6 +21,7 @@ export interface Entity {
   halfD: number;
   kind: HazardKind | null;
   kills: number;
+  max: number;
   resolved: boolean;
   flash: number;
 }

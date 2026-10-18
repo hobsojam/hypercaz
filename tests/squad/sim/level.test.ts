@@ -26,10 +26,19 @@ describe('validateLevel', () => {
     const level = validateLevel(raw(), 't.json');
     expect(level.name).toBe('Test');
     const enemy = level.spawns.find((s) => s.type === 'enemy')!;
-    expect(enemy).toEqual({ z: 50, x: 0.2, type: 'enemy', hp: 2, value: 0, width: 0, kind: null, kills: 1 });
+    expect(enemy).toEqual({ z: 50, x: 0.2, type: 'enemy', hp: 2, value: 0, width: 0, kind: null, kills: 1, max: 0 });
     expect(level.spawns.find((s) => s.type === 'heavy')!.kills).toBe(3);
     expect(level.spawns.find((s) => s.type === 'hazard')!.kind).toBe('blade');
     expect(level.boss).toEqual({ hp: 400, pattern: 'volley3', fireEvery: 2.5 });
+  });
+
+  it('gates get a value cap: explicit, or max(5, 2 * |value|)', () => {
+    const gate = validateLevel(raw(), 't.json').spawns.find((s) => s.type === 'gate')!;
+    expect(gate.max).toBe(16);
+    const small = validateLevel(raw({ spawns: [{ z: 1, x: 0, type: 'gate', width: 0.4, value: 1 }] }), 't.json');
+    expect(small.spawns[0].max).toBe(5);
+    const explicit = validateLevel(raw({ spawns: [{ z: 1, x: 0, type: 'gate', width: 0.4, value: -3, max: 9 }] }), 't.json');
+    expect(explicit.spawns[0].max).toBe(9);
   });
 
   it('sorts spawns by z', () => {
@@ -48,6 +57,7 @@ describe('validateLevel', () => {
     ['z beyond length', spawn({ z: 500, x: 0, type: 'enemy', hp: 1 }), 't.json: spawns[0].z must be between 0 and 200'],
     ['unknown type', spawn({ z: 10, x: 0, type: 'dragon' }), 't.json: spawns[0].type must be one of enemy, heavy, cage, gate, hazard'],
     ['gate missing width', spawn({ z: 10, x: 0, type: 'gate', value: 3 }), 't.json: spawns[0].width must be a number'],
+    ['gate max below value', spawn({ z: 10, x: 0, type: 'gate', width: 0.4, value: 5, max: 2 }), 't.json: spawns[0].max must be an integer >= 5'],
     ['hazard bad kind', spawn({ z: 10, x: 0, type: 'hazard', kind: 'lava', width: 0.3 }), 't.json: spawns[0].kind must be one of blade, fire, barricade'],
     ['cage zero value', spawn({ z: 10, x: 0, type: 'cage', hp: 2, value: 0 }), 't.json: spawns[0].value must be an integer >= 1'],
     ['enemy fractional hp', spawn({ z: 10, x: 0, type: 'enemy', hp: 1.5 }), 't.json: spawns[0].hp must be an integer >= 1'],

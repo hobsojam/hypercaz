@@ -14,6 +14,7 @@ export interface Spawn {
   width: number;
   kind: HazardKind | null;
   kills: number;
+  max: number; // gates only: the highest value shooting can raise it to
 }
 
 export interface Level {
@@ -111,6 +112,7 @@ export function validateLevel(raw: unknown, file: string): Level {
       width: 0,
       kind: null,
       kills: 0,
+      max: 0,
     };
     switch (type) {
       case 'enemy':
@@ -127,6 +129,10 @@ export function validateLevel(raw: unknown, file: string): Level {
         if (typeof v !== 'number' || !Number.isInteger(v)) fail(`${p}.value`, 'must be an integer');
         spawn.value = v as number;
         spawn.width = width(o, `${p}.width`);
+        spawn.max =
+          o.max === undefined
+            ? Math.max(5, 2 * Math.abs(spawn.value))
+            : intMin(o, 'max', `${p}.max`, Math.max(spawn.value, 1));
         break;
       }
       case 'hazard':
