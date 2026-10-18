@@ -1,8 +1,9 @@
 import type { Scene } from '../../../engine/scenes.ts';
-import { DEFAULT_VIEW, unprojectX } from '../../../engine/perspective.ts';
+import { DEFAULT_VIEW, project, unprojectX } from '../../../engine/perspective.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { recordResult, saveProgress } from '../progress.ts';
 import { renderGame } from '../render/draw.ts';
+import { Effects } from '../render/effects.ts';
 import { SquadView } from '../render/squadView.ts';
 import { formationSlots } from '../sim/formation.ts';
 import { starsFor } from '../sim/stars.ts';
@@ -19,6 +20,7 @@ export class PlayScene implements Scene {
   private index: number;
   private state: GameState;
   private squadView = new SquadView();
+  private effects: Effects;
   private targetX = 0;
   private lastPointerX: number | null;
   private paused = false;
@@ -28,7 +30,8 @@ export class PlayScene implements Scene {
     this.game = game;
     this.index = index;
     this.state = createState(game.levels[index].level!, Date.now() >>> 0);
-    this.lastPointerX = game.input.pointerX;
+    this.lastPointerX = null; // follow wherever the pointer already is
+    this.effects = new Effects(game.audio);
   }
 
   update(dt: number): void {
@@ -48,7 +51,8 @@ export class PlayScene implements Scene {
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX }, dt);
     this.squadView.update(formationSlots(this.state.squad.count), dt);
-    this.onEvents();
+    this.effects.handle(this.state.events, (x, z) => project(DEFAULT_VIEW, x, z));
+    this.effects.update(dt);
 
     if (this.state.phase === 'won' || this.state.phase === 'lost') {
       this.endTimer += dt;
@@ -69,9 +73,6 @@ export class PlayScene implements Scene {
     this.targetX = Math.max(-1, Math.min(1, this.targetX));
   }
 
-  // Hook for effects (Task 14).
-  protected onEvents(): void {}
-
   private finish(): void {
     const { state, game } = this;
     const won = state.phase === 'won';
@@ -87,8 +88,12 @@ export class PlayScene implements Scene {
       assets: this.game.assets,
       time: this.state.time,
       squadView: this.squadView,
-      shake: { x: 0, y: 0 },
+      shake: this.effects.shake,
     });
+    ctx.save();
+    ctx.translate(this.effects.shake.x, this.effects.shake.y);
+    this.effects.draw(ctx);
+    ctx.restore();
     if (this.paused) {
       ctx.fillStyle = 'rgba(26,26,46,0.55)';
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
