@@ -1,0 +1,223 @@
+{
+  "id": 5,
+  "name": "Crossfire",
+  "speed": 7.5,
+  "startSquad": 4,
+  "length": 420,
+  "stars": [
+    25,
+    62
+  ],
+  "spawns": [
+    {
+      "z": 20,
+      "x": 0.4,
+      "type": "cage",
+      "hp": 2,
+      "value": 7
+    },
+    {
+      "z": 40.0,
+      "x": -0.26,
+      "type": "heavy",
+      "hp": 19,
+      "kills": 4
+    },
+    {
+      "z": 54.46,
+      "x": 0.02,
+      "type": "hazard",
+      "kind": "barricade",
+      "width": 0.4
+    },
+    {
+      "z": 68.68,
+      "x": 0.08,
+      "type": "heavy",
+      "hp": 24,
+      "kills": 4
+    },
+    {
+      "z": 83.89,
+      "x": 0.13,
+      "type": "hazard",
+      "kind": "fire",
+      "width": 0.4
+    },
+    {
+      "z": 97.75,
+      "x": -0.45,
+      "type": "enemy",
+      "hp": 1
+    },
+    {
+      "z": 98.55,
+      "x": -0.3,
+      "type": "enemy",
+      "hp": 1
+    },
+    {
+      "z": 99.35,
+      "x": -0.15,
+      "type": "enemy",
+      "hp": 1
+    },
+    {
+      "z": 113.36,
+      "x": 0.67,
+      "type": "cage",
+      "hp": 13,
+      "value": 6
+    },
+    {
+      "z": 132.01,
+      "x": -0.37,
+      "type": "cage",
+      "hp": 13,
+      "value": 4
+    },
+    {
+      "z": 146.98,
+      "x": 0.7,
+      "type": "cage",
+      "hp": 13,
+      "value": 6
+    },
+    {
+      "z": 165.71,
+      "x": -0.72,
+      "type": "cage",
+      "hp": 13,
+      "value": 5
+    },
+    {
+      "z": 185.23,
+      "x": -0.09,
+      "type": "hazard",
+      "kind": "fire",
+      "width": 0.4
+    },
+    {
+      "z": 199.94,
+      "x": 0.23,
+      "type": "hazard",
+      "kind": "fire",
+      "width": 0.4
+    },
+    {
+      "z": 217.32,
+      "x": 0.43,
+      "type": "cage",
+      "hp": 13,
+      "value": 6
+    },
+    {
+      "z": 237.06,
+      "x": -0.39,
+      "type": "enemy",
+      "hp": 3
+    },
+    {
+      "z": 237.86,
+      "x": -0.24,
+      "type": "enemy",
+      "hp": 3
+    },
+    {
+      "z": 238.66,
+      "x": -0.09,
+      "type": "enemy",
+      "hp": 3
+    },
+    {
+      "z": 253.4,
+      "x": 0.2,
+      "type": "hazard",
+      "kind": "blade",
+      "width": 0.4
+    },
+    {
+      "z": 271.05,
+      "x": -0.66,
+      "type": "cage",
+      "hp": 13,
+      "value": 5
+    },
+    {
+      "z": 285.11,
+      "x": 0.27,
+      "type": "gate",
+      "width": 0.5,
+      "value": -18
+    },
+    {
+      "z": 301.15,
+      "x": -0.74,
+      "type": "cage",
+      "hp": 13,
+      "value": 5
+    },
+    {
+      "z": 315.0,
+      "x": 0.29,
+      "type": "gate",
+      "width": 0.45,
+      "value": 7
+    },
+    {
+      "z": 333.56,
+      "x": -0.62,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 334.36,
+      "x": -0.47,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 335.16,
+      "x": -0.32,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 353.13,
+      "x": -0.07,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 353.93,
+      "x": 0.08,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 354.73,
+      "x": 0.23,
+      "type": "enemy",
+      "hp": 5
+    },
+    {
+      "z": 369.86,
+      "x": -0.51,
+      "type": "cage",
+      "hp": 13,
+      "value": 6
+    },
+    {
+      "z": 384.3,
+      "x": -0.2,
+      "type": "heavy",
+      "hp": 80,
+      "kills": 4
+    }
+  ],
+  "boss": {
+    "hp": 3000,
+    "pattern": "volley3",
+    "fireEvery": 3.1
+  }
+}

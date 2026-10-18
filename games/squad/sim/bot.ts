@@ -12,6 +12,20 @@ export function botInput(state: GameState): Input {
   const ahead = (e: Entity, maxZ: number) => e.z > 0 && e.z <= maxZ;
   const nearest = (list: Entity[]) => list.reduce<Entity | null>((a, e) => (!a || e.z < a.z ? e : a), null);
 
+  // 0. Dodge incoming boss projectiles: pick the reachable position that the
+  // fewest projectiles overlap, preferring the one closest to where we are.
+  const incoming = state.projectiles.filter((p) => p.z < 12);
+  const overlaps = (x: number) => incoming.filter((p) => Math.abs(p.x - x) <= hw + 0.13).length;
+  if (incoming.length > 0 && overlaps(squad.x) > 0) {
+    let best = squad.x;
+    for (let i = 0; i <= 40; i++) {
+      const x = -limit + (2 * limit * i) / 40;
+      const better = overlaps(x) < overlaps(best) || (overlaps(x) === overlaps(best) && Math.abs(x - squad.x) < Math.abs(best - squad.x));
+      if (better) best = x;
+    }
+    return { targetX: best };
+  }
+
   // 1. Dodge hazards and negative gates that are about to reach the squad.
   const danger = nearest(
     entities.filter(
