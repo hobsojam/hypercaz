@@ -1,7 +1,7 @@
 // Draws the game state. Read-only: never changes gameplay.
 import { type AssetStore, drawSprite } from '../../../engine/assets.ts';
 import { type PerspectiveConfig, project } from '../../../engine/perspective.ts';
-import { BOSS_HALF_W } from '../sim/constants.ts';
+import { BOSS_HALF_W, SPAWN_HORIZON } from '../sim/constants.ts';
 import type { Entity, GameState } from '../sim/state.ts';
 import type { SquadView } from './squadView.ts';
 
@@ -14,7 +14,7 @@ export interface RenderView {
 }
 
 const ROAD_NEAR = -3;
-const ROAD_FAR = 90;
+const ROAD_FAR = 400;
 const TILE_LENGTH = 8; // metres of road per road_tile image
 const PROP_SPACING = 12;
 const UNIT_SCALE = 0.8;
@@ -31,7 +31,17 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
 
   const items: Draw[] = [];
   addProps(items, ctx, state, view);
-  for (const e of state.entities) items.push({ z: e.z, draw: () => drawEntity(ctx, e, view) });
+  for (const e of state.entities) {
+    items.push({
+      z: e.z,
+      draw: () => {
+        ctx.save();
+        ctx.globalAlpha = fadeIn(e.z);
+        drawEntity(ctx, e, view);
+        ctx.restore();
+      },
+    });
+  }
   if (state.boss) {
     const boss = state.boss;
     items.push({
@@ -86,6 +96,11 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   drawHud(ctx, state, view);
 }
 
+// Objects appear at the spawn horizon; fade them in rather than popping.
+function fadeIn(z: number): number {
+  return Math.min(1, Math.max(0, (SPAWN_HORIZON - z) / 12));
+}
+
 function drawBackground(ctx: CanvasRenderingContext2D, persp: PerspectiveConfig): void {
   const sky = ctx.createLinearGradient(0, 0, 0, persp.horizonY);
   sky.addColorStop(0, '#8FD3FF');
@@ -99,8 +114,8 @@ function drawBackground(ctx: CanvasRenderingContext2D, persp: PerspectiveConfig)
 function drawRoad(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
   const { persp } = view;
   const tile = view.assets.image('road_tile');
-  const band = 1;
-  for (let z = ROAD_FAR; z > ROAD_NEAR; z -= band) {
+  for (let z = ROAD_FAR; z > ROAD_NEAR; ) {
+    const band = Math.max(1, z / 15);
     const far = project(persp, -1, z);
     const near = project(persp, -1, z - band);
     const farR = project(persp, 1, z);
@@ -120,6 +135,7 @@ function drawRoad(ctx: CanvasRenderingContext2D, state: GameState, view: RenderV
       ctx.closePath();
       ctx.fill();
     }
+    z -= band;
   }
   // Kerbs
   for (const side of [-1, 1]) {
@@ -138,7 +154,7 @@ const PROPS = ['prop_tree', 'prop_rock', 'prop_tree', 'prop_crate'];
 
 function addProps(items: Draw[], ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
   const first = Math.ceil((state.distance + ROAD_NEAR) / PROP_SPACING);
-  const last = Math.floor((state.distance + ROAD_FAR) / PROP_SPACING);
+  const last = Math.floor((state.distance + SPAWN_HORIZON) / PROP_SPACING);
   for (let k = first; k <= last; k++) {
     const z = k * PROP_SPACING - state.distance;
     for (const side of [-1, 1]) {
@@ -148,7 +164,7 @@ function addProps(items: Draw[], ctx: CanvasRenderingContext2D, state: GameState
         z,
         draw: () => {
           const p = project(view.persp, x, z);
-          drawSprite(ctx, view.assets, PROPS[i % PROPS.length], view.time, p.sx, p.sy, p.scale);
+          drawSprite(ctx, view.assets, PROPS[i % PROPS.length], view.time, p.sx, p.sy, p.scale, { alpha: fadeIn(z) });
         },
       });
     }

@@ -140,7 +140,7 @@ export function drawSprite(
   const y = entry.anchor === 'bottom' ? sy - h : sy - h / 2;
   const flash = Math.min(1, (opts.flash ?? 0) * 10);
   ctx.save();
-  ctx.globalAlpha = opts.alpha ?? 1;
+  ctx.globalAlpha *= opts.alpha ?? 1;
   const img = store.image(id);
   if (img) {
     if (flash > 0) ctx.filter = `brightness(${1 + flash * 2})`;
