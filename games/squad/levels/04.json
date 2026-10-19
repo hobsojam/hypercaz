@@ -1,0 +1,303 @@
+{
+ "id": 4,
+ "name": "Heavy Metal",
+ "speed": 7,
+ "startSquad": 3,
+ "length": 400,
+ "stars": [
+  49,
+  74
+ ],
+ "spawns": [
+  {
+   "z": 12,
+   "x": 0,
+   "type": "cage",
+   "hp": 2,
+   "value": 8
+  },
+  {
+   "z": 40.0,
+   "x": 0.31,
+   "type": "horde",
+   "count": 31,
+   "hp": 1,
+   "width": 1.25,
+   "depth": 4.48
+  },
+  {
+   "z": 47.48,
+   "x": -0.12,
+   "type": "hazard",
+   "kind": "barricade",
+   "width": 0.38
+  },
+  {
+   "z": 60.15,
+   "x": -0.09,
+   "type": "horde",
+   "count": 41,
+   "hp": 1,
+   "width": 1.26,
+   "depth": 5.28
+  },
+  {
+   "z": 68.43,
+   "x": 0.67,
+   "type": "cage",
+   "hp": 5,
+   "value": 7
+  },
+  {
+   "z": 83.07,
+   "x": 0.33,
+   "type": "horde",
+   "count": 55,
+   "hp": 1,
+   "width": 1.33,
+   "depth": 6.4
+  },
+  {
+   "z": 92.47,
+   "x": -0.28,
+   "type": "gate",
+   "width": 0.45,
+   "value": 3,
+   "max": 7
+  },
+  {
+   "z": 102.07,
+   "x": 0.26,
+   "type": "horde",
+   "count": 68,
+   "hp": 1,
+   "width": 1.48,
+   "depth": 7.44
+  },
+  {
+   "z": 112.51,
+   "x": 0.64,
+   "type": "cage",
+   "hp": 8,
+   "value": 6
+  },
+  {
+   "z": 120.41,
+   "x": -0.19,
+   "type": "horde",
+   "count": 41,
+   "hp": 2,
+   "width": 1.18,
+   "depth": 5.28
+  },
+  {
+   "z": 128.69,
+   "x": -0.41,
+   "type": "gate",
+   "width": 0.5,
+   "value": -5,
+   "max": 4
+  },
+  {
+   "z": 142.0,
+   "x": -0.31,
+   "type": "horde",
+   "count": 49,
+   "hp": 2,
+   "width": 1.38,
+   "depth": 5.92
+  },
+  {
+   "z": 150.92,
+   "x": 0.67,
+   "type": "cage",
+   "hp": 12,
+   "value": 10
+  },
+  {
+   "z": 163.2,
+   "x": 0.22,
+   "type": "horde",
+   "count": 59,
+   "hp": 2,
+   "width": 1.52,
+   "depth": 6.72
+  },
+  {
+   "z": 172.92,
+   "x": -0.41,
+   "type": "cage",
+   "hp": 14,
+   "value": 8
+  },
+  {
+   "z": 181.35,
+   "x": -0.19,
+   "type": "horde",
+   "count": 67,
+   "hp": 2,
+   "width": 1.61,
+   "depth": 7.36
+  },
+  {
+   "z": 191.71,
+   "x": 0.69,
+   "type": "cage",
+   "hp": 17,
+   "value": 10
+  },
+  {
+   "z": 199.37,
+   "x": 0.26,
+   "type": "horde",
+   "count": 51,
+   "hp": 3,
+   "width": 1.48,
+   "depth": 6.08
+  },
+  {
+   "z": 208.45,
+   "x": 0.5,
+   "type": "heavy",
+   "hp": 48,
+   "kills": 4
+  },
+  {
+   "z": 219.86,
+   "x": 0.03,
+   "type": "horde",
+   "count": 58,
+   "hp": 3,
+   "width": 1.51,
+   "depth": 6.64
+  },
+  {
+   "z": 229.5,
+   "x": 0.5,
+   "type": "cage",
+   "hp": 21,
+   "value": 10
+  },
+  {
+   "z": 242.01,
+   "x": -0.21,
+   "type": "horde",
+   "count": 66,
+   "hp": 3,
+   "width": 1.57,
+   "depth": 7.28
+  },
+  {
+   "z": 252.29,
+   "x": -0.39,
+   "type": "cage",
+   "hp": 24,
+   "value": 8
+  },
+  {
+   "z": 263.94,
+   "x": -0.0,
+   "type": "horde",
+   "count": 55,
+   "hp": 4,
+   "width": 1.52,
+   "depth": 6.4
+  },
+  {
+   "z": 273.34,
+   "x": 0.63,
+   "type": "cage",
+   "hp": 28,
+   "value": 6
+  },
+  {
+   "z": 284.56,
+   "x": 0.28,
+   "type": "horde",
+   "count": 61,
+   "hp": 4,
+   "width": 1.45,
+   "depth": 6.88
+  },
+  {
+   "z": 294.44,
+   "x": -0.55,
+   "type": "heavy",
+   "hp": 77,
+   "kills": 4
+  },
+  {
+   "z": 307.44,
+   "x": -0.27,
+   "type": "horde",
+   "count": 68,
+   "hp": 4,
+   "width": 1.47,
+   "depth": 7.44
+  },
+  {
+   "z": 317.88,
+   "x": 0.75,
+   "type": "cage",
+   "hp": 34,
+   "value": 7
+  },
+  {
+   "z": 324.56,
+   "x": 0.16,
+   "type": "horde",
+   "count": 59,
+   "hp": 5,
+   "width": 1.47,
+   "depth": 6.72
+  },
+  {
+   "z": 334.28,
+   "x": -0.63,
+   "type": "cage",
+   "hp": 37,
+   "value": 11
+  },
+  {
+   "z": 342.52,
+   "x": 0.27,
+   "type": "horde",
+   "count": 64,
+   "hp": 5,
+   "width": 1.47,
+   "depth": 7.12
+  },
+  {
+   "z": 352.64,
+   "x": 0.55,
+   "type": "cage",
+   "hp": 40,
+   "value": 8
+  },
+  {
+   "z": 365.27,
+   "x": -0.23,
+   "type": "horde",
+   "count": 69,
+   "hp": 5,
+   "width": 1.53,
+   "depth": 7.52
+  },
+  {
+   "z": 375.79,
+   "x": 0.44,
+   "type": "heavy",
+   "hp": 110,
+   "kills": 4
+  }
+ ],
+ "boss": {
+  "hp": 2810,
+  "pattern": "volley3",
+  "fireEvery": 3.2,
+  "advance": 0.488,
+  "summonEvery": 4.88,
+  "summonCount": 41,
+  "summonHp": 5
+ }
+}

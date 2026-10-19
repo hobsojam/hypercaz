@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "soldier_run",
+      "file": "soldier_run.png",
+      "frameW": 64,
+      "frameH": 80,
+      "frames": 2,
+      "fps": 10,
+      "anchor": "bottom",
+      "group": "player"
+    },
+    {
+      "id": "bullet",
+      "file": "bullet.svg",
+      "frameW": 32,
+      "frameH": 32,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "center",
+      "group": "effect"
+    },
+    {
+      "id": "cage",
+      "file": null,
+      "frameW": 96,
+      "frameH": 112,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "bonus"
+    }
+  ]
+}

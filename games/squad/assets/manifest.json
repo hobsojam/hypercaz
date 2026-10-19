@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "soldier_run",
+      "file": null,
+      "frameW": 64,
+      "frameH": 80,
+      "frames": 4,
+      "fps": 10,
+      "anchor": "bottom",
+      "group": "player"
+    },
+    {
+      "id": "soldier_shoot",
+      "file": null,
+      "frameW": 64,
+      "frameH": 80,
+      "frames": 2,
+      "fps": 12,
+      "anchor": "bottom",
+      "group": "player"
+    },
+    {
+      "id": "enemy_walk",
+      "file": null,
+      "frameW": 64,
+      "frameH": 80,
+      "frames": 4,
+      "fps": 8,
+      "anchor": "bottom",
+      "group": "enemy"
+    },
+    {
+      "id": "heavy_walk",
+      "file": null,
+      "frameW": 96,
+      "frameH": 112,
+      "frames": 4,
+      "fps": 6,
+      "anchor": "bottom",
+      "group": "enemy"
+    },
+    {
+      "id": "boss_idle",
+      "file": null,
+      "frameW": 320,
+      "frameH": 256,
+      "frames": 2,
+      "fps": 3,
+      "anchor": "bottom",
+      "group": "enemy"
+    },
+    {
+      "id": "boss_damaged",
+      "file": null,
+      "frameW": 320,
+      "frameH": 256,
+      "frames": 2,
+      "fps": 3,
+      "anchor": "bottom",
+      "group": "enemy"
+    },
+    {
+      "id": "cage",
+      "file": null,
+      "frameW": 96,
+      "frameH": 112,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "bonus"
+    },
+    {
+      "id": "cage_broken",
+      "file": null,
+      "frameW": 96,
+      "frameH": 112,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "bonus"
+    },
+    {
+      "id": "gate_positive",
+      "file": null,
+      "frameW": 256,
+      "frameH": 96,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "bonus"
+    },
+    {
+      "id": "gate_negative",
+      "file": null,
+      "frameW": 256,
+      "frameH": 96,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "bonus"
+    },
+    {
+      "id": "hazard_blade",
+      "file": null,
+      "frameW": 128,
+      "frameH": 128,
+      "frames": 4,
+      "fps": 12,
+      "anchor": "bottom",
+      "group": "hazard"
+    },
+    {
+      "id": "hazard_fire",
+      "file": null,
+      "frameW": 256,
+      "frameH": 64,
+      "frames": 3,
+      "fps": 10,
+      "anchor": "bottom",
+      "group": "hazard"
+    },
+    {
+      "id": "hazard_barricade",
+      "file": null,
+      "frameW": 256,
+      "frameH": 96,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "hazard"
+    },
+    {
+      "id": "road_tile",
+      "file": null,
+      "frameW": 512,
+      "frameH": 256,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "scenery"
+    },
+    {
+      "id": "prop_tree",
+      "file": null,
+      "frameW": 128,
+      "frameH": 160,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "scenery"
+    },
+    {
+      "id": "prop_rock",
+      "file": null,
+      "frameW": 128,
+      "frameH": 96,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "scenery"
+    },
+    {
+      "id": "prop_crate",
+      "file": null,
+      "frameW": 96,
+      "frameH": 96,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "bottom",
+      "group": "scenery"
+    },
+    {
+      "id": "bullet",
+      "file": null,
+      "frameW": 16,
+      "frameH": 24,
+      "frames": 1,
+      "fps": 0,
+      "anchor": "center",
+      "group": "effect"
+    },
+    {
+      "id": "muzzle_flash",
+      "file": null,
+      "frameW": 32,
+      "frameH": 32,
+      "frames": 2,
+      "fps": 20,
+      "anchor": "center",
+      "group": "effect"
+    }
+  ]
+}

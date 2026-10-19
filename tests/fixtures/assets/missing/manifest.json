@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "soldier_run",
+      "file": "soldier_run.png",
+      "frameW": 64,
+      "frameH": 80,
+      "frames": 2,
+      "fps": 10,
+      "anchor": "bottom",
+      "group": "player"
+    }
+  ]
+}
