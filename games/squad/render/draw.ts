@@ -18,6 +18,8 @@ const ROAD_FAR = 400;
 const TILE_LENGTH = 8; // metres of road per road_tile image
 const PROP_SPACING = 12;
 const UNIT_SCALE = 0.8;
+// Cannon centre is 160 px above the feet in the 2x boss art.
+const BOSS_MUZZLE_HEIGHT = 80;
 const FONT = '"Trebuchet MS", "Segoe UI", sans-serif';
 
 type Draw = { z: number; draw: () => void };
@@ -30,6 +32,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   drawRoad(ctx, view.persp, state.distance, view.assets.image('road_tile'));
 
   const items: Draw[] = [];
+  const bossFit = (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / (320 / 2);
   addProps(items, ctx, state, view);
   for (const e of state.entities) {
     items.push({
@@ -49,8 +52,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
       draw: () => {
         const p = project(persp, boss.x, boss.z);
         const id = boss.hp < boss.maxHp / 2 ? 'boss_damaged' : 'boss_idle';
-        const fit = (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / (320 / 2);
-        const s = p.scale * fit;
+        const s = p.scale * bossFit;
         // Enraged: a red aura. Charging a volley: a fast orange pulse, so the
         // player knows to move.
         const pulse = 0.5 + 0.5 * Math.sin(view.time * 30);
@@ -75,12 +77,17 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
     items.push({
       z: pr.z,
       draw: () => {
-        const p = project(persp, pr.x, pr.z);
+        // Fan out from the captured muzzle position, then descend to the
+        // existing landing lane. Boss movement cannot drag shells in flight.
+        const remaining = Math.min(1, Math.max(0, pr.z / pr.originZ));
+        const x = pr.x + (pr.originX - pr.x) * remaining;
+        const p = project(persp, x, pr.z);
+        const height = 10 + (BOSS_MUZZLE_HEIGHT * bossFit - 10) * remaining;
         ctx.fillStyle = '#FF8A1F';
         ctx.strokeStyle = '#1A1A2E';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(p.sx, p.sy - 10 * p.scale, 9 * p.scale, 0, Math.PI * 2);
+        ctx.arc(p.sx, p.sy - height * p.scale, 9 * p.scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       },

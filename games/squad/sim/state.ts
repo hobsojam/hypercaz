@@ -35,8 +35,10 @@ export interface Bullet {
 }
 
 export interface Projectile {
-  x: number;
-  z: number;
+  x: number; // landing lane, fixed when fired
+  z: number; // distance remaining to the squad
+  originX: number;
+  originZ: number;
 }
 
 export interface Boss {
