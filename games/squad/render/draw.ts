@@ -27,7 +27,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   ctx.save();
   ctx.translate(view.shake.x, view.shake.y);
   drawBackground(ctx, persp);
-  drawRoad(ctx, state, view);
+  drawRoad(ctx, view.persp, state.distance, view.assets.image('road_tile'));
 
   const items: Draw[] = [];
   addProps(items, ctx, state, view);
@@ -126,22 +126,34 @@ function drawBackground(ctx: CanvasRenderingContext2D, persp: PerspectiveConfig)
   ctx.fillRect(-20, persp.horizonY, persp.width + 40, persp.height - persp.horizonY + 20);
 }
 
-function drawRoad(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
-  const { persp } = view;
-  const tile = view.assets.image('road_tile');
-  for (let z = ROAD_FAR; z > ROAD_NEAR; ) {
-    const band = Math.max(1, z / 15);
-    const far = project(persp, -1, z);
-    const near = project(persp, -1, z - band);
-    const farR = project(persp, 1, z);
-    const nearR = project(persp, 1, z - band);
-    const worldZ = z + state.distance;
-    if (tile) {
-      const v = (((worldZ % TILE_LENGTH) + TILE_LENGTH) % TILE_LENGTH) / TILE_LENGTH;
+export function drawRoad(
+  ctx: CanvasRenderingContext2D,
+  persp: PerspectiveConfig,
+  distance: number,
+  tile: HTMLImageElement | null,
+): void {
+  if (tile) {
+    // One slice per screen row, exactly as wide as the road at that row, so
+    // the tile never overhangs the road edges.
+    const top = Math.floor(project(persp, 0, ROAD_FAR).sy);
+    const bottom = Math.min(persp.height, Math.ceil(project(persp, 0, ROAD_NEAR).sy));
+    const span = persp.squadLineY - persp.horizonY;
+    for (let y = top; y < bottom; y++) {
+      const scale = (y + 0.5 - persp.horizonY) / span;
+      const z = persp.focal / scale - persp.focal;
+      const v = ((((z + distance) % TILE_LENGTH) + TILE_LENGTH) % TILE_LENGTH) / TILE_LENGTH;
       const srcY = Math.floor((1 - v) * (tile.height - 1));
-      ctx.drawImage(tile, 0, srcY, tile.width, 1, near.sx, far.sy, nearR.sx - near.sx, near.sy - far.sy + 1);
-    } else {
-      ctx.fillStyle = Math.floor(worldZ / 4) % 2 === 0 ? '#6B6F7A' : '#62666F';
+      const halfW = persp.roadHalfWidthPx * scale;
+      ctx.drawImage(tile, 0, srcY, tile.width, 1, persp.width / 2 - halfW, y, 2 * halfW, 1);
+    }
+  } else {
+    for (let z = ROAD_FAR; z > ROAD_NEAR; ) {
+      const band = Math.max(1, z / 15);
+      const far = project(persp, -1, z);
+      const near = project(persp, -1, z - band);
+      const farR = project(persp, 1, z);
+      const nearR = project(persp, 1, z - band);
+      ctx.fillStyle = Math.floor((z + distance) / 4) % 2 === 0 ? '#6B6F7A' : '#62666F';
       ctx.beginPath();
       ctx.moveTo(far.sx, far.sy);
       ctx.lineTo(farR.sx, farR.sy);
@@ -149,8 +161,8 @@ function drawRoad(ctx: CanvasRenderingContext2D, state: GameState, view: RenderV
       ctx.lineTo(near.sx, near.sy + 1);
       ctx.closePath();
       ctx.fill();
+      z -= band;
     }
-    z -= band;
   }
   // Kerbs
   for (const side of [-1, 1]) {

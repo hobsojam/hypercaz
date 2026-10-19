@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
 import { AssetStore, parseManifest } from '../../engine/assets.ts';
-import { DEFAULT_VIEW } from '../../engine/perspective.ts';
-import { renderGame } from '../../games/squad/render/draw.ts';
+import { DEFAULT_VIEW, project } from '../../engine/perspective.ts';
+import { drawRoad, renderGame } from '../../games/squad/render/draw.ts';
 import { SquadView } from '../../games/squad/render/squadView.ts';
 import { botInput } from '../../games/squad/sim/bot.ts';
 import { formationSlots } from '../../games/squad/sim/formation.ts';
@@ -68,4 +68,38 @@ test('new soldiers appear at the squad centre', () => {
   view.update(formationSlots(1), 1);
   view.update(formationSlots(3), 0);
   expect(view.positions.map((p) => p.dx)).toEqual([0, 0, 0]);
+});
+
+test('the road tile is drawn inside the road edges, with no overhang', () => {
+  const persp = DEFAULT_VIEW;
+  const slices: { dx: number; dy: number; dw: number; dh: number }[] = [];
+  const ctx = new Proxy(
+    {},
+    {
+      get: (_t, prop) =>
+        prop === 'drawImage'
+          ? (_img: unknown, _sx: number, _sy: number, _sw: number, _sh: number, dx: number, dy: number, dw: number, dh: number) =>
+              slices.push({ dx, dy, dw, dh })
+          : () => undefined,
+      set: () => true,
+    },
+  ) as CanvasRenderingContext2D;
+  const tile = { width: 512, height: 256 } as HTMLImageElement;
+  drawRoad(ctx, persp, 123.4, tile);
+
+  expect(slices.length).toBeGreaterThan(500);
+  // The road edge at screen row y, from the projection's inverse.
+  const edgeAt = (y: number) => {
+    const scale = (y - persp.horizonY) / (persp.squadLineY - persp.horizonY);
+    const z = persp.focal / scale - persp.focal;
+    return { left: project(persp, -1, z).sx, right: project(persp, 1, z).sx };
+  };
+  for (const s of slices) {
+    expect(s.dh).toBeLessThanOrEqual(1.01);
+    for (const y of [s.dy, s.dy + s.dh]) {
+      const { left, right } = edgeAt(y);
+      expect(s.dx).toBeGreaterThanOrEqual(Math.min(left, edgeAt(s.dy + s.dh).left) - 0.5);
+      expect(s.dx + s.dw).toBeLessThanOrEqual(Math.max(right, edgeAt(s.dy + s.dh).right) + 0.5);
+    }
+  }
 });
