@@ -10,24 +10,26 @@ import { formationSlots } from '../../games/squad/sim/formation.ts';
 import { validateLevel } from '../../games/squad/sim/level.ts';
 import { createState } from '../../games/squad/sim/state.ts';
 import { step } from '../../games/squad/sim/step.ts';
+import { makeLevel } from './fixtures.ts';
 
-// A canvas context that accepts every call and property write, counting calls.
+// A canvas context that accepts every call and property write, recording each
+// call's arguments by method name.
 function stubCtx() {
-  const calls: Record<string, number> = {};
+  const calls: Record<string, unknown[][]> = {};
   const proxy: object = new Proxy(
     {},
     {
       get(_t, prop) {
         if (prop === 'calls') return calls;
-        return () => {
-          calls[String(prop)] = (calls[String(prop)] ?? 0) + 1;
+        return (...args: unknown[]) => {
+          (calls[String(prop)] ??= []).push(args);
           return proxy;
         };
       },
       set: () => true,
     },
   );
-  return proxy as CanvasRenderingContext2D & { calls: Record<string, number> };
+  return proxy as CanvasRenderingContext2D & { calls: Record<string, unknown[][]> };
 }
 
 const root = join(import.meta.dirname, '../..');
@@ -49,7 +51,8 @@ test('renders a whole bot run of level 1 without throwing', () => {
   }
   expect(state.phase).toBe('won');
   expect(frames).toBeGreaterThan(100);
-  expect((ctx.calls.fillRect ?? 0) + (ctx.calls.fill ?? 0) + (ctx.calls.drawImage ?? 0)).toBeGreaterThan(0);
+  const drawn = ['fillRect', 'fill', 'drawImage'].reduce((n, m) => n + (ctx.calls[m]?.length ?? 0), 0);
+  expect(drawn).toBeGreaterThan(0);
 });
 
 test('squad view eases displayed slots to their targets', () => {
@@ -72,20 +75,9 @@ test('new soldiers appear at the squad centre', () => {
 
 test('the road tile is drawn inside the road edges, with no overhang', () => {
   const persp = DEFAULT_VIEW;
-  const slices: { dx: number; dy: number; dw: number; dh: number }[] = [];
-  const ctx = new Proxy(
-    {},
-    {
-      get: (_t, prop) =>
-        prop === 'drawImage'
-          ? (_img: unknown, _sx: number, _sy: number, _sw: number, _sh: number, dx: number, dy: number, dw: number, dh: number) =>
-              slices.push({ dx, dy, dw, dh })
-          : () => undefined,
-      set: () => true,
-    },
-  ) as CanvasRenderingContext2D;
-  const tile = { width: 512, height: 256 } as HTMLImageElement;
-  drawRoad(ctx, persp, 123.4, tile);
+  const ctx = stubCtx();
+  drawRoad(ctx, persp, 123.4, { width: 512, height: 256 } as HTMLImageElement);
+  const slices = (ctx.calls.drawImage as number[][]).map(([, , , , , dx, dy, dw, dh]) => ({ dx, dy, dw, dh }));
 
   expect(slices.length).toBeGreaterThan(500);
   // The road edge at screen row y, from the projection's inverse.
@@ -104,42 +96,22 @@ test('the road tile is drawn inside the road edges, with no overhang', () => {
   }
 });
 
-test('a cage shows its remaining hit points as well as its reward', () => {
-  const level = validateLevel(
-    { id: 1, name: 't', speed: 6, startSquad: 1, length: 200, stars: [1, 1], spawns: [{ z: 20, x: 0.5, type: 'cage', hp: 37, value: 5 }], boss: { hp: 10, pattern: 'single', fireEvery: 9 } },
-    't.json',
-  );
-  const state = createState(level, 1);
-  step(state, { targetX: -0.9 }, 1 / 60);
-  const texts: string[] = [];
-  const ctx = new Proxy(
-    {},
-    {
-      get: (_t, prop) => (prop === 'fillText' ? (text: string) => texts.push(text) : () => ({ addColorStop: () => undefined })),
-      set: () => true,
-    },
-  ) as CanvasRenderingContext2D;
+// Every piece of text drawn for one frame of `state`.
+function textsDrawn(state: ReturnType<typeof createState>): string[] {
+  const ctx = stubCtx();
   renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
-  expect(texts).toContain('+5');
-  expect(texts).toContain('37');
+  return (ctx.calls.fillText ?? []).map(([text]) => text as string);
+}
+
+test('a cage shows its remaining hit points as well as its reward', () => {
+  const state = createState(makeLevel({ speed: 6, spawns: [{ z: 20, x: 0.5, type: 'cage', hp: 37, value: 5 }] }), 1);
+  step(state, { targetX: -0.9 }, 1 / 60);
+  expect(textsDrawn(state)).toEqual(expect.arrayContaining(['+5', '37']));
 });
 
 test('the boss shows its remaining health as a number', () => {
-  const level = validateLevel(
-    { id: 1, name: 't', speed: 6, startSquad: 5, length: 200, stars: [1, 1], spawns: [], boss: { hp: 5000, pattern: 'single', fireEvery: 9 } },
-    't.json',
-  );
-  const state = createState(level, 1);
+  const state = createState(makeLevel({ startSquad: 5 }), 1);
   state.phase = 'boss';
   state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
-  const texts: string[] = [];
-  const ctx = new Proxy(
-    {},
-    {
-      get: (_t, prop) => (prop === 'fillText' ? (text: string) => texts.push(text) : () => ({ addColorStop: () => undefined })),
-      set: () => true,
-    },
-  ) as CanvasRenderingContext2D;
-  renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
-  expect(texts).toContain('1235');
+  expect(textsDrawn(state)).toContain('1235');
 });
