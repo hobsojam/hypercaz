@@ -1,10 +1,9 @@
 import { updateBoss } from './boss.ts';
 import { updateCombat } from './combat.ts';
 import { updateContacts } from './contact.ts';
-import { DESPAWN_Z, ENEMY_SPEED, HEAVY_SPEED, SIZES, SPAWN_HORIZON, SQUAD_OMEGA } from './constants.ts';
+import { DESPAWN_Z, ENEMY_SPEED, HEAVY_SPEED, SPAWN_HORIZON, SQUAD_OMEGA } from './constants.ts';
 import { formationHalfWidth, formationSlots } from './formation.ts';
-import type { Spawn } from './level.ts';
-import type { Entity, GameState, Input } from './state.ts';
+import { spawnEntity, type GameState, type Input } from './state.ts';
 
 // The only way game state changes. Mutates `state` in place and returns it.
 export function step(state: GameState, input: Input, dt: number): GameState {
@@ -40,7 +39,8 @@ function scrollAndSpawn(state: GameState, dt: number): void {
   state.distance = Math.min(state.distance + level.speed * dt, level.length);
   for (const e of state.entities) e.z -= level.speed * dt;
   while (state.nextSpawn < level.spawns.length && level.spawns[state.nextSpawn].z - state.distance <= SPAWN_HORIZON) {
-    state.entities.push(makeEntity(state, level.spawns[state.nextSpawn]));
+    const spawn = level.spawns[state.nextSpawn];
+    state.entities.push(spawnEntity(state, spawn, spawn.z - state.distance));
     state.nextSpawn++;
   }
   if (state.distance >= level.length) state.phase = 'boss';
@@ -51,25 +51,6 @@ function moveEntities(state: GameState, dt: number): void {
     if (e.type === 'enemy') e.z -= ENEMY_SPEED * dt;
     else if (e.type === 'heavy') e.z -= HEAVY_SPEED * dt;
   }
-}
-
-function makeEntity(state: GameState, s: Spawn): Entity {
-  const halfW = s.type === 'gate' || s.type === 'hazard' ? s.width / 2 : SIZES[s.type].halfW;
-  return {
-    id: state.nextId++,
-    type: s.type,
-    x: s.x,
-    z: s.z - state.distance,
-    hp: s.hp,
-    value: s.value,
-    halfW,
-    halfD: SIZES[s.type].halfD,
-    kind: s.kind,
-    kills: s.kills,
-    max: s.max,
-    resolved: false,
-    flash: 0,
-  };
 }
 
 function clamp(v: number, lo: number, hi: number): number {

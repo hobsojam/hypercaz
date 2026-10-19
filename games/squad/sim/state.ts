@@ -1,6 +1,6 @@
 import { createRng } from '../../../engine/rng.ts';
-import { FIRE_INTERVAL } from './constants.ts';
-import type { HazardKind, Level, SpawnType } from './level.ts';
+import { FIRE_INTERVAL, SIZES } from './constants.ts';
+import type { HazardKind, Level, Spawn, SpawnType } from './level.ts';
 
 export type Phase = 'advance' | 'boss' | 'won' | 'lost';
 
@@ -45,6 +45,9 @@ export interface Boss {
   x: number;
   z: number;
   fireTimer: number;
+  summonTimer: number;
+  enraged: boolean;
+  charging: boolean; // in the warning window before a volley
   flash: number;
 }
 
@@ -55,6 +58,9 @@ export type GameEvent =
   | { type: 'gain' | 'lose'; amount: number; x: number; z: number }
   | { type: 'bossArrive' }
   | { type: 'bossFire'; x: number }
+  | { type: 'bossWindup' }
+  | { type: 'bossSummon'; x: number }
+  | { type: 'bossEnrage' }
   | { type: 'bossDead'; x: number; z: number }
   | { type: 'won' }
   | { type: 'lost' };
@@ -96,5 +102,25 @@ export function createState(level: Level, seed: number): GameState {
     nextShot: FIRE_INTERVAL / level.startSquad, // first shot after one average gap
     nextId: 1,
     events: [],
+  };
+}
+
+// `z` is the entity's distance ahead of the squad right now.
+export function spawnEntity(state: GameState, s: Spawn, z: number): Entity {
+  const halfW = s.type === 'gate' || s.type === 'hazard' ? s.width / 2 : SIZES[s.type].halfW;
+  return {
+    id: state.nextId++,
+    type: s.type,
+    x: s.x,
+    z,
+    hp: s.hp,
+    value: s.value,
+    halfW,
+    halfD: SIZES[s.type].halfD,
+    kind: s.kind,
+    kills: s.kills,
+    max: s.max,
+    resolved: false,
+    flash: 0,
   };
 }

@@ -16,11 +16,12 @@ export function changeCount(state: GameState, delta: number, x: number, z: numbe
   }
 }
 
-// How many soldiers sit within `halfW` of `x`, scaled from drawn slots to the
-// real count (only up to 150 slots exist even for much bigger squads).
-export function soldiersHit(state: GameState, slots: Slot[], x: number, halfW: number): number {
+// How many soldiers sit within `halfW` of `x` (and, if given, within `depth`
+// metres of the front line), scaled from drawn slots to the real count (only
+// up to 150 slots exist even for much bigger squads).
+export function soldiersHit(state: GameState, slots: Slot[], x: number, halfW: number, depth = Infinity): number {
   let hit = 0;
-  for (const s of slots) if (Math.abs(state.squad.x + s.dx - x) <= halfW) hit++;
+  for (const s of slots) if (Math.abs(state.squad.x + s.dx - x) <= halfW && -s.dz <= depth) hit++;
   return hit === 0 ? 0 : Math.ceil((hit * state.squad.count) / slots.length);
 }
 

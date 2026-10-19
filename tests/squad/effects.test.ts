@@ -47,6 +47,28 @@ describe('Effects', () => {
     expect(magnitude(fx)).toBeLessThan(0.5);
   });
 
+  it('a boss winding up plays a warning sound', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'bossWindup' }], toScreen);
+    expect(played).toEqual(['warn']);
+  });
+
+  it('an enraged boss roars and shakes the screen', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'bossEnrage' }], toScreen);
+    fx.update(1 / 60);
+    expect(magnitude(fx)).toBeGreaterThanOrEqual(5);
+    expect(played).toContain('boss');
+  });
+
+  it('a summon rumbles', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'bossSummon', x: 0 }], toScreen);
+    fx.update(1 / 60);
+    expect(magnitude(fx)).toBeGreaterThan(0);
+    expect(played).toContain('boss');
+  });
+
   it('destroyed units burst into 12 confetti particles', () => {
     const { fx, pool, toScreen } = setup();
     fx.handle([{ type: 'destroyed', x: 0, z: 10, target: 'enemy' }], toScreen);

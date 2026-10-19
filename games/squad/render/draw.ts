@@ -50,7 +50,22 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
         const p = project(persp, boss.x, boss.z);
         const id = boss.hp < boss.maxHp / 2 ? 'boss_damaged' : 'boss_idle';
         const fit = (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / (320 / 2);
-        drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, p.scale * fit, { flash: boss.flash });
+        const s = p.scale * fit;
+        // Enraged: a red aura. Charging a volley: a fast orange pulse, so the
+        // player knows to move.
+        const pulse = 0.5 + 0.5 * Math.sin(view.time * 30);
+        if (boss.enraged || boss.charging) {
+          ctx.save();
+          ctx.globalAlpha = boss.charging ? 0.35 + 0.35 * pulse : 0.3;
+          ctx.fillStyle = boss.charging ? '#FF8A1F' : '#E04040';
+          ctx.beginPath();
+          ctx.ellipse(p.sx, p.sy - 64 * s, 130 * s, 105 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
+        drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
+        if (boss.charging) label(ctx, '!', p.sx, p.sy - 185 * s, 44 * s + 12, '#FF8A1F');
       },
     });
   }

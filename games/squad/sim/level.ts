@@ -26,7 +26,15 @@ export interface Level {
   length: number;
   stars: [number, number];
   spawns: Spawn[];
-  boss: { hp: number; pattern: BossPattern; fireEvery: number };
+  boss: {
+    hp: number;
+    pattern: BossPattern;
+    fireEvery: number;
+    advance: number; // metres per second toward the squad once settled; 0 = holds position
+    summonEvery: number; // seconds between summoned crowds; 0 = never
+    summonCount: number;
+    summonHp: number;
+  };
 }
 
 export class LevelError extends Error {
@@ -166,6 +174,16 @@ export function validateLevel(raw: unknown, file: string): Level {
   const pattern = oneOf(b, 'pattern', 'boss.pattern', BOSS_PATTERNS);
   const fireEvery = num(b, 'fireEvery', 'boss.fireEvery');
   if (fireEvery <= 0) fail('boss.fireEvery', 'must be > 0');
+  const advance = b.advance === undefined ? 0 : range(b, 'advance', 'boss.advance', 0, 10);
+  let summonEvery = 0;
+  let summonCount = 0;
+  let summonHp = 1;
+  if (b.summonEvery !== undefined) {
+    summonEvery = num(b, 'summonEvery', 'boss.summonEvery');
+    if (summonEvery <= 0) fail('boss.summonEvery', 'must be > 0');
+    summonCount = intMin(b, 'summonCount', 'boss.summonCount', 1);
+    summonHp = intMin(b, 'summonHp', 'boss.summonHp', 1);
+  }
 
   return {
     id,
@@ -175,11 +193,11 @@ export function validateLevel(raw: unknown, file: string): Level {
     length,
     stars: [(stars as number[])[0], (stars as number[])[1]],
     spawns,
-    boss: { hp: bossHp, pattern, fireEvery },
+    boss: { hp: bossHp, pattern, fireEvery, advance, summonEvery, summonCount, summonHp },
   };
 }
 
-interface Horde {
+export interface Horde {
   z: number;
   x: number;
   count: number;
@@ -190,7 +208,7 @@ interface Horde {
 
 // A jittered grid: evenly filled like a crowd, never in neat rows. Seeded by
 // the level and spawn index, so a level always lays out the same way.
-function expandHorde(h: Horde, seed: number): Spawn[] {
+export function expandHorde(h: Horde, seed: number): Spawn[] {
   let rng = createRng(seed);
   const jitter = () => {
     const [v, next] = nextFloat(rng);

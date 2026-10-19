@@ -65,6 +65,17 @@ export class Effects {
         case 'bossArrive':
           this.audio.play('boss');
           break;
+        case 'bossWindup':
+          this.audio.play('warn');
+          break;
+        case 'bossSummon':
+          this.kick(3);
+          this.audio.play('boss');
+          break;
+        case 'bossEnrage':
+          this.kick(8);
+          this.audio.play('boss');
+          break;
         case 'bossDead': {
           const p = toScreen(e.x, e.z);
           this.kick(14);

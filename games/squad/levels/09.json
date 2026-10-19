@@ -5,8 +5,8 @@
  "startSquad": 8,
  "length": 560,
  "stars": [
-  247,
-  371
+  167,
+  251
  ],
  "spawns": [
   {
@@ -549,8 +549,12 @@
   }
  ],
  "boss": {
-  "hp": 9140,
+  "hp": 14450,
   "pattern": "spread5",
-  "fireEvery": 3.5
+  "fireEvery": 3.5,
+  "advance": 0.672,
+  "summonEvery": 3.5,
+  "summonCount": 39,
+  "summonHp": 10
  }
 }

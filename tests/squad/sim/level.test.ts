@@ -29,7 +29,7 @@ describe('validateLevel', () => {
     expect(enemy).toEqual({ z: 50, x: 0.2, type: 'enemy', hp: 2, value: 0, width: 0, kind: null, kills: 1, max: 0 });
     expect(level.spawns.find((s) => s.type === 'heavy')!.kills).toBe(3);
     expect(level.spawns.find((s) => s.type === 'hazard')!.kind).toBe('blade');
-    expect(level.boss).toEqual({ hp: 400, pattern: 'volley3', fireEvery: 2.5 });
+    expect(level.boss).toEqual({ hp: 400, pattern: 'volley3', fireEvery: 2.5, advance: 0, summonEvery: 0, summonCount: 0, summonHp: 1 });
   });
 
   it('gates get a value cap: explicit, or max(5, 2 * |value|)', () => {
@@ -39,6 +39,12 @@ describe('validateLevel', () => {
     expect(small.spawns[0].max).toBe(5);
     const explicit = validateLevel(raw({ spawns: [{ z: 1, x: 0, type: 'gate', width: 0.4, value: -3, max: 9 }] }), 't.json');
     expect(explicit.spawns[0].max).toBe(9);
+  });
+
+  it('boss pressure settings default to none', () => {
+    expect(validateLevel(raw(), 't.json').boss).toMatchObject({ advance: 0, summonEvery: 0, summonCount: 0, summonHp: 1 });
+    const b = validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, advance: 0.5, summonEvery: 4, summonCount: 12, summonHp: 3 } }), 't.json').boss;
+    expect(b).toMatchObject({ advance: 0.5, summonEvery: 4, summonCount: 12, summonHp: 3 });
   });
 
   it('sorts spawns by z', () => {
@@ -97,6 +103,8 @@ describe('validateLevel', () => {
     ['horde past the end', spawn({ z: 198, x: 0, type: 'horde', count: 5, hp: 1, width: 0.5, depth: 4 }), 't.json: spawns[0].depth must keep the horde within length 200'],
     ['stars reversed', raw({ stars: [20, 10] }), 't.json: stars must be two integers with 1 <= stars[0] <= stars[1]'],
     ['boss bad pattern', raw({ boss: { hp: 10, pattern: 'laser', fireEvery: 1 } }), 't.json: boss.pattern must be one of single, volley3, spread5'],
+    ['boss summon without count', raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, summonEvery: 4 } }), 't.json: boss.summonCount must be an integer >= 1'],
+    ['boss negative advance', raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, advance: -1 } }), 't.json: boss.advance must be between 0 and 10'],
     ['speed out of range', raw({ speed: 0 }), 't.json: speed must be between 0 (exclusive) and 30'],
     ['empty name', raw({ name: '' }), 't.json: name must be a non-empty string'],
   ])('rejects %s', (_label, input, message) => {

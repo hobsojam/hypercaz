@@ -29,8 +29,15 @@ export const BOSS_ENTRY_SPEED = 5;
 export const BOSS_HALF_W = 0.5;
 export const BOSS_HALF_D = 2;
 
+export const BOSS_WINDUP = 0.7; // seconds of warning glow before each volley
+export const BOSS_ENRAGE_AT = 0.5; // fraction of health left when the boss enrages
+export const BOSS_ENRAGE_FIRE = 0.6; // fire interval multiplier once enraged
+export const BOSS_ENRAGE_SUMMON = 0.7; // summon interval multiplier once enraged
+export const BOSS_SUMMON_WIDTH = 0.9;
+
 export const PROJECTILE_SPEED = 10;
 export const PROJECTILE_RADIUS = 0.12;
+export const PROJECTILE_BLAST_DEPTH = 1; // metres back from the front line a shell reaches (two rows)
 export const BOSS_AIM_JITTER = 0.1;
 
 export const SIZES = {
@@ -40,6 +47,8 @@ export const SIZES = {
   gate: { halfD: 0.3 },
   hazard: { halfD: 0.4 },
 } as const;
+
+export const ENRAGED_PATTERN = { single: 'volley3', volley3: 'spread5', spread5: 'spread5' } as const;
 
 export const PATTERNS = {
   single: [0],

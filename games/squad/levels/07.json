@@ -5,8 +5,8 @@
  "startSquad": 6,
  "length": 480,
  "stars": [
-  84,
-  126
+  87,
+  130
  ],
  "spawns": [
   {
@@ -422,8 +422,12 @@
   }
  ],
  "boss": {
-  "hp": 5230,
+  "hp": 6170,
   "pattern": "volley3",
-  "fireEvery": 2.9
+  "fireEvery": 2.9,
+  "advance": 0.584,
+  "summonEvery": 4.04,
+  "summonCount": 39,
+  "summonHp": 8
  }
 }
