@@ -2,7 +2,7 @@ import type { Scene } from '../../../engine/scenes.ts';
 import { DEFAULT_VIEW, project, unprojectX } from '../../../engine/perspective.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { recordResult, saveProgress } from '../progress.ts';
-import { renderGame } from '../render/draw.ts';
+import { BURST_BUTTON, renderGame } from '../render/draw.ts';
 import { Effects } from '../render/effects.ts';
 import { SquadView } from '../render/squadView.ts';
 import { formationSlots } from '../sim/formation.ts';
@@ -14,6 +14,12 @@ import { ResultsScene } from './results.ts';
 
 const KEY_SPEED = 1.6;
 const END_DELAY = 1.2;
+const TAP_SLOP = 12; // forgiving edges for thumbs
+
+function onBurstButton({ x, y }: { x: number; y: number }): boolean {
+  const b = BURST_BUTTON;
+  return x >= b.x - TAP_SLOP && x <= b.x + b.w + TAP_SLOP && y >= b.y - TAP_SLOP && y <= b.y + b.h + TAP_SLOP;
+}
 
 export class PlayScene implements Scene {
   private game: Game;
@@ -52,10 +58,11 @@ export class PlayScene implements Scene {
       if (input.consumeClick()) this.setPaused(false);
       return;
     }
-    input.consumeClick();
+    const click = input.consumeClick();
+    const burst = input.consumeKey(' ') || (click !== null && onBurstButton(click));
 
     this.readSteering(dt);
-    step(this.state, { targetX: this.targetX }, dt);
+    step(this.state, { targetX: this.targetX, burst }, dt);
     this.squadView.update(formationSlots(this.state.squad.count), dt);
     this.effects.handle(this.state.events, (x, z) => project(DEFAULT_VIEW, x, z));
     this.effects.update(dt);

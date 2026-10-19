@@ -1,7 +1,7 @@
 // Tiny synthesized sound effects: no audio files. Silent until unlock() is
 // called from a user gesture (browser autoplay rules).
 
-export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn';
+export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst';
 
 interface Voice {
   type: OscillatorType;
@@ -30,6 +30,11 @@ const VOICES: Record<Sfx, Voice[]> = {
     { type: 'square', from: 880, to: 880, dur: 0.08, vol: 0.06 },
     { type: 'square', from: 1175, to: 1175, dur: 0.12, vol: 0.06 },
   ],
+  ready: [
+    { type: 'triangle', from: 784, to: 784, dur: 0.1, vol: 0.12 },
+    { type: 'triangle', from: 1175, to: 1568, dur: 0.2, vol: 0.12 },
+  ],
+  burst: [{ type: 'sawtooth', from: 200, to: 900, dur: 0.35, vol: 0.1 }],
 };
 
 // Rapid-fire sounds are rate-limited so big squads don't stack dozens of

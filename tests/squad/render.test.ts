@@ -135,3 +135,10 @@ test.each([
   expect(y).toBeCloseTo(sy);
   expect(state).toEqual(before);
 });
+
+test('a full kill meter prompts the player to fire', () => {
+  const state = createState(makeLevel({ startSquad: 5 }), 1);
+  expect(textsDrawn(state)).not.toContain('RAPID FIRE!');
+  state.meter = state.level.burstKills;
+  expect(textsDrawn(state)).toContain('RAPID FIRE!');
+});

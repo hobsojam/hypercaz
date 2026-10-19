@@ -63,6 +63,8 @@ export type GameEvent =
   | { type: 'bossWindup' }
   | { type: 'bossSummon'; x: number }
   | { type: 'bossEnrage' }
+  | { type: 'burstReady' }
+  | { type: 'burstStart' }
   | { type: 'bossDead'; x: number; z: number }
   | { type: 'won' }
   | { type: 'lost' };
@@ -80,12 +82,15 @@ export interface GameState {
   boss: Boss | null;
   nextSpawn: number;
   nextShot: number; // seconds until the squad's next bullet
+  meter: number; // kill-meter charge, up to level.burstKills
+  burstTime: number; // seconds of rapid fire left
   nextId: number;
   events: GameEvent[];
 }
 
 export interface Input {
   targetX: number;
+  burst?: boolean; // spend a full kill meter on rapid fire
 }
 
 export function createState(level: Level, seed: number): GameState {
@@ -102,6 +107,8 @@ export function createState(level: Level, seed: number): GameState {
     boss: null,
     nextSpawn: 0,
     nextShot: FIRE_INTERVAL / level.startSquad, // first shot after one average gap
+    meter: 0,
+    burstTime: 0,
     nextId: 1,
     events: [],
   };

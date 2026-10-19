@@ -3,9 +3,11 @@ import {
   BOSS_HALF_D,
   BOSS_HALF_W,
   BULLET_DRIFT,
+  BURST_MULTIPLIER,
   BULLET_RANGE,
   BULLET_SPEED,
   FIRE_INTERVAL,
+  HEAVY_CHARGE,
   MAX_BULLETS_PER_SEC,
   SHOT_GAP_JITTER,
   SHOT_X_JITTER,
@@ -69,7 +71,7 @@ export function updateCombat(state: GameState, dt: number): void {
 function fire(state: GameState, dt: number): void {
   const { squad } = state;
   if (squad.count <= 0) return;
-  const desired = squad.count / FIRE_INTERVAL;
+  const desired = (squad.count / FIRE_INTERVAL) * (state.burstTime > 0 ? BURST_MULTIPLIER : 1);
   const actual = Math.min(desired, MAX_BULLETS_PER_SEC);
   const damage = desired / actual;
   const slots = formationSlots(squad.count);
@@ -105,6 +107,15 @@ function applyHit(state: GameState, e: Entity, damage: number): void {
   state.entities = state.entities.filter((x) => x !== e);
   state.events.push({ type: 'destroyed', x: e.x, z: e.z, target: e.type });
   if (e.type === 'cage') changeCount(state, e.value, e.x, e.z);
+  if (e.type === 'enemy' || e.type === 'heavy') charge(state, e.type === 'heavy' ? HEAVY_CHARGE : 1);
+}
+
+// Kills charge the meter, except during a burst (no chaining bursts).
+function charge(state: GameState, amount: number): void {
+  const full = state.level.burstKills;
+  if (state.burstTime > 0 || state.meter >= full) return;
+  state.meter = Math.min(full, state.meter + amount);
+  if (state.meter === full) state.events.push({ type: 'burstReady' });
 }
 
 function hitsBoss(state: GameState, b: SweptBullet): boolean {

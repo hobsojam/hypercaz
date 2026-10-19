@@ -6,6 +6,24 @@ import { createState, type Entity, type GameState, type Input } from './state.ts
 import { step } from './step.ts';
 
 export function botInput(state: GameState): Input {
+  const move = steer(state);
+  return { ...move, burst: wantsBurst(state, move.targetX) };
+}
+
+// Spend a full kill meter on the boss, a big crowd that's close, or a cage
+// the squad is lined up on but can't break in time.
+function wantsBurst(state: GameState, targetX: number): boolean {
+  if (state.meter < state.level.burstKills || state.burstTime > 0) return false;
+  if (state.boss) return true;
+  const close = state.entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && e.z > 0 && e.z < 20);
+  if (close.length >= 12) return true;
+  const fire = (state.squad.count * 2.5) / 3; // rough share of shots that reach a cage
+  return state.entities.some(
+    (e) => e.type === 'cage' && e.z > 0 && Math.abs(e.x - targetX) < 0.05 && e.hp / fire > e.z / state.level.speed,
+  );
+}
+
+function steer(state: GameState): Input {
   const { squad, entities } = state;
   const hw = formationHalfWidth(formationSlots(squad.count));
   const limit = 1 - hw;

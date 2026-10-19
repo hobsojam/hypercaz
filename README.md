@@ -6,10 +6,10 @@ Simple, ad-free hyper-casual browser games. No monetisation, no currencies, no t
 
 ### Squad Shooter
 
-Your squad fires automatically up a 2.5D road. Slide left and right to shoot enemies before they reach you, break cages to recruit soldiers, shoot number gates up into the positives, dodge hazards, and beat the boss at the end of each level.
+Your squad fires automatically up a 2.5D road. Slide left and right to shoot enemies before they reach you, break cages to recruit soldiers, shoot number gates up into the positives, dodge hazards, and beat the boss at the end of each level. Enemy crowds close in on you, and every kill charges the Rapid Fire meter; fire it when it's full for a few seconds of 2.5× firepower.
 
-- **Mouse:** move left and right to steer.
-- **Keyboard:** ← → or A / D to steer, Esc to pause, M to mute.
+- **Mouse / touch:** move left and right to steer; tap the Rapid Fire meter when it's full.
+- **Keyboard:** ← → or A / D to steer, Space for Rapid Fire, Esc to pause, M to mute.
 
 ## Development
 

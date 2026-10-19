@@ -105,6 +105,7 @@ describe('validateLevel', () => {
     ['boss bad pattern', raw({ boss: { hp: 10, pattern: 'laser', fireEvery: 1 } }), 't.json: boss.pattern must be one of single, volley3, spread5'],
     ['boss summon without count', raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, summonEvery: 4 } }), 't.json: boss.summonCount must be an integer >= 1'],
     ['boss negative advance', raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, advance: -1 } }), 't.json: boss.advance must be between 0 and 10'],
+    ['zero burst kills', raw({ burstKills: 0 }), 't.json: burstKills must be an integer >= 1'],
     ['speed out of range', raw({ speed: 0 }), 't.json: speed must be between 0 (exclusive) and 30'],
     ['empty name', raw({ name: '' }), 't.json: name must be a non-empty string'],
   ])('rejects %s', (_label, input, message) => {

@@ -1,7 +1,7 @@
 // Draws the game state. Read-only: never changes gameplay.
 import { type AssetStore, drawSprite } from '../../../engine/assets.ts';
 import { type PerspectiveConfig, project } from '../../../engine/perspective.ts';
-import { BOSS_HALF_W, SPAWN_HORIZON } from '../sim/constants.ts';
+import { BOSS_HALF_W, BURST_SECONDS, SPAWN_HORIZON } from '../sim/constants.ts';
 import type { Entity, GameState } from '../sim/state.ts';
 import type { SquadView } from './squadView.ts';
 
@@ -263,6 +263,30 @@ export function label(ctx: CanvasRenderingContext2D, text: string, x: number, y:
   ctx.fillText(text, x, y);
 }
 
+// The kill meter, under the top bar; tapping it while full fires the burst.
+export const BURST_BUTTON = { x: 160, y: 84, w: 220, h: 34 };
+
+function drawKillMeter(ctx: CanvasRenderingContext2D, state: GameState, time: number): void {
+  const { x, y, w, h } = BURST_BUTTON;
+  const firing = state.burstTime > 0;
+  const full = !firing && state.meter >= state.level.burstKills;
+  const frac = firing ? state.burstTime / BURST_SECONDS : state.meter / state.level.burstKills;
+  const pulse = 0.5 + 0.5 * Math.sin(time * 8);
+  ctx.fillStyle = full ? `rgba(245,194,66,${0.35 + 0.35 * pulse})` : 'rgba(26,26,46,0.55)';
+  ctx.strokeStyle = full ? '#FFFFFF' : '#1A1A2E';
+  ctx.lineWidth = full ? 3 : 2;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, h / 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = firing ? '#FF5A1F' : '#FF8A1F';
+  ctx.beginPath();
+  ctx.roundRect(x + 4, y + 4, Math.max(0, (w - 8) * Math.min(1, frac)), h - 8, (h - 8) / 2);
+  ctx.fill();
+  if (full) label(ctx, 'RAPID FIRE!', x + w / 2, y + h / 2 + 1, 20 + 2 * pulse, '#FFFFFF');
+  else label(ctx, firing ? 'FIRING' : 'RAPID FIRE', x + w / 2, y + h / 2 + 1, 16, firing ? '#FFFFFF' : 'rgba(255,255,255,0.75)');
+}
+
 function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
   const { persp } = view;
   const front = project(persp, state.squad.x, 0);
@@ -303,4 +327,5 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderVi
   ctx.textAlign = 'left';
   ctx.fillStyle = '#1A1A2E';
   ctx.fillText(state.level.name, 16, 24);
+  drawKillMeter(ctx, state, view.time);
 }

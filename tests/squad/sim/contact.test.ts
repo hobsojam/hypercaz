@@ -51,7 +51,8 @@ describe('hazards', () => {
   it('kills the soldiers it overlaps', () => {
     const s = createState(makeLevel({ startSquad: 11, spawns: [{ z: 1, x: 0, type: 'hazard', kind: 'blade', width: 0.2 }] }), 1);
     runCollect(s, 0.2);
-    expect(s.squad.count).toBe(8);
+    // Rows of 7 + 4: the blade covers 3 of the front row and 2 of the row behind.
+    expect(s.squad.count).toBe(6);
   });
 });
 
