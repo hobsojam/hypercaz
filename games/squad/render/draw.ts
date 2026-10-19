@@ -65,7 +65,9 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
         }
         const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
         drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
-        if (boss.charging) label(ctx, '!', p.sx, p.sy - 185 * s, 44 * s + 12, '#FF8A1F');
+        // Health left, counting down as it's shot, like gate and cage numbers.
+        label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
+        if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
       },
     });
   }
