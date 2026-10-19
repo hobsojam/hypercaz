@@ -24,12 +24,12 @@ export const STEPS_PER_BAR = 16;
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const LETTERS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const ACCIDENTALS: Record<string, number> = { '#': 1, b: -1, '': 0 };
 
 export function parseNote(name: string): number {
-  const m = /^([A-G])(#|b)?(-?\d)$/.exec(name);
+  const m = /^([A-G])([#b])?(-?\d)$/.exec(name);
   if (!m) throw new Error(`not a note: ${name}`);
-  const accidental = m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0;
-  return (Number(m[3]) + 1) * 12 + LETTERS[m[1]] + accidental;
+  return (Number(m[3]) + 1) * 12 + LETTERS[m[1]] + ACCIDENTALS[m[2] ?? ''];
 }
 
 export function noteName(midi: number): string {
@@ -263,7 +263,7 @@ export function renderSong(song: Song, sampleRate: number, seed = 1): Float32Arr
 // 16-bit mono PCM WAV.
 export function encodeWav(samples: Float32Array, sampleRate: number): Uint8Array {
   const out = new DataView(new ArrayBuffer(44 + samples.length * 2));
-  const text = (at: number, s: string) => [...s].forEach((c, i) => out.setUint8(at + i, c.charCodeAt(0)));
+  const text = (at: number, s: string) => [...s].forEach((c, i) => out.setUint8(at + i, c.codePointAt(0)!));
   text(0, 'RIFF');
   out.setUint32(4, 36 + samples.length * 2, true);
   text(8, 'WAVE');

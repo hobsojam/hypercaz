@@ -108,7 +108,7 @@ const MARCH_CRASH = 'x+k g h g s+h g h g k+h g k+h g s+h g s g';
 const TURN = 'k+h . h . s+h . h g k+h . s . s s s s';
 const ROLL = 'k . s . s . s . s s s s s s s s';
 
-const section = (first: string, middle: string, last: string) => [first, ...Array<string>(6).fill(middle), last];
+const section = (first: string, middle: string, last: string) => [first, ...new Array<string>(6).fill(middle), last];
 
 export const GAMEPLAY_SONG: Song = {
   bpm: 136,

@@ -126,7 +126,8 @@ export class GameAudio {
 
   private applyMusicVolume(): void {
     if (!this.music || !this.ctx) return;
-    const target = this.isMuted ? 0 : MUSIC_VOLUME * (this.ducked ? DUCKED : 1);
+    let target = this.ducked ? MUSIC_VOLUME * DUCKED : MUSIC_VOLUME;
+    if (this.isMuted) target = 0;
     this.music.gain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.05);
   }
 
