@@ -32,18 +32,24 @@ export class PlayScene implements Scene {
     this.state = createState(game.levels[index].level!, Date.now() >>> 0);
     this.lastPointerX = null; // follow wherever the pointer already is
     this.effects = new Effects(game.audio);
+    game.audio.startMusic();
+  }
+
+  private setPaused(paused: boolean): void {
+    this.paused = paused;
+    this.game.audio.duckMusic(paused);
   }
 
   update(dt: number): void {
     const { input } = this.game;
-    if (input.consumeKey('Escape')) this.paused = !this.paused;
+    if (input.consumeKey('Escape')) this.setPaused(!this.paused);
     if (input.consumeKey('m')) {
       this.game.audio.muted = !this.game.audio.muted;
       this.game.progress = { ...this.game.progress, muted: this.game.audio.muted };
       saveProgress(this.game.storage, this.game.progress);
     }
     if (this.paused) {
-      if (input.consumeClick()) this.paused = false;
+      if (input.consumeClick()) this.setPaused(false);
       return;
     }
     input.consumeClick();
@@ -55,6 +61,8 @@ export class PlayScene implements Scene {
     this.effects.update(dt);
 
     if (this.state.phase === 'won' || this.state.phase === 'lost') {
+      // Stop the music the moment the level is decided, so the jingle plays clean.
+      if (this.endTimer === 0) this.game.audio.stopMusic();
       this.endTimer += dt;
       if (this.endTimer >= END_DELAY) this.finish();
     }
