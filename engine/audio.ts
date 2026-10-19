@@ -36,7 +36,9 @@ const VOICES: Record<Sfx, Voice[]> = {
 // voices and clip.
 const MIN_GAP: Partial<Record<Sfx, number>> = { shot: 0.05, hit: 0.05 };
 
-export const MUSIC_VOLUME = 0.35;
+// Music sits under the effects: its average level (~0.36 of this) stays below
+// the hit, gain and boss sounds.
+export const MUSIC_VOLUME = 0.12;
 const DUCKED = 0.3; // fraction of the music volume while ducked (e.g. paused)
 
 export class GameAudio {
