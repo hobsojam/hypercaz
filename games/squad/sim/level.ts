@@ -1,5 +1,6 @@
 // Level data: types and validation. Levels are authored as JSON; anything
 // malformed fails loudly with the file and field path in the message.
+import { createRng, nextFloat } from '../../../engine/rng.ts';
 
 export type SpawnType = 'enemy' | 'heavy' | 'cage' | 'gate' | 'hazard';
 export type HazardKind = 'blade' | 'fire' | 'barricade';
@@ -35,7 +36,8 @@ export class LevelError extends Error {
   }
 }
 
-const SPAWN_TYPES: readonly SpawnType[] = ['enemy', 'heavy', 'cage', 'gate', 'hazard'];
+// 'horde' exists only in level files: it expands into a crowd of enemies.
+const SPAWN_TYPES: readonly (SpawnType | 'horde')[] = ['enemy', 'heavy', 'cage', 'gate', 'hazard', 'horde'];
 const HAZARD_KINDS: readonly HazardKind[] = ['blade', 'fire', 'barricade'];
 const BOSS_PATTERNS: readonly BossPattern[] = ['single', 'volley3', 'spread5'];
 
@@ -98,11 +100,25 @@ export function validateLevel(raw: unknown, file: string): Level {
   }
 
   if (!Array.isArray(r.spawns)) fail('spawns', 'must be an array');
-  const spawns = (r.spawns as unknown[]).map((s, i): Spawn => {
+  const spawns = (r.spawns as unknown[]).flatMap((s, i): Spawn[] => {
     const p = `spawns[${i}]`;
     if (!isObj(s)) fail(p, 'must be an object');
     const o = s as Obj;
     const type = oneOf(o, 'type', `${p}.type`, SPAWN_TYPES);
+    if (type === 'horde') {
+      const z = range(o, 'z', `${p}.z`, 0, length);
+      const horde = {
+        z,
+        x: range(o, 'x', `${p}.x`, -1, 1),
+        count: intMin(o, 'count', `${p}.count`, 1),
+        hp: intMin(o, 'hp', `${p}.hp`, 1),
+        width: width(o, `${p}.width`),
+        depth: num(o, 'depth', `${p}.depth`),
+      };
+      if (horde.depth <= 0) fail(`${p}.depth`, 'must be > 0');
+      if (z + horde.depth > length) fail(`${p}.depth`, `must keep the horde within length ${length}`);
+      return expandHorde(horde, id * 100003 + i);
+    }
     const spawn: Spawn = {
       z: range(o, 'z', `${p}.z`, 0, length),
       x: range(o, 'x', `${p}.x`, -1, 1),
@@ -140,7 +156,7 @@ export function validateLevel(raw: unknown, file: string): Level {
         spawn.width = width(o, `${p}.width`);
         break;
     }
-    return spawn;
+    return [spawn];
   });
   spawns.sort((a, b) => a.z - b.z);
 
@@ -161,4 +177,45 @@ export function validateLevel(raw: unknown, file: string): Level {
     spawns,
     boss: { hp: bossHp, pattern, fireEvery },
   };
+}
+
+interface Horde {
+  z: number;
+  x: number;
+  count: number;
+  hp: number;
+  width: number;
+  depth: number;
+}
+
+// A jittered grid: evenly filled like a crowd, never in neat rows. Seeded by
+// the level and spawn index, so a level always lays out the same way.
+function expandHorde(h: Horde, seed: number): Spawn[] {
+  let rng = createRng(seed);
+  const jitter = () => {
+    const [v, next] = nextFloat(rng);
+    rng = next;
+    return (v * 2 - 1) * 0.4;
+  };
+  const cols = Math.max(1, Math.min(h.count, Math.round(h.width / 0.1)));
+  const rows = Math.ceil(h.count / cols);
+  const cw = h.width / cols;
+  const cd = h.depth / rows;
+  const out: Spawn[] = [];
+  for (let k = 0; k < h.count; k++) {
+    const x = h.x - h.width / 2 + (k % cols + 0.5 + jitter()) * cw;
+    const z = h.z + (Math.floor(k / cols) + 0.5 + jitter()) * cd;
+    out.push({
+      z,
+      x: Math.min(0.95, Math.max(-0.95, x)),
+      type: 'enemy',
+      hp: h.hp,
+      value: 0,
+      width: 0,
+      kind: null,
+      kills: 1,
+      max: 0,
+    });
+  }
+  return out;
 }

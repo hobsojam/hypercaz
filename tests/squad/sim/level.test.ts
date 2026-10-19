@@ -46,6 +46,37 @@ describe('validateLevel', () => {
     expect(zs).toEqual([40, 50, 60, 80, 90]);
   });
 
+  describe('hordes', () => {
+    const horde = { z: 100, x: 0.3, type: 'horde', count: 24, hp: 2, width: 0.6, depth: 6 };
+
+    it('expands into that many ordinary enemies', () => {
+      const spawns = validateLevel(raw({ spawns: [horde] }), 't.json').spawns;
+      expect(spawns).toHaveLength(24);
+      for (const e of spawns) {
+        expect(e).toMatchObject({ type: 'enemy', hp: 2, kills: 1 });
+        expect(Math.abs(e.x - 0.3)).toBeLessThanOrEqual(0.3);
+        expect(e.z).toBeGreaterThanOrEqual(100);
+        expect(e.z).toBeLessThanOrEqual(106);
+      }
+    });
+
+    it('scatters the crowd rather than lining it up', () => {
+      const spawns = validateLevel(raw({ spawns: [horde] }), 't.json').spawns;
+      expect(new Set(spawns.map((e) => e.x.toFixed(3))).size).toBeGreaterThan(12);
+      expect(new Set(spawns.map((e) => e.z.toFixed(2))).size).toBeGreaterThan(12);
+    });
+
+    it('lays out the same crowd every time', () => {
+      const a = validateLevel(raw({ spawns: [horde] }), 't.json').spawns;
+      expect(validateLevel(raw({ spawns: [horde] }), 't.json').spawns).toEqual(a);
+    });
+
+    it('keeps crowds at the road edge on the road', () => {
+      const edge = { ...horde, x: 0.9, width: 0.6 };
+      for (const e of validateLevel(raw({ spawns: [edge] }), 't.json').spawns) expect(Math.abs(e.x)).toBeLessThanOrEqual(0.95);
+    });
+  });
+
   it('rejects non-object input', () => {
     expect(() => validateLevel(null, 't.json')).toThrow(new LevelError('t.json: level must be an object'));
     expect(() => validateLevel([], 't.json')).toThrow('t.json: level must be an object');
@@ -55,12 +86,15 @@ describe('validateLevel', () => {
   it.each([
     ['bad x', spawn({ z: 10, x: 1.5, type: 'enemy', hp: 1 }), 't.json: spawns[0].x must be between -1 and 1'],
     ['z beyond length', spawn({ z: 500, x: 0, type: 'enemy', hp: 1 }), 't.json: spawns[0].z must be between 0 and 200'],
-    ['unknown type', spawn({ z: 10, x: 0, type: 'dragon' }), 't.json: spawns[0].type must be one of enemy, heavy, cage, gate, hazard'],
+    ['unknown type', spawn({ z: 10, x: 0, type: 'dragon' }), 't.json: spawns[0].type must be one of enemy, heavy, cage, gate, hazard, horde'],
     ['gate missing width', spawn({ z: 10, x: 0, type: 'gate', value: 3 }), 't.json: spawns[0].width must be a number'],
     ['gate max below value', spawn({ z: 10, x: 0, type: 'gate', width: 0.4, value: 5, max: 2 }), 't.json: spawns[0].max must be an integer >= 5'],
     ['hazard bad kind', spawn({ z: 10, x: 0, type: 'hazard', kind: 'lava', width: 0.3 }), 't.json: spawns[0].kind must be one of blade, fire, barricade'],
     ['cage zero value', spawn({ z: 10, x: 0, type: 'cage', hp: 2, value: 0 }), 't.json: spawns[0].value must be an integer >= 1'],
     ['enemy fractional hp', spawn({ z: 10, x: 0, type: 'enemy', hp: 1.5 }), 't.json: spawns[0].hp must be an integer >= 1'],
+    ['horde zero count', spawn({ z: 10, x: 0, type: 'horde', count: 0, hp: 1, width: 0.5, depth: 4 }), 't.json: spawns[0].count must be an integer >= 1'],
+    ['horde no depth', spawn({ z: 10, x: 0, type: 'horde', count: 5, hp: 1, width: 0.5 }), 't.json: spawns[0].depth must be a number'],
+    ['horde past the end', spawn({ z: 198, x: 0, type: 'horde', count: 5, hp: 1, width: 0.5, depth: 4 }), 't.json: spawns[0].depth must keep the horde within length 200'],
     ['stars reversed', raw({ stars: [20, 10] }), 't.json: stars must be two integers with 1 <= stars[0] <= stars[1]'],
     ['boss bad pattern', raw({ boss: { hp: 10, pattern: 'laser', fireEvery: 1 } }), 't.json: boss.pattern must be one of single, volley3, spread5'],
     ['speed out of range', raw({ speed: 0 }), 't.json: speed must be between 0 (exclusive) and 30'],
