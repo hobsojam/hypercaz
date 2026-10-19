@@ -1,4 +1,16 @@
-import { BOSS_HALF_D, BOSS_HALF_W, BULLET_RANGE, BULLET_SPEED, FIRE_INTERVAL, MAX_BULLETS_PER_SEC } from './constants.ts';
+import { nextFloat } from '../../../engine/rng.ts';
+import {
+  BOSS_HALF_D,
+  BOSS_HALF_W,
+  BULLET_DRIFT,
+  BULLET_RANGE,
+  BULLET_SPEED,
+  FIRE_INTERVAL,
+  MAX_BULLETS_PER_SEC,
+  SHOT_GAP_JITTER,
+  SHOT_X_JITTER,
+  SHOT_Z_JITTER,
+} from './constants.ts';
 import { changeCount } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import type { Entity, GameState } from './state.ts';
@@ -46,6 +58,7 @@ export function updateCombat(state: GameState, dt: number): void {
       continue;
     }
     b.z = swept.zTo;
+    b.x += b.vx * dt;
     if (b.z <= BULLET_RANGE) survivors.push(b);
   }
   state.bullets = survivors;
@@ -58,14 +71,21 @@ function fire(state: GameState, dt: number): void {
   const actual = Math.min(desired, MAX_BULLETS_PER_SEC);
   const damage = desired / actual;
   const slots = formationSlots(squad.count);
-  state.fireAcc += actual * dt;
-  while (state.fireAcc >= 1) {
-    state.fireAcc -= 1;
-    const slot = slots[state.shotIndex % slots.length];
-    state.shotIndex++;
-    const x = squad.x + slot.dx;
-    state.bullets.push({ x, z: slot.dz, damage });
-    state.events.push({ type: 'shot', x, z: slot.dz });
+  // Random gaps from random soldiers, so a squad sounds and looks like a
+  // crowd firing at will rather than a sweep on a fixed beat.
+  const rand = (lo: number, hi: number) => {
+    const [r, next] = nextFloat(state.rngState);
+    state.rngState = next;
+    return lo + r * (hi - lo);
+  };
+  state.nextShot -= dt;
+  while (state.nextShot <= 0) {
+    state.nextShot += (1 / actual) * rand(1 - SHOT_GAP_JITTER, 1 + SHOT_GAP_JITTER);
+    const slot = slots[Math.floor(rand(0, slots.length))];
+    const x = squad.x + slot.dx + rand(-SHOT_X_JITTER, SHOT_X_JITTER);
+    const z = slot.dz + rand(0, SHOT_Z_JITTER);
+    state.bullets.push({ x, z, damage, vx: rand(-BULLET_DRIFT, BULLET_DRIFT) });
+    state.events.push({ type: 'shot', x, z });
   }
 }
 

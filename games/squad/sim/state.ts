@@ -1,4 +1,5 @@
 import { createRng } from '../../../engine/rng.ts';
+import { FIRE_INTERVAL } from './constants.ts';
 import type { HazardKind, Level, SpawnType } from './level.ts';
 
 export type Phase = 'advance' | 'boss' | 'won' | 'lost';
@@ -30,6 +31,7 @@ export interface Bullet {
   x: number;
   z: number;
   damage: number;
+  vx: number; // sideways drift in road units per second
 }
 
 export interface Projectile {
@@ -69,8 +71,7 @@ export interface GameState {
   projectiles: Projectile[];
   boss: Boss | null;
   nextSpawn: number;
-  fireAcc: number;
-  shotIndex: number;
+  nextShot: number; // seconds until the squad's next bullet
   nextId: number;
   events: GameEvent[];
 }
@@ -92,8 +93,7 @@ export function createState(level: Level, seed: number): GameState {
     projectiles: [],
     boss: null,
     nextSpawn: 0,
-    fireAcc: 0,
-    shotIndex: 0,
+    nextShot: FIRE_INTERVAL / level.startSquad, // first shot after one average gap
     nextId: 1,
     events: [],
   };

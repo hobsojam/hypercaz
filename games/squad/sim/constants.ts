@@ -9,6 +9,12 @@ export const MAX_DRAWN = 150;
 export const FIRE_INTERVAL = 0.4;
 export const MAX_BULLETS_PER_SEC = MAX_DRAWN / FIRE_INTERVAL; // 375
 export const BULLET_SPEED = 40;
+// Crowd fire: each gap between shots is the average gap times a random factor
+// in [1 - SHOT_GAP_JITTER, 1 + SHOT_GAP_JITTER], from a random soldier.
+export const SHOT_GAP_JITTER = 0.85;
+export const SHOT_X_JITTER = 0.02;
+export const SHOT_Z_JITTER = 0.3;
+export const BULLET_DRIFT = 0.04; // max sideways drift, road units per second
 export const BULLET_RANGE = 60;
 export const SPAWN_HORIZON = 60;
 export const DESPAWN_Z = -5;
