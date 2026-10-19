@@ -3,7 +3,7 @@
   "entries": [
     {
       "id": "soldier_run",
-      "file": null,
+      "file": "soldier_run.png",
       "frameW": 64,
       "frameH": 80,
       "frames": 4,
