@@ -68,7 +68,7 @@ Skin tones and hair are up to you, with variety welcome. Team colour should domi
 |---|---|---|---|---|---|---|
 | `soldier_run` | `soldier_run.png` | 64×80 | 4 | 10 | back | Player soldier running up the road, rifle raised. A run cycle with frames 1 and 3 as contact poses. |
 | `soldier_shoot` | `soldier_shoot.png` | 64×80 | 2 | 12 | back | Player soldier firing: frame 1 normal, frame 2 recoil. |
-| `enemy_walk` | `enemy_walk.png` | 64×80 | 4 | 8 | front | Red enemy soldier marching toward the camera. Same build as the player, red gear, a meaner brow. |
+| `enemy_walk` | `enemy_walk.png` | 64×80 | 4 | 8 | front | Red enemy soldier marching toward the camera. Same build as the player, red gear, a meaner brow. Enemies come in packed crowds of up to 70, overlapping each other, so keep the silhouette simple and the red strong; it must still read as a mass of red soldiers when dozens overlap. |
 | `heavy_walk` | `heavy_walk.png` | 96×112 | 4 | 6 | front | Big armoured red brute with a shield or heavy plating, slow and stompy. Clearly tougher than `enemy_walk`. |
 | `boss_idle` | `boss_idle.png` | 320×256 | 2 | 3 | front | Level boss: a big chunky red armoured tank or mech with a cannon pointing at the camera. Frame 2 is a slight bob or idle shift. |
 | `boss_damaged` | `boss_damaged.png` | 320×256 | 2 | 3 | front | The same boss, visibly battered: dents, sparks, smoke puffs, a bent barrel. Same silhouette and position as `boss_idle`. |
