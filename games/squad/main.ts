@@ -25,11 +25,27 @@ function resize(): void {
 window.addEventListener('resize', resize);
 resize();
 
+// Music is rendered in a worker so start-up never stalls; the game simply
+// plays without it until (or unless) it arrives.
+function loadMusic(audio: GameAudio): void {
+  try {
+    const worker = new Worker(new URL('./music/worker.ts', import.meta.url), { type: 'module' });
+    worker.onmessage = (e: MessageEvent<{ samples: Float32Array<ArrayBuffer>; sampleRate: number }>) => {
+      audio.setMusic(e.data.samples, e.data.sampleRate);
+      worker.terminate();
+    };
+    worker.onerror = (e) => console.warn('music failed to render:', e.message);
+  } catch (err) {
+    console.warn('music unavailable:', err);
+  }
+}
+
 async function boot(): Promise<void> {
   const storage = createStorage('hypercaz.squad');
   const progress = loadProgress(storage);
   const audio = new GameAudio();
   audio.muted = progress.muted;
+  loadMusic(audio);
   const assetUrls = import.meta.glob<string>('./assets/*.{png,svg}', { eager: true, query: '?url', import: 'default' });
   const assets = await AssetStore.load(parseManifest(manifestJson), urlResolver(assetUrls, './assets/'));
   const game: Game = {
