@@ -115,3 +115,23 @@ test('the boss shows its remaining health as a number', () => {
   state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
   expect(textsDrawn(state)).toContain('1235');
 });
+
+test.each([
+  { z: 20, sx: 293, sy: 452.5 },
+  { z: 10, sx: 346.6666667, sy: 565 },
+  { z: 0, sx: 454, sy: 790 },
+])('a boss shell travels from the muzzle to its landing point (z=$z)', ({ z, sx, sy }) => {
+  const state = createState(makeLevel(), 1);
+  // The tank has since moved: an in-flight shell must retain its own origin.
+  state.phase = 'boss';
+  state.boss = { hp: 100, maxHp: 100, x: -0.4, z: 8, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  state.projectiles = [{ x: 0.8, z, originX: 0.2, originZ: 20 }];
+  const before = structuredClone(state);
+  const ctx = stubCtx();
+  renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
+  expect(ctx.calls.arc).toHaveLength(1);
+  const [x, y] = ctx.calls.arc[0] as number[];
+  expect(x).toBeCloseTo(sx);
+  expect(y).toBeCloseTo(sy);
+  expect(state).toEqual(before);
+});

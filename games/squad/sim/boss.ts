@@ -106,7 +106,12 @@ function fireVolley(state: GameState): void {
     const [r, next] = nextFloat(state.rngState);
     state.rngState = next;
     const jitter = (r * 2 - 1) * BOSS_AIM_JITTER;
-    state.projectiles.push({ x: Math.min(1, Math.max(-1, state.squad.x + offset + jitter)), z: boss.z });
+    state.projectiles.push({
+      x: Math.min(1, Math.max(-1, state.squad.x + offset + jitter)),
+      z: boss.z,
+      originX: boss.x,
+      originZ: boss.z,
+    });
   }
   state.events.push({ type: 'bossFire', x: boss.x });
 }

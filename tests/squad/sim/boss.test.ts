@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { updateBoss } from '../../../games/squad/sim/boss.ts';
 import { changeCount } from '../../../games/squad/sim/contact.ts';
 import { createState, type GameState } from '../../../games/squad/sim/state.ts';
 import { step } from '../../../games/squad/sim/step.ts';
@@ -23,6 +24,23 @@ describe('boss', () => {
     expect(s.boss!.z).toBeCloseTo(18);
   });
 
+  it('keeps each shell launch position when the boss moves after firing', () => {
+    const s = createState(makeLevel({ boss: { hp: 100, pattern: 'volley3', fireEvery: 2 } }), 7);
+    s.phase = 'boss';
+    s.squad.x = -0.7;
+    s.boss = { hp: 100, maxHp: 100, x: 0.3, z: 18, fireTimer: 0, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+    updateBoss(s, 0);
+    expect(s.projectiles).toHaveLength(3);
+    expect(new Set(s.projectiles.map(p => p.x)).size).toBe(3);
+    for (const p of s.projectiles) expect(p).toMatchObject({ originX: 0.3, originZ: 18, z: 18 });
+    const targets = s.projectiles.map(p => p.x);
+    s.boss.x = -0.3;
+    s.boss.z = 12;
+    updateBoss(s, 0.1);
+    expect(s.projectiles.map(p => p.x)).toEqual(targets);
+    for (const p of s.projectiles) expect(p).toMatchObject({ originX: 0.3, originZ: 18, z: 17 });
+  });
+
   it('fires volleys deterministically from the seed', () => {
     const volley = (seed: number) => {
       const s = createState(makeLevel({ length: 10, boss: { hp: 100000, pattern: 'volley3', fireEvery: 1 } }), seed);
@@ -37,7 +55,7 @@ describe('boss', () => {
 
   it('a landing projectile kills the soldiers within its radius', () => {
     const s = createState(makeLevel({ startSquad: 11 }), 1);
-    s.projectiles = [{ x: 0, z: 0.1 }];
+    s.projectiles = [{ x: 0, z: 0.1, originX: 0, originZ: 18 }];
     step(s, { targetX: 0 }, DT);
     expect(s.squad.count).toBe(8);
     expect(s.projectiles).toHaveLength(0);
@@ -45,7 +63,7 @@ describe('boss', () => {
 
   it('a projectile only hits soldiers near where it lands, not its whole column', () => {
     const s = createState(makeLevel({ startSquad: 110 }), 1); // 10 rows of 11
-    s.projectiles = [{ x: 0, z: 0.1 }];
+    s.projectiles = [{ x: 0, z: 0.1, originX: 0, originZ: 18 }];
     step(s, { targetX: 0 }, DT);
     expect(110 - s.squad.count).toBeGreaterThanOrEqual(3);
     expect(110 - s.squad.count).toBeLessThanOrEqual(9);
