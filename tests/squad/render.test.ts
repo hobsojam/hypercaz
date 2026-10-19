@@ -123,3 +123,23 @@ test('a cage shows its remaining hit points as well as its reward', () => {
   expect(texts).toContain('+5');
   expect(texts).toContain('37');
 });
+
+test('the boss shows its remaining health as a number', () => {
+  const level = validateLevel(
+    { id: 1, name: 't', speed: 6, startSquad: 5, length: 200, stars: [1, 1], spawns: [], boss: { hp: 5000, pattern: 'single', fireEvery: 9 } },
+    't.json',
+  );
+  const state = createState(level, 1);
+  state.phase = 'boss';
+  state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  const texts: string[] = [];
+  const ctx = new Proxy(
+    {},
+    {
+      get: (_t, prop) => (prop === 'fillText' ? (text: string) => texts.push(text) : () => ({ addColorStop: () => undefined })),
+      set: () => true,
+    },
+  ) as CanvasRenderingContext2D;
+  renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
+  expect(texts).toContain('1235');
+});
