@@ -43,15 +43,15 @@ export function botInput(state: GameState): Input {
     return { targetX: options[0] };
   }
 
-  // 2. Shoot the closest threat.
-  const threat = nearest(entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && ahead(e, 25)));
-  if (threat) return { targetX: threat.x };
-
-  // 3. Invest: break cages, shoot up gates, walk through good gates.
+  // 2. Shoot whatever is nearest: a crowd, or a cage worth breaking first.
+  // An enemy about to reach the squad always comes first.
+  const threat = nearest(entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && ahead(e, 45)));
+  if (threat && threat.z < 12) return { targetX: threat.x };
   const goodGate = nearest(entities.filter((e) => e.type === 'gate' && e.value > 0 && ahead(e, 10)));
   if (goodGate) return { targetX: goodGate.x };
   const bonus = nearest(entities.filter((e) => (e.type === 'cage' || (e.type === 'gate' && e.value <= 0)) && ahead(e, 40)));
-  if (bonus) return { targetX: bonus.x };
+  const pick = nearest([threat, bonus].filter((e): e is Entity => e !== null));
+  if (pick) return { targetX: pick.x };
 
   // 4. Boss, or centre.
   return { targetX: state.boss ? state.boss.x : 0 };

@@ -1,186 +1,267 @@
 {
-  "id": 3,
-  "name": "Mind the Blades",
-  "speed": 7,
-  "startSquad": 2,
-  "length": 380,
-  "stars": [
-    58,
-    96
-  ],
-  "spawns": [
-    {
-      "z": 20,
-      "x": 0.4,
-      "type": "cage",
-      "hp": 2,
-      "value": 5
-    },
-    {
-      "z": 40.0,
-      "x": 0.11,
-      "type": "hazard",
-      "kind": "blade",
-      "width": 0.36
-    },
-    {
-      "z": 60.01,
-      "x": 0.42,
-      "type": "cage",
-      "hp": 9,
-      "value": 3
-    },
-    {
-      "z": 75.75,
-      "x": -0.4,
-      "type": "cage",
-      "hp": 9,
-      "value": 5
-    },
-    {
-      "z": 96.84,
-      "x": 0.57,
-      "type": "gate",
-      "width": 0.5,
-      "value": -12
-    },
-    {
-      "z": 112.61,
-      "x": -0.24,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 113.41,
-      "x": -0.09,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 114.21,
-      "x": 0.06,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 129.76,
-      "x": 0.38,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 130.56,
-      "x": 0.53,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 146.87,
-      "x": -0.64,
-      "type": "cage",
-      "hp": 9,
-      "value": 3
-    },
-    {
-      "z": 164.24,
-      "x": -0.54,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 165.04,
-      "x": -0.39,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 183.68,
-      "x": -0.31,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 184.48,
-      "x": -0.16,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 185.28,
-      "x": -0.01,
-      "type": "enemy",
-      "hp": 1
-    },
-    {
-      "z": 202.73,
-      "x": 0.43,
-      "type": "cage",
-      "hp": 9,
-      "value": 5
-    },
-    {
-      "z": 221.01,
-      "x": -0.54,
-      "type": "gate",
-      "width": 0.5,
-      "value": -12
-    },
-    {
-      "z": 237.16,
-      "x": 0.3,
-      "type": "gate",
-      "width": 0.5,
-      "value": -12
-    },
-    {
-      "z": 255.76,
-      "x": -0.43,
-      "type": "enemy",
-      "hp": 2
-    },
-    {
-      "z": 256.56,
-      "x": -0.28,
-      "type": "enemy",
-      "hp": 2
-    },
-    {
-      "z": 276.57,
-      "x": 0.37,
-      "type": "gate",
-      "width": 0.5,
-      "value": -12
-    },
-    {
-      "z": 295.6,
-      "x": -0.36,
-      "type": "cage",
-      "hp": 9,
-      "value": 5
-    },
-    {
-      "z": 317.15,
-      "x": 0.41,
-      "type": "enemy",
-      "hp": 2
-    },
-    {
-      "z": 317.95,
-      "x": 0.56,
-      "type": "enemy",
-      "hp": 2
-    },
-    {
-      "z": 335.18,
-      "x": -0.4,
-      "type": "cage",
-      "hp": 9,
-      "value": 4
-    }
-  ],
-  "boss": {
-    "hp": 5000,
-    "pattern": "single",
-    "fireEvery": 2.6
+ "id": 3,
+ "name": "Mind the Blades",
+ "speed": 7,
+ "startSquad": 2,
+ "length": 380,
+ "stars": [
+  46,
+  70
+ ],
+ "spawns": [
+  {
+   "z": 12,
+   "x": 0,
+   "type": "cage",
+   "hp": 2,
+   "value": 7
+  },
+  {
+   "z": 40.0,
+   "x": -0.33,
+   "type": "horde",
+   "count": 23,
+   "hp": 1,
+   "width": 1.06,
+   "depth": 3.84
+  },
+  {
+   "z": 46.84,
+   "x": -0.43,
+   "type": "cage",
+   "hp": 2,
+   "value": 5
+  },
+  {
+   "z": 61.76,
+   "x": 0.35,
+   "type": "horde",
+   "count": 32,
+   "hp": 1,
+   "width": 1.1,
+   "depth": 4.56
+  },
+  {
+   "z": 69.32,
+   "x": 0.48,
+   "type": "cage",
+   "hp": 3,
+   "value": 8
+  },
+  {
+   "z": 84.07,
+   "x": -0.18,
+   "type": "horde",
+   "count": 43,
+   "hp": 1,
+   "width": 1.24,
+   "depth": 5.44
+  },
+  {
+   "z": 92.51,
+   "x": -0.3,
+   "type": "gate",
+   "width": 0.5,
+   "value": -3,
+   "max": 3
+  },
+  {
+   "z": 102.72,
+   "x": 0.22,
+   "type": "horde",
+   "count": 54,
+   "hp": 1,
+   "width": 1.52,
+   "depth": 6.32
+  },
+  {
+   "z": 112.04,
+   "x": 0.43,
+   "type": "cage",
+   "hp": 6,
+   "value": 8
+  },
+  {
+   "z": 124.79,
+   "x": 0.2,
+   "type": "horde",
+   "count": 68,
+   "hp": 1,
+   "width": 1.6,
+   "depth": 7.44
+  },
+  {
+   "z": 135.23,
+   "x": -0.6,
+   "type": "cage",
+   "hp": 8,
+   "value": 6
+  },
+  {
+   "z": 147.4,
+   "x": 0.26,
+   "type": "horde",
+   "count": 41,
+   "hp": 2,
+   "width": 1.34,
+   "depth": 5.28
+  },
+  {
+   "z": 155.68,
+   "x": 0.57,
+   "type": "cage",
+   "hp": 10,
+   "value": 5
+  },
+  {
+   "z": 169.2,
+   "x": 0.06,
+   "type": "horde",
+   "count": 50,
+   "hp": 2,
+   "width": 1.33,
+   "depth": 6.0
+  },
+  {
+   "z": 178.2,
+   "x": -0.51,
+   "type": "cage",
+   "hp": 12,
+   "value": 7
+  },
+  {
+   "z": 193.14,
+   "x": 0.29,
+   "type": "horde",
+   "count": 59,
+   "hp": 2,
+   "width": 1.42,
+   "depth": 6.72
+  },
+  {
+   "z": 202.86,
+   "x": 0.68,
+   "type": "cage",
+   "hp": 14,
+   "value": 5
+  },
+  {
+   "z": 211.67,
+   "x": -0.05,
+   "type": "horde",
+   "count": 67,
+   "hp": 2,
+   "width": 1.47,
+   "depth": 7.36
+  },
+  {
+   "z": 222.03,
+   "x": -0.65,
+   "type": "cage",
+   "hp": 16,
+   "value": 5
+  },
+  {
+   "z": 235.55,
+   "x": -0.24,
+   "type": "horde",
+   "count": 52,
+   "hp": 3,
+   "width": 1.36,
+   "depth": 6.16
+  },
+  {
+   "z": 244.71,
+   "x": 0.5,
+   "type": "cage",
+   "hp": 18,
+   "value": 7
+  },
+  {
+   "z": 253.51,
+   "x": 0.25,
+   "type": "horde",
+   "count": 57,
+   "hp": 3,
+   "width": 1.5,
+   "depth": 6.56
+  },
+  {
+   "z": 263.07,
+   "x": -0.5,
+   "type": "cage",
+   "hp": 20,
+   "value": 9
+  },
+  {
+   "z": 271.94,
+   "x": 0.14,
+   "type": "horde",
+   "count": 63,
+   "hp": 3,
+   "width": 1.4,
+   "depth": 7.04
+  },
+  {
+   "z": 281.98,
+   "x": 0.66,
+   "type": "cage",
+   "hp": 22,
+   "value": 5
+  },
+  {
+   "z": 294.92,
+   "x": 0.13,
+   "type": "horde",
+   "count": 53,
+   "hp": 4,
+   "width": 1.32,
+   "depth": 6.24
+  },
+  {
+   "z": 304.16,
+   "x": 0.14,
+   "type": "hazard",
+   "kind": "barricade",
+   "width": 0.36
+  },
+  {
+   "z": 313.46,
+   "x": -0.28,
+   "type": "horde",
+   "count": 58,
+   "hp": 4,
+   "width": 1.45,
+   "depth": 6.64
+  },
+  {
+   "z": 323.1,
+   "x": 0.59,
+   "type": "cage",
+   "hp": 27,
+   "value": 8
+  },
+  {
+   "z": 336.47,
+   "x": -0.17,
+   "type": "horde",
+   "count": 64,
+   "hp": 4,
+   "width": 1.55,
+   "depth": 7.12
+  },
+  {
+   "z": 346.59,
+   "x": -0.27,
+   "type": "gate",
+   "width": 0.5,
+   "value": -15,
+   "max": 3
   }
+ ],
+ "boss": {
+  "hp": 2780,
+  "pattern": "single",
+  "fireEvery": 2.6
+ }
 }
