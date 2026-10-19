@@ -5,60 +5,60 @@
  "startSquad": 2,
  "length": 380,
  "stars": [
-  43,
-  65
+  40,
+  61
  ],
  "spawns": [
   {
-   "z": 12,
+   "z": 25,
    "x": 0,
    "type": "cage",
-   "hp": 2,
+   "hp": 5,
    "value": 7
   },
   {
    "z": 40.0,
    "x": -0.33,
    "type": "horde",
-   "count": 23,
+   "count": 16,
    "hp": 1,
-   "width": 1.06,
-   "depth": 3.84
+   "width": 0.95,
+   "depth": 3.28
   },
   {
-   "z": 46.84,
+   "z": 52.84,
    "x": -0.43,
    "type": "cage",
-   "hp": 2,
+   "hp": 13,
    "value": 5
   },
   {
-   "z": 61.76,
+   "z": 63.21,
    "x": 0.35,
    "type": "horde",
-   "count": 32,
+   "count": 23,
    "hp": 1,
-   "width": 1.1,
-   "depth": 4.56
+   "width": 0.98,
+   "depth": 3.84
   },
   {
-   "z": 69.32,
+   "z": 76.33,
    "x": 0.48,
    "type": "cage",
-   "hp": 3,
+   "hp": 18,
    "value": 8
   },
   {
-   "z": 84.07,
+   "z": 87.01,
    "x": -0.18,
    "type": "horde",
-   "count": 43,
+   "count": 32,
    "hp": 1,
-   "width": 1.24,
-   "depth": 5.44
+   "width": 1.12,
+   "depth": 4.56
   },
   {
-   "z": 92.51,
+   "z": 100.49,
    "x": -0.3,
    "type": "gate",
    "width": 0.5,
@@ -66,206 +66,189 @@
    "max": 3
   },
   {
-   "z": 102.72,
+   "z": 106.9,
    "x": 0.22,
    "type": "horde",
-   "count": 54,
+   "count": 40,
    "hp": 1,
-   "width": 1.52,
-   "depth": 6.32
+   "width": 1.38,
+   "depth": 5.2
   },
   {
-   "z": 112.04,
+   "z": 120.7,
    "x": 0.43,
    "type": "cage",
-   "hp": 6,
+   "hp": 32,
    "value": 8
   },
   {
-   "z": 124.79,
-   "x": 0.2,
+   "z": 130.44,
+   "x": 0.21,
    "type": "horde",
-   "count": 68,
+   "count": 51,
    "hp": 1,
-   "width": 1.6,
-   "depth": 7.44
+   "width": 1.45,
+   "depth": 6.08
   },
   {
-   "z": 135.23,
+   "z": 144.68,
    "x": -0.6,
    "type": "cage",
-   "hp": 8,
+   "hp": 40,
    "value": 6
   },
   {
-   "z": 147.4,
-   "x": 0.26,
-   "type": "horde",
-   "count": 41,
-   "hp": 2,
-   "width": 1.34,
-   "depth": 5.28
-  },
-  {
-   "z": 155.68,
-   "x": 0.57,
-   "type": "cage",
-   "hp": 10,
-   "value": 5
-  },
-  {
-   "z": 169.2,
-   "x": 0.06,
-   "type": "horde",
-   "count": 50,
-   "hp": 2,
-   "width": 1.33,
-   "depth": 6.0
-  },
-  {
-   "z": 178.2,
-   "x": -0.51,
-   "type": "cage",
-   "hp": 12,
-   "value": 7
-  },
-  {
-   "z": 193.14,
-   "x": 0.29,
-   "type": "horde",
-   "count": 59,
-   "hp": 2,
-   "width": 1.42,
-   "depth": 6.72
-  },
-  {
-   "z": 202.86,
-   "x": 0.68,
-   "type": "cage",
-   "hp": 14,
-   "value": 5
-  },
-  {
-   "z": 211.67,
-   "x": -0.05,
-   "type": "horde",
-   "count": 67,
-   "hp": 2,
-   "width": 1.47,
-   "depth": 7.36
-  },
-  {
-   "z": 222.03,
-   "x": -0.65,
-   "type": "cage",
-   "hp": 16,
-   "value": 5
-  },
-  {
-   "z": 235.55,
-   "x": -0.24,
-   "type": "horde",
-   "count": 52,
-   "hp": 3,
-   "width": 1.36,
-   "depth": 6.16
-  },
-  {
-   "z": 244.71,
-   "x": 0.5,
-   "type": "cage",
-   "hp": 18,
-   "value": 7
-  },
-  {
-   "z": 253.51,
-   "x": 0.25,
-   "type": "horde",
-   "count": 57,
-   "hp": 3,
-   "width": 1.5,
-   "depth": 6.56
-  },
-  {
-   "z": 263.07,
-   "x": -0.5,
-   "type": "cage",
-   "hp": 20,
-   "value": 9
-  },
-  {
-   "z": 271.94,
-   "x": 0.14,
+   "z": 154.56,
+   "x": 0.22,
    "type": "horde",
    "count": 63,
-   "hp": 3,
-   "width": 1.4,
+   "hp": 1,
+   "width": 1.55,
    "depth": 7.04
   },
   {
-   "z": 281.98,
-   "x": 0.66,
+   "z": 169.28,
+   "x": 0.57,
    "type": "cage",
-   "hp": 22,
+   "hp": 50,
    "value": 5
   },
   {
-   "z": 294.92,
-   "x": 0.13,
+   "z": 177.81,
+   "x": 0.06,
    "type": "horde",
-   "count": 53,
-   "hp": 4,
-   "width": 1.32,
-   "depth": 6.24
+   "count": 76,
+   "hp": 1,
+   "width": 1.55,
+   "depth": 8.08
   },
   {
-   "z": 304.16,
+   "z": 193.05,
+   "x": -0.51,
+   "type": "cage",
+   "hp": 60,
+   "value": 7
+  },
+  {
+   "z": 203.35,
+   "x": 0.17,
+   "type": "horde",
+   "count": 90,
+   "hp": 1,
+   "width": 1.66,
+   "depth": 9.2
+  },
+  {
+   "z": 219.15,
+   "x": 0.68,
+   "type": "cage",
+   "hp": 71,
+   "value": 5
+  },
+  {
+   "z": 223.11,
+   "x": -0.05,
+   "type": "horde",
+   "count": 103,
+   "hp": 1,
+   "width": 1.7,
+   "depth": 10.24
+  },
+  {
+   "z": 239.43,
+   "x": -0.65,
+   "type": "cage",
+   "hp": 81,
+   "value": 5
+  },
+  {
+   "z": 248.59,
+   "x": -0.15,
+   "type": "horde",
+   "count": 119,
+   "hp": 1,
+   "width": 1.7,
+   "depth": 11.52
+  },
+  {
+   "z": 265.55,
+   "x": 0.5,
+   "type": "cage",
+   "hp": 94,
+   "value": 7
+  },
+  {
+   "z": 267.74,
+   "x": 0.21,
+   "type": "horde",
+   "count": 66,
+   "hp": 2,
+   "width": 1.58,
+   "depth": 7.28
+  },
+  {
+   "z": 282.58,
+   "x": -0.5,
+   "type": "cage",
+   "hp": 104,
+   "value": 9
+  },
+  {
+   "z": 287.4,
+   "x": 0.14,
+   "type": "horde",
+   "count": 73,
+   "hp": 2,
+   "width": 1.48,
+   "depth": 7.84
+  },
+  {
+   "z": 302.52,
+   "x": 0.66,
+   "type": "cage",
+   "hp": 115,
+   "value": 5
+  },
+  {
+   "z": 311.92,
+   "x": 0.13,
+   "type": "horde",
+   "count": 82,
+   "hp": 2,
+   "width": 1.56,
+   "depth": 8.56
+  },
+  {
+   "z": 327.4,
    "x": 0.14,
    "type": "hazard",
    "kind": "barricade",
    "width": 0.36
   },
   {
-   "z": 313.46,
-   "x": -0.28,
+   "z": 331.69,
+   "x": -0.15,
    "type": "horde",
-   "count": 58,
-   "hp": 4,
-   "width": 1.45,
-   "depth": 6.64
+   "count": 89,
+   "hp": 2,
+   "width": 1.7,
+   "depth": 9.12
   },
   {
-   "z": 323.1,
+   "z": 347.45,
    "x": 0.59,
    "type": "cage",
-   "hp": 27,
+   "hp": 141,
    "value": 8
-  },
-  {
-   "z": 336.47,
-   "x": -0.17,
-   "type": "horde",
-   "count": 64,
-   "hp": 4,
-   "width": 1.55,
-   "depth": 7.12
-  },
-  {
-   "z": 346.59,
-   "x": -0.27,
-   "type": "gate",
-   "width": 0.5,
-   "value": -15,
-   "max": 3
   }
  ],
  "boss": {
-  "hp": 2970,
+  "hp": 3050,
   "pattern": "single",
   "fireEvery": 2.6,
   "advance": 0.462,
   "summonEvery": 5.16,
-  "summonCount": 38,
-  "summonHp": 4
+  "summonCount": 53,
+  "summonHp": 2
  }
 }
