@@ -34,7 +34,9 @@ export function hitTest(b: SweptBullet, e: Box): boolean {
   return Math.abs(b.x - e.x) <= e.halfW && b.zTo >= e.z - e.halfD && b.zFrom <= e.z + e.halfD;
 }
 
-const isShootable = (e: Entity) => e.type !== 'hazard';
+// Hazards never stop bullets; a gate stops them only while shooting can still
+// raise it, so a maxed gate doesn't shield the crowd behind it.
+const isShootable = (e: Entity) => e.type !== 'hazard' && !(e.type === 'gate' && e.value >= e.max);
 
 export function updateCombat(state: GameState, dt: number): void {
   for (const e of state.entities) e.flash = Math.max(0, e.flash - dt);

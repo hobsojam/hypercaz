@@ -58,7 +58,7 @@ describe('firing', () => {
     runCollect(s, 1);
     const drifts = s.bullets.map((b) => Math.abs(b.vx));
     expect(Math.max(...drifts)).toBeGreaterThan(0);
-    expect(Math.max(...drifts)).toBeLessThanOrEqual(0.05);
+    expect(Math.max(...drifts)).toBeLessThanOrEqual(0.025);
   });
 
   it('the same seed fires the same shots', () => {
@@ -104,6 +104,24 @@ describe('hits', () => {
     s.bullets = Array.from({ length: 10 }, () => ({ x: 0, z: 9.5, damage: 1, vx: 0 }));
     step(s, { targetX: 0 }, DT);
     expect(s.entities[0].value).toBe(6);
+  });
+
+  it('a gate at its cap stops absorbing bullets, so enemies behind it can be shot', () => {
+    const s = createState(
+      makeLevel({
+        speed: 1,
+        spawns: [
+          { z: 5, x: 0, type: 'gate', width: 0.4, value: 6, max: 6 },
+          { z: 8, x: 0, type: 'enemy', hp: 5 },
+        ],
+      }),
+      1,
+    );
+    step(s, { targetX: 0 }, DT);
+    s.bullets = [{ x: 0, z: 4.5, damage: 1, vx: 0 }];
+    for (let i = 0; i < 10; i++) step(s, { targetX: 0 }, DT);
+    expect(s.entities.find((e) => e.type === 'gate')!.value).toBe(6);
+    expect(s.entities.find((e) => e.type === 'enemy')!.hp).toBe(4);
   });
 
   it('bullets pass through hazards', () => {
