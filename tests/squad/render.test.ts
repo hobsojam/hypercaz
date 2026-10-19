@@ -103,3 +103,23 @@ test('the road tile is drawn inside the road edges, with no overhang', () => {
     }
   }
 });
+
+test('a cage shows its remaining hit points as well as its reward', () => {
+  const level = validateLevel(
+    { id: 1, name: 't', speed: 6, startSquad: 1, length: 200, stars: [1, 1], spawns: [{ z: 20, x: 0.5, type: 'cage', hp: 37, value: 5 }], boss: { hp: 10, pattern: 'single', fireEvery: 9 } },
+    't.json',
+  );
+  const state = createState(level, 1);
+  step(state, { targetX: -0.9 }, 1 / 60);
+  const texts: string[] = [];
+  const ctx = new Proxy(
+    {},
+    {
+      get: (_t, prop) => (prop === 'fillText' ? (text: string) => texts.push(text) : () => ({ addColorStop: () => undefined })),
+      set: () => true,
+    },
+  ) as CanvasRenderingContext2D;
+  renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
+  expect(texts).toContain('+5');
+  expect(texts).toContain('37');
+});

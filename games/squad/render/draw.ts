@@ -213,6 +213,8 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
     case 'cage':
       drawSprite(ctx, assets, 'cage', time, p.sx, p.sy, p.scale, { flash: e.flash });
       label(ctx, `+${e.value}`, p.sx, p.sy - 66 * p.scale, 22 * p.scale + 6, '#F5C242');
+      // Hits left to break it, counting down as it's shot.
+      label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 28 * p.scale, 18 * p.scale + 6, '#FFFFFF');
       break;
     case 'gate': {
       const good = e.value > 0;

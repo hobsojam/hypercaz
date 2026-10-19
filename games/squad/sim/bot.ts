@@ -50,6 +50,9 @@ export function botInput(state: GameState): Input {
   const goodGate = nearest(entities.filter((e) => e.type === 'gate' && e.value > 0 && ahead(e, 10)));
   if (goodGate) return { targetX: goodGate.x };
   const bonus = nearest(entities.filter((e) => (e.type === 'cage' || (e.type === 'gate' && e.value <= 0)) && ahead(e, 40)));
+  // Commit to a cage the squad can break before it arrives, unless a crowd is close.
+  const breakable = (e: Entity) => e.type === 'cage' && e.hp / (squad.count * 2.5) < e.z / state.level.speed;
+  if (bonus && breakable(bonus) && (!threat || threat.z > 15)) return { targetX: bonus.x };
   const pick = nearest([threat, bonus].filter((e): e is Entity => e !== null));
   if (pick) return { targetX: pick.x };
 
