@@ -44,9 +44,7 @@ export function remove(state: State, id: number): 'removed' | 'blocked' | 'ignor
   return 'removed';
 }
 
-export function validatePuzzle(puzzle: Puzzle): Puzzle {
-  const fail = (): never => { throw new Error(`Invalid Arrow Escape puzzle ${puzzle.id}`); };
-  if (!Number.isInteger(puzzle.id) || puzzle.id < 1 || !puzzle.name || !puzzle.lesson || !Number.isInteger(puzzle.size) || puzzle.size < 4 || puzzle.size > 8 || !puzzle.arrows.length) fail();
+function validateArrows(puzzle: Puzzle, fail: () => never): void {
   const occupied = new Set<string>(), ids = new Set<number>();
   for (const arrow of puzzle.arrows) {
     if (!Number.isInteger(arrow.id) || ids.has(arrow.id) || !Object.hasOwn(VECTORS, arrow.direction) || !Number.isInteger(arrow.length) || arrow.length < 1 || arrow.length > puzzle.size) fail();
@@ -57,6 +55,12 @@ export function validatePuzzle(puzzle: Puzzle): Puzzle {
       occupied.add(key);
     }
   }
+}
+
+export function validatePuzzle(puzzle: Puzzle): Puzzle {
+  const fail = (): never => { throw new Error(`Invalid Arrow Escape puzzle ${puzzle.id}`); };
+  if (!Number.isInteger(puzzle.id) || puzzle.id < 1 || !puzzle.name || !puzzle.lesson || !Number.isInteger(puzzle.size) || puzzle.size < 4 || puzzle.size > 8 || !puzzle.arrows.length) fail();
+  validateArrows(puzzle, fail);
   const state = createState(puzzle);
   while (state.remaining.size) {
     const free = removable(puzzle, state.remaining);

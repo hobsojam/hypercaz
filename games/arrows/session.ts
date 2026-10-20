@@ -20,6 +20,7 @@ export class Session {
   flight: Flight | null = null;
   feedback: Feedback | null = null;
   hintId: number | null = null;
+  private returnScreen: 'play' | 'won' = 'play';
   private sounds: Sfx[] = [];
   private readonly storage: ReturnType<typeof createStorage>;
 
@@ -56,9 +57,10 @@ export class Session {
 
   retry(): void { this.select(this.index); }
   showPuzzles(): void {
+    if (this.screen !== 'levels') this.returnScreen = this.screen;
     this.screen = 'levels'; this.menuIndex = this.index; this.paused = false;
-    this.flight = null; this.feedback = null; this.hintId = null;
   }
+  returnToPuzzle(): void { if (this.screen === 'levels') this.screen = this.returnScreen; }
   next(): void { if (this.screen === 'won' && !this.select(this.index + 1)) this.showPuzzles(); }
   togglePause(): void { if (this.screen === 'play') this.paused = !this.paused; }
   suspend(): void { if (this.screen === 'play') this.paused = true; }

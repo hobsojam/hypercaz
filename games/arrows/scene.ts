@@ -18,7 +18,7 @@ export class EscapeScene implements Scene {
     this.announce();
   }
 
-  suspend(): void { this.session.suspend(); this.announce(); }
+  suspend(): void { this.game.input.endFrame(); this.session.suspend(); this.announce(); }
 
   update(dt: number): void {
     const s = this.session, input = this.game.input;
@@ -59,6 +59,7 @@ export class EscapeScene implements Scene {
     const s = this.session;
     if (id.startsWith('puzzle:')) { s.select(Number(id.slice(7))); return; }
     if (id === 'levels') s.showPuzzles();
+    if (id === 'back') s.returnToPuzzle();
     if (id === 'hint') s.hint();
     if (id === 'retry') s.retry();
     if (id === 'next') s.next();

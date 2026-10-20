@@ -2,6 +2,10 @@
 import type { createStorage } from '../../engine/storage.ts';
 import { loadProgress } from '../squad/progress.ts';
 
+import { PUZZLES } from '../arrows/levels.ts';
+import { loadProgress as loadArrowsProgress } from '../arrows/progress.ts';
+export { ARROWS_STORAGE } from '../arrows/progress.ts';
+
 type Storage = ReturnType<typeof createStorage>;
 
 export interface Tile {
@@ -27,4 +31,11 @@ export function stackTile(storage: Storage): Tile & { name: 'Stack'; href: 'stac
   const best = storage.get<unknown>('best', null);
   const progress = typeof best === 'number' && Number.isFinite(best) && best > 0 ? `Best: ${Math.floor(best)} floors` : 'New';
   return { name: 'Stack', href: 'stack/', progress };
+}
+
+export function arrowsTile(storage: Storage): Tile & { name: 'Arrow Escape'; href: 'arrows/' } {
+  const count = loadArrowsProgress(storage).completed.length;
+  let progress = 'New';
+  if (count > 0) progress = count === PUZZLES.length ? `Complete · ${count}/${PUZZLES.length}` : `${count}/${PUZZLES.length} cleared`;
+  return { name: 'Arrow Escape', href: 'arrows/', progress };
 }

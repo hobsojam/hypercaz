@@ -94,3 +94,15 @@ test('keyboard cursor clamps to the board and missing or stale ids are harmless'
   expect(s.attemptFocus()).toBe(false); expect(s.attempt(99)).toBe(false);
   s.moveFocus(100, -100); expect(s.focus).toEqual({ x: 3, y: 0 });
 });
+
+
+test('returning from the puzzle grid preserves the attempt and an interrupted final flight', () => {
+  const s = new Session(createStorage('test', null));
+  s.attempt(3); s.update(1); s.showPuzzles(); s.returnToPuzzle();
+  expect(s.state.remaining.size).toBe(2);
+  s.attempt(2); s.update(1); s.attempt(1); s.showPuzzles(); s.update(1);
+  expect(s.flight?.age).toBe(0);
+  s.returnToPuzzle(); s.update(1);
+  expect(s.screen).toBe('won'); expect(s.completed.has(1)).toBe(true);
+  s.showPuzzles(); s.returnToPuzzle(); expect(s.screen).toBe('won');
+});

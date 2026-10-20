@@ -40,13 +40,18 @@ Interfaces: `Session` with select/retry/attempt/hint/togglePause/update, explici
 
 Files: `games/arrows/main.ts`, `arrows/index.html`; picker main/tiles, root HTML, Vite/PWA config, README and picker/PWA tests.
 
-- [ ] Write failing picker/progress and precache assertions, then add the game tile, HTML entry, live status and boot adapter.
-- [ ] Verify types, lint, root build, diff and the full repository suite; resolve failures without changing Claude's checkout.
-- [ ] Browser-check phone and desktop, pointer/keyboard puzzle wins, hints/blocked feedback, pause/tab hide, puzzle selection, return progress and static production offline play.
-- [ ] Request an independent final review, fix material findings, re-verify, commit and publish a PR from current main. Record evidence here.
+- [x] Write failing picker/progress and precache assertions, then add the game tile, HTML entry, live status and boot adapter.
+- [x] Verify types, lint, root build, diff and the full repository suite; resolve failures without changing Claude's checkout.
+- [x] Browser-check phone and desktop, pointer/keyboard puzzle wins, hints/blocked feedback, pause/tab hide, puzzle selection, return progress and static production offline play.
+- [x] Request an independent final review, fix material findings, re-verify, commit and publish a PR from current main. Record evidence here.
 
 ## Verification record
 
 - Baseline main: 564 tests across 50 files pass.
 - Task 1: 32 rule/layout tests pass, including all 12 independent puzzle solutions and every available legal first removal. TypeScript and diff checks pass.
 - Task 2: all 46 Arrow Escape rule, session, input, layout and rendering tests pass; typing/lint/diff checks pass.
+- Final focused verification: 51 Arrow Escape cases plus 15 picker/PWA cases pass (66 total). Full suite: 618 tests across 54 files pass. TypeScript, lint, production build and diff checks pass.
+- Independent review found queued activation on tab hide and a misleading grid return action. Both were reproduced with failing tests, fixed, and verified green; return now preserves partial attempts and a final flight.
+- Static production Chromium run: every puzzle cleared with actual touch input; independent keyboard-only and mouse wins; blocked feedback, hint and pause exercised; complete progress shown on picker return; offline game play works with no browser errors. Phone and DPR-2 desktop captures inspected.
+- Final fetch: main remains `5c3d5d8`, already contained in the task branch. Claude's active Water Sort checkout was not modified.
+- Car repositioning puzzle recorded separately in GitHub issue #40.

@@ -12,12 +12,12 @@ function fixture() {
   const keys = new Set<string>(); let click: { x: number; y: number } | null = null;
   const sounds: string[] = [], statuses: string[] = [], links: string[] = [];
   const game = {
-    input: { consumeKey: (key: string) => keys.delete(key), consumeClick: () => { const p = click; click = null; return p; }, touch: false },
+    input: { endFrame: () => { keys.clear(); click = null; }, consumeKey: (key: string) => keys.delete(key), consumeClick: () => { const p = click; click = null; return p; }, touch: false },
     audio: { muted: false, play: (s: string) => sounds.push(s), unlock: () => undefined },
     storage: createStorage('test', null), announce: (s: string) => statuses.push(s),
   } as unknown as ArrowGame;
   const scene = new EscapeScene(game); scene.navigate = url => links.push(url);
-  return { game, scene, sounds, statuses, links, press: (key: string) => { keys.add(key); scene.update(1 / 60); }, tap: (x: number, y: number) => { click = { x, y }; scene.update(1 / 60); } };
+  return { game, scene, sounds, statuses, links, queue: (key: string) => keys.add(key), press: (key: string) => { keys.add(key); scene.update(1 / 60); }, tap: (x: number, y: number) => { click = { x, y }; scene.update(1 / 60); } };
 }
 
 function tapCell(f: ReturnType<typeof fixture>, x: number, y: number) {
@@ -81,4 +81,20 @@ test('rendering play, pause, grid and win is read-only and gives visible instruc
   const text = ctx.calls.fillText.map(c => c[0]);
   expect(text).toContain('ARROW ESCAPE'); expect(text).toContain('Paused');
   expect(text).toContain('Choose a puzzle'); expect(text).toContain('Board clear!');
+});
+
+
+test.each(['Enter', 'Escape', ' '])('hiding clears a queued %s so returning cannot resume without fresh input', key => {
+  const f = fixture();
+  f.queue(key); f.scene.suspend(); f.scene.update(1 / 60);
+  expect(f.scene.session.paused).toBe(true);
+  expect(f.scene.session.state.remaining.size).toBe(3);
+  f.press('Enter'); expect(f.scene.session.paused).toBe(false);
+});
+
+test('Back to puzzle preserves the attempt instead of performing Retry', () => {
+  const f = fixture(); f.press('h'); f.press('Enter'); f.scene.update(1);
+  f.press('l'); f.tap(270, 850);
+  expect(f.scene.session.screen).toBe('play');
+  expect(f.scene.session.state.remaining.size).toBe(2);
 });

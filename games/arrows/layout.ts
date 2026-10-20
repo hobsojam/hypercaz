@@ -18,7 +18,7 @@ export function buttonsFor(s: Session): readonly Button[] {
   if (s.paused) return [{ id: 'resume', label: 'Resume', enabled: true, x: 150, y: 550, w: 240, h: 64 }];
   if (s.screen === 'levels') return [
     ...PUZZLES.map((p, i) => ({ id: `puzzle:${i}`, label: p.name, enabled: true, x: 40 + (i % 3) * 160, y: 236 + Math.floor(i / 3) * 128, w: 140, h: 108 })),
-    { id: 'retry', label: 'Back to puzzle', enabled: true, x: 150, y: 822, w: 240, h: 64 },
+    { id: 'back', label: 'Back to puzzle', enabled: true, x: 150, y: 822, w: 240, h: 64 },
   ];
   const buttons: Button[] = [
     { id: 'levels', label: 'Puzzles', enabled: true, x: 30, y: 822, w: 148, h: 64 },
