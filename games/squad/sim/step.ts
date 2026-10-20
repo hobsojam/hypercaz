@@ -1,7 +1,17 @@
 import { updateBoss } from './boss.ts';
 import { updateCombat } from './combat.ts';
 import { updateContacts } from './contact.ts';
-import { DESPAWN_Z, ENEMY_SPEED, HEAVY_SPEED, SPAWN_HORIZON, SQUAD_OMEGA } from './constants.ts';
+import {
+  BURST_SECONDS,
+  DESPAWN_Z,
+  ENEMY_SPEED,
+  ENEMY_STEER,
+  HEAVY_SPEED,
+  HEAVY_STEER,
+  SPAWN_HORIZON,
+  SQUAD_OMEGA,
+  STEER_RANGE,
+} from './constants.ts';
 import { formationHalfWidth, formationSlots } from './formation.ts';
 import { spawnEntity, type GameState, type Input } from './state.ts';
 
@@ -10,10 +20,12 @@ export function step(state: GameState, input: Input, dt: number): GameState {
   state.events = [];
   if (state.phase === 'won' || state.phase === 'lost') return state;
 
+  if (input.burst) startBurst(state);
   moveSquad(state, input, dt);
   if (state.phase === 'advance') scrollAndSpawn(state, dt);
   moveEntities(state, dt);
   updateCombat(state, dt);
+  state.burstTime = Math.max(0, state.burstTime - dt);
   updateContacts(state);
   updateBoss(state, dt);
   state.entities = state.entities.filter((e) => e.z >= DESPAWN_Z);
@@ -46,10 +58,25 @@ function scrollAndSpawn(state: GameState, dt: number): void {
   if (state.distance >= level.length) state.phase = 'boss';
 }
 
+function startBurst(state: GameState): void {
+  if (state.burstTime > 0 || state.meter < state.level.burstKills) return;
+  state.meter = 0;
+  state.burstTime = BURST_SECONDS;
+  state.events.push({ type: 'burstStart' });
+}
+
+// Enemies walk down the road; once close, those outside the formation drift
+// toward it (stopping at its edge), so a crowd can't simply be sidestepped.
 function moveEntities(state: GameState, dt: number): void {
+  const edge = formationHalfWidth(formationSlots(state.squad.count));
   for (const e of state.entities) {
-    if (e.type === 'enemy') e.z -= ENEMY_SPEED * dt;
-    else if (e.type === 'heavy') e.z -= HEAVY_SPEED * dt;
+    if (e.type !== 'enemy' && e.type !== 'heavy') continue;
+    e.z -= (e.type === 'enemy' ? ENEMY_SPEED : HEAVY_SPEED) * dt;
+    if (e.z > STEER_RANGE) continue;
+    const gap = e.x - state.squad.x;
+    if (Math.abs(gap) <= edge) continue;
+    const move = Math.min((e.type === 'enemy' ? ENEMY_STEER : HEAVY_STEER) * dt, Math.abs(gap) - edge);
+    e.x -= Math.sign(gap) * move;
   }
 }
 

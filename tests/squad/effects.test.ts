@@ -80,4 +80,14 @@ describe('Effects', () => {
     fx.handle([{ type: 'lost' }], toScreen);
     expect(played).toEqual(['fail']);
   });
+
+  it('a full meter chimes, and firing it kicks the screen with its own sound', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'burstReady' }], toScreen);
+    expect(played).toEqual(['ready']);
+    fx.handle([{ type: 'burstStart' }], toScreen);
+    expect(played).toEqual(['ready', 'burst']);
+    fx.update(0);
+    expect(magnitude(fx)).toBeGreaterThan(0);
+  });
 });

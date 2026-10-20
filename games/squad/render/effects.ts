@@ -83,6 +83,13 @@ export class Effects {
           this.audio.play('win');
           break;
         }
+        case 'burstReady':
+          this.audio.play('ready');
+          break;
+        case 'burstStart':
+          this.kick(6);
+          this.audio.play('burst');
+          break;
         case 'lost':
           this.audio.play('fail');
           break;

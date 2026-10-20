@@ -57,7 +57,8 @@ describe('boss', () => {
     const s = createState(makeLevel({ startSquad: 11 }), 1);
     s.projectiles = [{ x: 0, z: 0.1, originX: 0, originZ: 18 }];
     step(s, { targetX: 0 }, DT);
-    expect(s.squad.count).toBe(8);
+    // Rows of 7 + 4: 3 of the front row and all 4 of the second row are in the blast.
+    expect(s.squad.count).toBe(4);
     expect(s.projectiles).toHaveLength(0);
   });
 

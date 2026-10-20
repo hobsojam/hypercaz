@@ -1,9 +1,11 @@
 // Every gameplay tuning number lives here. Distances: x in road units
 // ([-1, 1] = full road width), z in metres. Times in seconds.
 
-export const FORMATION_MAX_WIDTH = 0.76; // 38% of the road (road width = 2)
+// Squads grow deep rather than wide (7 per row, 21% of the road), so even a
+// big squad has to be aimed and steered.
+export const FORMATION_MAX_WIDTH = 0.42;
 export const SLOT_DX = 0.07;
-export const SLOT_DZ = 0.9;
+export const SLOT_DZ = 0.6;
 export const MAX_DRAWN = 150;
 
 export const FIRE_INTERVAL = 0.4;
@@ -22,6 +24,17 @@ export const DESPAWN_Z = -5;
 export const ENEMY_SPEED = 1.5;
 export const HEAVY_SPEED = 0.8;
 export const SQUAD_OMEGA = 12;
+// Crowds close in: within STEER_RANGE metres, enemies outside the formation
+// drift sideways toward it (road units per second).
+export const STEER_RANGE = 30;
+export const ENEMY_STEER = 0.15;
+export const HEAVY_STEER = 0.06;
+
+// Kill meter: kills charge it (heavies count triple); a full meter can be
+// spent on a burst of rapid fire.
+export const HEAVY_CHARGE = 3;
+export const BURST_MULTIPLIER = 2.5;
+export const BURST_SECONDS = 4;
 
 export const BOSS_Z = 18;
 export const BOSS_ENTRY_Z = 38;

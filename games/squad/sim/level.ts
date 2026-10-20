@@ -25,6 +25,7 @@ export interface Level {
   startSquad: number;
   length: number;
   stars: [number, number];
+  burstKills: number; // kill-meter size: kills needed to charge one burst
   spawns: Spawn[];
   boss: {
     hp: number;
@@ -106,6 +107,8 @@ export function validateLevel(raw: unknown, file: string): Level {
   ) {
     fail('stars', 'must be two integers with 1 <= stars[0] <= stars[1]');
   }
+
+  const burstKills = r.burstKills === undefined ? 40 : intMin(r, 'burstKills', 'burstKills', 1);
 
   if (!Array.isArray(r.spawns)) fail('spawns', 'must be an array');
   const spawns = (r.spawns as unknown[]).flatMap((s, i): Spawn[] => {
@@ -192,6 +195,7 @@ export function validateLevel(raw: unknown, file: string): Level {
     startSquad,
     length,
     stars: [(stars as number[])[0], (stars as number[])[1]],
+    burstKills,
     spawns,
     boss: { hp: bossHp, pattern, fireEvery, advance, summonEvery, summonCount, summonHp },
   };

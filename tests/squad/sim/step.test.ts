@@ -95,3 +95,48 @@ describe('scrolling and spawning', () => {
     expect(s).toEqual(before);
   });
 });
+
+describe('crowds close in on the squad', () => {
+  // A lone soldier parked at the left edge, and tough targets so nothing dies.
+  const lane = (spawns: Record<string, unknown>[]) => createState(makeLevel({ speed: 2, spawns }), 1);
+  const enemy = (s: ReturnType<typeof createState>, type = 'enemy') => s.entities.find((e) => e.type === type)!;
+
+  it('an enemy off to the side drifts toward the squad as it nears', () => {
+    const s = lane([{ z: 20, x: 0.5, type: 'enemy', hp: 999 }]);
+    run(s, 0.5, -0.9);
+    const before = enemy(s).x;
+    run(s, 2, -0.9);
+    expect(enemy(s).x).toBeLessThan(before - 0.1);
+  });
+
+  it('an enemy already in line with the squad walks straight', () => {
+    const s = lane([{ z: 20, x: 0.01, type: 'enemy', hp: 999 }]);
+    run(s, 2, 0);
+    expect(enemy(s).x).toBeCloseTo(0.01);
+  });
+
+  it('enemies far up the road do not steer yet', () => {
+    const s = lane([{ z: 100, x: 0.5, type: 'enemy', hp: 999 }]);
+    run(s, 25, -0.9); // spawns at the horizon, ~60 m away, still beyond steering range
+    expect(enemy(s).x).toBe(0.5);
+  });
+
+  it('heavies drift more slowly than ordinary enemies', () => {
+    const s = lane([
+      { z: 20, x: 0.6, type: 'enemy', hp: 999 },
+      { z: 20, x: 0.6, type: 'heavy', hp: 999 },
+    ]);
+    run(s, 2, -0.9);
+    expect(0.6 - enemy(s).x).toBeGreaterThan(0.6 - enemy(s, 'heavy').x);
+    expect(enemy(s, 'heavy').x).toBeLessThan(0.6);
+  });
+
+  it('a drifting enemy stops at the edge of the formation instead of crossing it', () => {
+    const s = lane([{ z: 28, x: 0.9, type: 'enemy', hp: 999 }]);
+    for (let i = 0; i < 60 * 8 && s.entities.length > 0; i++) {
+      step(s, { targetX: 0 }, DT);
+      const e = s.entities[0];
+      if (e) expect(e.x).toBeGreaterThanOrEqual(s.squad.x - 1e-9);
+    }
+  });
+});
