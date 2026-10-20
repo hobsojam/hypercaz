@@ -20,6 +20,7 @@ import {
 import { changeCount, soldiersHit } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import { expandHorde } from './level.ts';
+import { updateSignature } from './signature.ts';
 import { spawnEntity, type GameState } from './state.ts';
 
 export function updateBoss(state: GameState, dt: number): void {
@@ -70,6 +71,7 @@ function fight(state: GameState, dt: number): void {
     return;
   }
 
+  updateSignature(state, dt);
   boss.fireTimer -= dt;
   if (boss.fireTimer <= 0) {
     boss.fireTimer += cfg.fireEvery * (boss.enraged ? BOSS_ENRAGE_FIRE : 1);
