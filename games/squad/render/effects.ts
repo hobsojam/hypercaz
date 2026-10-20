@@ -19,8 +19,19 @@ export interface Popup {
 
 type ToScreen = (x: number, z: number) => { sx: number; sy: number };
 
+// How the squad count badge is drawn right now: popped bigger after a gain,
+// shaken sideways after a loss, tinted while either lasts.
+export interface BadgePop {
+  scale: number;
+  dx: number;
+  color: string | null;
+}
+
 const POPUP_LIFE = 0.8;
 const POPUP_RISE = 60;
+const BADGE_LIFE = 0.35;
+const GAIN_COLOR = '#3CC85A';
+const LOSS_COLOR = '#E04040';
 const GRAVITY = 900;
 const CONFETTI = ['#F5C242', '#2F7DE1', '#E04040', '#7CFC6A', '#FFFFFF', '#FF8A1F'];
 const TARGET_COLORS: Record<string, string> = { enemy: '#E04040', heavy: '#E04040', cage: '#F5C242', gate: '#F5C242', hazard: '#FF8A1F' };
@@ -44,6 +55,9 @@ export class Effects {
   private crowdWindow = 0;
   private celebrationCooldown = 0;
   private shakeVec = { x: 0, y: 0 };
+  private badgeKind: 'gain' | 'lose' | null = null;
+  private badgeAge = 0;
+  private badgeSize = 0; // how big the last gain's pop is
 
   constructor(audio: { play(s: Sfx): void }, pool: ParticlePool = new ParticlePool(600)) {
     this.audio = audio;
@@ -71,6 +85,7 @@ export class Effects {
           const p = toScreen(e.x, e.z);
           const good = e.type === 'gain';
           this.addPopup(e.amount, e.type, p.sx, p.sy - 50);
+          this.popBadge(e.type, e.amount);
           if (!good) this.routineBurst(p.sx, p.sy - 20, '#2F7DE1');
           this.audio.play(e.type);
           break;
@@ -128,6 +143,8 @@ export class Effects {
     this.crowdWindow = Math.max(0, this.crowdWindow - dt);
     if (this.crowdWindow === 0) this.crowdKills = 0;
     this.celebrationCooldown = Math.max(0, this.celebrationCooldown - dt);
+    this.badgeAge += dt;
+    if (this.badgeAge >= BADGE_LIFE) this.badgeKind = null;
     this.pool.update(dt, GRAVITY);
     for (const p of this.list) p.age += dt;
     this.list = this.list.filter((p) => p.age < POPUP_LIFE);
@@ -162,6 +179,23 @@ export class Effects {
 
   get popups(): readonly Popup[] {
     return this.list;
+  }
+
+  get badge(): BadgePop {
+    if (!this.badgeKind) return { scale: 1, dx: 0, color: null };
+    const left = 1 - this.badgeAge / BADGE_LIFE;
+    if (this.badgeKind === 'gain') return { scale: 1 + this.badgeSize * left * left, dx: 0, color: GAIN_COLOR };
+    return { scale: 1, dx: 8 * left * Math.sin(this.badgeAge * 70), color: LOSS_COLOR };
+  }
+
+  // A gain of 1 pops the badge a little, 20 or more pops it as far as it goes.
+  private popBadge(kind: 'gain' | 'lose', amount: number): void {
+    if (kind === 'gain') {
+      const size = 0.15 + 0.3 * Math.min(1, amount / 20);
+      this.badgeSize = this.badgeKind === 'gain' ? Math.max(size, this.badgeSize) : size;
+    }
+    this.badgeKind = kind;
+    this.badgeAge = 0;
   }
 
   private addPopup(amount: number, kind: Popup['kind'], x: number, y: number): void {

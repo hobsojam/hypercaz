@@ -117,6 +117,23 @@ test.each([
   expect(state).toEqual(before);
 });
 
+test('the squad count badge grows, shifts and changes colour with its pop', () => {
+  const state = createState(makeLevel({ startSquad: 5 }), 1);
+  const badge = (pop?: { scale: number; dx: number; color: string | null }) => {
+    const ctx = stubCtx();
+    renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 }, badge: pop });
+    const rect = (ctx.calls.roundRect ?? []).find((c) => c[3] === 36 * (pop?.scale ?? 1))!;
+    return { x: rect[0] as number, w: rect[2] as number, fills: (ctx.calls['=fillStyle'] ?? []).map((c) => c[0]) };
+  };
+  const plain = badge();
+  const popped = badge({ scale: 1.5, dx: 6, color: '#3CC85A' });
+  expect(plain.w).toBe(68);
+  expect(popped.w).toBe(102);
+  expect(popped.x + popped.w / 2).toBeCloseTo(plain.x + plain.w / 2 + 6);
+  expect(popped.fills).toContain('#3CC85A');
+  expect(plain.fills).not.toContain('#3CC85A');
+});
+
 test('a full kill meter prompts the player to fire', () => {
   const state = createState(makeLevel({ startSquad: 5 }), 1);
   expect(textsDrawn(state)).not.toContain('RAPID FIRE!');

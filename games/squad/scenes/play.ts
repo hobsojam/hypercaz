@@ -70,7 +70,10 @@ export class PlayScene implements Scene {
     step(this.state, { targetX: this.targetX, burst }, dt);
     for (const event of this.state.events) if (event.type === 'lose') this.finalHit = event;
     this.introduction?.update(this.state);
-    this.squadView.update(formationSlots(this.state.squad.count), dt);
+    // New soldiers run in from wherever they were rescued.
+    let spawnAt: { dx: number; dz: number } | undefined;
+    for (const e of this.state.events) if (e.type === 'gain') spawnAt = { dx: e.x - this.state.squad.x, dz: e.z };
+    this.squadView.update(formationSlots(this.state.squad.count), dt, spawnAt);
     if (this.state.events.some((e) => e.type === 'bossArrive')) this.game.audio.startMusic('boss');
     this.effects.handle(this.state.events, (x, z) => projectPlayfieldPoint(DEFAULT_VIEW, x, z));
     this.effects.update(dt);
@@ -112,6 +115,7 @@ export class PlayScene implements Scene {
       time: this.state.time,
       squadView: this.squadView,
       shake: this.effects.shake,
+      badge: this.effects.badge,
       drawEffects: (ctx) => this.effects.draw(ctx),
     });
     if (this.paused) {

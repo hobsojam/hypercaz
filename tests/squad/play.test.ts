@@ -6,6 +6,7 @@ import { spawnEntity } from '../../games/squad/sim/state.ts';
 import { makeLevel } from './fixtures.ts';
 import { PlayScene } from '../../games/squad/scenes/play.ts';
 import type { GameState } from '../../games/squad/sim/state.ts';
+import type { SquadView } from '../../games/squad/render/squadView.ts';
 import { stubGame } from './stubGame.ts';
 
 describe('play scene music', () => {
@@ -128,4 +129,19 @@ it('a rescue behind the front shows its reward at the displayed target', () => {
   expect(effects.popups[0].x).toBeCloseTo(451.7);
   expect(effects.popups[0].y).toBeGreaterThan(800);
   expect(effects.popups[0].y).toBeLessThan(850);
+});
+
+it('soldiers freed from a cage start at the cage and run into the squad', () => {
+  const { game } = stubGame();
+  game.levels[0].level = makeLevel({ startSquad: 5, spawns: [{ z: 10, x: 0.5, type: 'cage', hp: 1, value: 3 }] });
+  const scene = new PlayScene(game, 0);
+  const { state, squadView } = scene as unknown as { state: GameState; squadView: SquadView };
+  state.entities = [spawnEntity(state, state.level.spawns[0], 10)];
+  state.bullets = [{ x: 0.5, z: 10, damage: 1, vx: 0 }];
+  scene.update(0);
+  expect(state.squad.count).toBe(8);
+  for (const p of squadView.positions.slice(5)) {
+    expect(p.dx).toBeCloseTo(0.5 - state.squad.x);
+    expect(p.dz).toBeCloseTo(10);
+  }
 });
