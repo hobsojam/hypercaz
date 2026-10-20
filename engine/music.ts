@@ -221,7 +221,7 @@ function addEcho(bus: Bus, delay: number, feedback: number, mix: number): void {
   for (let i = 0; i < n; i++) bus.data[i] = dry[i] + mix * (wet[i] - dry[i]);
 }
 
-export function renderSong(song: Song, sampleRate: number, seed = 1): Float32Array {
+export function renderSong(song: Song, sampleRate: number, seed = 1): Float32Array<ArrayBuffer> {
   const barCount = song.tracks[0]?.bars.length ?? 0;
   const parsed = song.tracks.map((t, i) => parseTrack(t, i, barCount));
   const length = Math.round(songSeconds(song) * sampleRate);

@@ -34,7 +34,7 @@ export function stubGame() {
       muted: false,
       play: () => undefined,
       unlock: () => undefined,
-      startMusic: () => calls.push('start'),
+      startMusic: (name: string) => calls.push(`start:${name}`),
       stopMusic: () => calls.push('stop'),
       duckMusic: (on: boolean) => calls.push(on ? 'duck' : 'unduck'),
     },

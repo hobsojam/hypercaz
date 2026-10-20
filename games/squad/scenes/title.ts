@@ -11,6 +11,7 @@ export class TitleScene implements Scene {
 
   constructor(game: Game) {
     this.game = game;
+    game.audio.startMusic('menu');
   }
 
   update(dt: number): void {

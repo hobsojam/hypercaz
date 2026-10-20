@@ -51,12 +51,11 @@ export class GameAudio {
   private last: Partial<Record<Sfx, number>> = {};
   private createContext: () => AudioContext;
   private isMuted = false;
-  // Music: the rendered track may arrive after play was asked for (it is
-  // rendered off the main thread), so remember the request.
-  private track: { samples: Float32Array<ArrayBuffer>; sampleRate: number } | null = null;
-  private buffer: AudioBuffer | null = null;
-  private music: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
-  private wantMusic = false;
+  // Music: named looping tracks. A track may arrive after play was asked for
+  // (they are rendered off the main thread), so remember the request.
+  private tracks = new Map<string, { samples: Float32Array<ArrayBuffer>; sampleRate: number; buffer: AudioBuffer | null }>();
+  private music: { name: string; source: AudioBufferSourceNode; gain: GainNode } | null = null;
+  private wanted: string | null = null;
   private ducked = false;
 
   constructor(createContext: () => AudioContext = () => new AudioContext()) {
@@ -93,19 +92,25 @@ export class GameAudio {
     this.applyMusicVolume();
   }
 
-  setMusic(samples: Float32Array<ArrayBuffer>, sampleRate: number): void {
-    this.track = { samples, sampleRate };
-    this.buffer = null;
+  setMusic(name: string, samples: Float32Array<ArrayBuffer>, sampleRate: number): void {
+    this.tracks.set(name, { samples, sampleRate, buffer: null });
     this.syncMusic();
   }
 
-  startMusic(): void {
-    this.wantMusic = true;
+  // Plays the named track, fading out whatever else is playing. Asking for
+  // the track that is already playing changes nothing.
+  startMusic(name: string): void {
+    if (this.music && this.music.name !== name) this.fadeOut();
+    this.wanted = name;
     this.syncMusic();
   }
 
   stopMusic(): void {
-    this.wantMusic = false;
+    this.wanted = null;
+    this.fadeOut();
+  }
+
+  private fadeOut(): void {
     const m = this.music;
     if (!m || !this.ctx) return;
     this.music = null;
@@ -122,17 +127,20 @@ export class GameAudio {
 
   private syncMusic(): void {
     const ctx = this.ctx;
-    if (!this.wantMusic || this.music || !ctx || !this.track) return;
-    if (!this.buffer) {
-      this.buffer = ctx.createBuffer(1, this.track.samples.length, this.track.sampleRate);
-      this.buffer.copyToChannel(this.track.samples, 0);
+    const name = this.wanted;
+    const track = name === null ? undefined : this.tracks.get(name);
+    if (name === null || this.music || !ctx || !track) return;
+    if (!track.buffer) {
+      track.buffer = ctx.createBuffer(1, track.samples.length, track.sampleRate);
+      track.buffer.copyToChannel(track.samples, 0);
     }
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
-    source.buffer = this.buffer;
+    source.buffer = track.buffer;
     source.loop = true;
     source.connect(gain).connect(ctx.destination);
-    this.music = { source, gain };
+    this.music = { name, source, gain };
+    gain.gain.setValueAtTime(0, ctx.currentTime); // fade in from silence, not from full volume
     this.applyMusicVolume();
     source.start();
   }

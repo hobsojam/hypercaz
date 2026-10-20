@@ -36,7 +36,7 @@ export class PlayScene implements Scene {
     this.state = createState(game.levels[index].level!, Date.now() >>> 0);
     this.lastPointerX = null; // follow wherever the pointer already is
     this.effects = new Effects(game.audio);
-    game.audio.startMusic();
+    game.audio.startMusic('gameplay');
   }
 
   private setPaused(paused: boolean): void {
@@ -65,6 +65,7 @@ export class PlayScene implements Scene {
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX, burst }, dt);
     this.squadView.update(formationSlots(this.state.squad.count), dt);
+    if (this.state.events.some((e) => e.type === 'bossArrive')) this.game.audio.startMusic('boss');
     this.effects.handle(this.state.events, (x, z) => projectPlayfieldPoint(DEFAULT_VIEW, x, z));
     this.effects.update(dt);
 

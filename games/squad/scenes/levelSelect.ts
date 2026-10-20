@@ -11,6 +11,7 @@ export class LevelSelectScene implements Scene {
 
   constructor(game: Game) {
     this.game = game;
+    game.audio.startMusic('menu');
   }
 
   private buttons(): { button: Button; index: number }[] {
