@@ -38,11 +38,12 @@ export const BURST_SECONDS = 4;
 
 export const BOSS_Z = 18;
 export const BOSS_ENTRY_Z = 38;
-export const BOSS_ENTRY_SPEED = 5;
+export const BOSS_ENTRY_SPEED = 10; // a two-second entrance
 export const BOSS_HALF_W = 0.5;
 export const BOSS_HALF_D = 2;
 
 export const BOSS_WINDUP = 0.7; // seconds of warning glow before each volley
+export const BOSS_FIRST_VOLLEY = 1.5; // seconds after settling: the boss opens with its attack, not a full interval
 export const BOSS_ENRAGE_AT = 0.5; // fraction of health left when the boss enrages
 export const BOSS_ENRAGE_FIRE = 0.6; // fire interval multiplier once enraged
 export const BOSS_ENRAGE_SUMMON = 0.7; // summon interval multiplier once enraged

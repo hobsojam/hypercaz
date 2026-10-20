@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { updateBoss } from '../../../games/squad/sim/boss.ts';
+import { BOSS_WINDUP } from '../../../games/squad/sim/constants.ts';
 import { changeCount } from '../../../games/squad/sim/contact.ts';
 import { createState, type GameState } from '../../../games/squad/sim/state.ts';
 import { step } from '../../../games/squad/sim/step.ts';
 import { DT, makeLevel } from '../fixtures.ts';
 
-function runCollect(s: GameState, seconds: number, targetX = 0) {
+function runCollect(s: GameState, seconds: number, targetX = 0, { noShells = false } = {}) {
   const events: GameState['events'] = [];
   for (let i = 0; i < Math.round(seconds / DT); i++) {
     step(s, { targetX }, DT);
     events.push(...s.events);
+    if (noShells) s.projectiles = [];
   }
   return events;
 }
@@ -84,15 +86,16 @@ describe('boss', () => {
 });
 
 describe('boss pressure', () => {
-  // length 10 at speed 10: the boss arrives at t=1 and settles (z=18) at t=5.
+  // length 10 at speed 10: the boss arrives at t=1 and settles (z=18) at t=3.
   const boss = (extra: Record<string, unknown>) => ({ hp: 100000, pattern: 'single', fireEvery: 100, ...extra });
 
   it('advances on the squad once settled, and reaching it loses the level', () => {
     const s = createState(makeLevel({ startSquad: 5, length: 10, boss: boss({ advance: 2 }) }), 1);
-    runCollect(s, 6);
+    // Shells are cleared so only the boss reaching the squad kills it.
+    runCollect(s, 4, 0, { noShells: true });
     expect(s.boss!.z).toBeLessThan(18);
     expect(s.boss!.z).toBeGreaterThan(14);
-    const events = runCollect(s, 10);
+    const events = runCollect(s, 10, 0, { noShells: true });
     expect(s.phase).toBe('lost');
     expect(s.squad.count).toBe(0);
     expect(events.filter((e) => e.type === 'lost')).toHaveLength(1);
@@ -152,13 +155,26 @@ describe('boss pressure', () => {
     expect(angry.volley).toBe(3);
   });
 
+  it('opens fire soon after it appears, after a full warning glow', () => {
+    // length 10 at speed 10: the boss appears at t=1.
+    const s = createState(makeLevel({ startSquad: 5, length: 10, boss: boss({ fireEvery: 3 }) }), 1);
+    const seen: { type: string; t: number }[] = [];
+    for (let i = 0; i < Math.round(8 / DT); i++) {
+      step(s, { targetX: 0.9 }, DT);
+      for (const e of s.events) seen.push({ type: e.type, t: s.time });
+    }
+    const at = (type: string) => seen.find((e) => e.type === type)!.t;
+    expect(at('bossFire') - at('bossArrive')).toBeLessThanOrEqual(4);
+    expect(at('bossFire') - at('bossWindup')).toBeCloseTo(BOSS_WINDUP, 1);
+  });
+
   it('glows a warning just before each volley', () => {
     const s = createState(makeLevel({ length: 10, boss: boss({ fireEvery: 2 }) }), 1);
-    runCollect(s, 5.5);
+    runCollect(s, 3.5); // settled; the first volley is due at t=4.5
     expect(s.boss!.charging).toBe(false);
-    runCollect(s, 1.2);
+    runCollect(s, 0.5);
     expect(s.boss!.charging).toBe(true);
-    const events = runCollect(s, 0.5);
+    const events = runCollect(s, 0.6);
     expect(events.some((e) => e.type === 'bossFire')).toBe(true);
     expect(s.boss!.charging).toBe(false);
   });
