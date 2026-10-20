@@ -63,7 +63,7 @@ test('a wide but short window keeps one row while the tubes can be 44 px wide', 
 test('on an upright phone, 12 tubes wrap into centred rows', () => {
   const rects = layoutTubes(12, 390, 844);
   const rows = [...new Set(rects.map((r) => r.y))];
-  expect(rows.length).toBe(3);
+  expect(rows).toHaveLength(3);
   for (const y of rows) {
     const row = rects.filter((r) => r.y === y);
     const left = row[0]!.x;

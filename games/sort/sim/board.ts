@@ -11,7 +11,7 @@ export interface Board {
 
 export function topRun(tube: Tube): { color: number; count: number } | null {
   if (tube.length === 0) return null;
-  const color = tube[tube.length - 1];
+  const color = tube.at(-1)!;
   let count = 1;
   while (count < tube.length && tube[tube.length - 1 - count] === color) count++;
   return { color, count };
@@ -23,13 +23,13 @@ export function pour(board: Board, from: number, to: number): { board: Board; mo
   const run = topRun(tubes[from]);
   if (!run) return null;
   const dest = tubes[to];
-  const destTop = dest[dest.length - 1];
+  const destTop = dest.at(-1);
   if (dest.length > 0 && destTop !== run.color) return null;
   const moved = Math.min(run.count, CAPACITY - dest.length);
   if (moved <= 0) return null;
   const next = tubes.map((t, i) => {
     if (i === from) return t.slice(0, t.length - moved);
-    if (i === to) return [...t, ...Array<number>(moved).fill(run.color)];
+    if (i === to) return [...t, ...new Array<number>(moved).fill(run.color)];
     return t;
   });
   return { board: { tubes: next }, moved };

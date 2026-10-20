@@ -257,7 +257,9 @@ function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number): vo
 // above the target, tilted towards it.
 function pourPose(a: Rect, b: Rect, t: number) {
   const dir = a.x >= b.x ? 1 : -1; // +1: the source is right of the target
-  const reach = t < FLOW_START ? ease.inOutQuad(t / FLOW_START) : t > FLOW_END ? 1 - ease.inOutQuad((t - FLOW_END) / (1 - FLOW_END)) : 1;
+  let reach = 1;
+  if (t < FLOW_START) reach = ease.inOutQuad(t / FLOW_START);
+  else if (t > FLOW_END) reach = 1 - ease.inOutQuad((t - FLOW_END) / (1 - FLOW_END));
   // It leaves from its lifted place and comes back to rest.
   const restY = t < FLOW_START ? a.y - a.w * LIFT : a.y;
   const half = a.w / 2;
@@ -350,11 +352,11 @@ export function drawScene(ctx: CanvasRenderingContext2D, m: SceneModel): void {
   const { pour } = m;
   m.board.tubes.forEach((tube, i) => {
     const r = m.rects[i];
-    if (!r || (pour && i === pour.from)) return;
+    if (!r || i === pour?.from) return;
     const lifted = i === m.lifted;
     const dx = lifted ? Math.sin(m.time * 55) * 5 * m.shake : 0;
     const dy = lifted ? -r.w * LIFT : 0;
-    const settled = !pour || i !== pour.to;
+    const settled = i !== pour?.to;
     const look = { symbols: m.symbols, done: settled && isDone(tube), shine: settled ? (m.shine?.[i] ?? 0) : 0 };
     drawTube(ctx, r.x + dx, r.y + dy, r.w, r.h, layersFor(m.board, i, pour), look);
   });

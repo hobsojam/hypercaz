@@ -1,4 +1,4 @@
-import { isDone, isWon, pour, topRun, type Board } from './board.ts';
+import { isDone, isWon, pour, topRun, type Board, type Tube } from './board.ts';
 
 export type Move = { from: number; to: number };
 
@@ -6,8 +6,48 @@ export type Move = { from: number; to: number };
 function key(board: Board): string {
   return board.tubes
     .map((t) => t.join(','))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .join('|');
+}
+
+interface Candidate {
+  move: Move;
+  next: Board;
+  score: number;
+}
+
+// Moving a whole one-colour tube into an empty tube gains nothing.
+function pointless(src: Tube, dest: Tube): boolean {
+  const run = topRun(src);
+  return dest.length === 0 && run?.count === src.length;
+}
+
+// Completing a tube first, then moves that empty the source.
+function scoreOf(next: Board, from: number, to: number): number {
+  return (isDone(next.tubes[to]) ? 2 : 0) + (next.tubes[from].length === 0 ? 1 : 0);
+}
+
+function candidatesFor(b: Board, to: number): Candidate[] {
+  const out: Candidate[] = [];
+  const dest = b.tubes[to];
+  b.tubes.forEach((src, from) => {
+    if (from === to || src.length === 0 || isDone(src) || pointless(src, dest)) return;
+    const r = pour(b, from, to);
+    if (r) out.push({ move: { from, to }, next: r.board, score: scoreOf(r.board, from, to) });
+  });
+  return out;
+}
+
+// Every legal pour, best first. Empty tubes are interchangeable, so only the
+// first one is tried as a destination.
+function candidates(b: Board): Candidate[] {
+  const firstEmpty = b.tubes.findIndex((t) => t.length === 0);
+  const all: Candidate[] = [];
+  for (let to = 0; to < b.tubes.length; to++) {
+    if (b.tubes[to].length === 0 && to !== firstEmpty) continue;
+    all.push(...candidatesFor(b, to));
+  }
+  return all.sort((x, y) => y.score - x.score);
 }
 
 // Depth-first search. Returns a winning move list, or null if none was found
@@ -20,32 +60,7 @@ export function solve(board: Board, maxNodes = 200_000): Move[] | null {
   function search(b: Board): boolean {
     if (isWon(b)) return true;
     if (++nodes > maxNodes) return false;
-    const { tubes } = b;
-    const candidates: { move: Move; next: Board; score: number }[] = [];
-    let emptyTried = false;
-    for (let to = 0; to < tubes.length; to++) {
-      const dest = tubes[to];
-      if (dest.length === 0) {
-        // Empty tubes are interchangeable, so only try the first.
-        if (emptyTried) continue;
-        emptyTried = true;
-      }
-      for (let from = 0; from < tubes.length; from++) {
-        const src = tubes[from];
-        if (from === to || src.length === 0 || isDone(src)) continue;
-        const run = topRun(src);
-        // Moving a whole one-colour tube into an empty tube gains nothing.
-        if (dest.length === 0 && run && run.count === src.length) continue;
-        const r = pour(b, from, to);
-        if (!r) continue;
-        const after = r.board.tubes[to];
-        // Completing a tube first, then moves that empty the source.
-        const score = (isDone(after) ? 2 : 0) + (r.board.tubes[from].length === 0 ? 1 : 0);
-        candidates.push({ move: { from, to }, next: r.board, score });
-      }
-    }
-    candidates.sort((x, y) => y.score - x.score);
-    for (const c of candidates) {
+    for (const c of candidates(b)) {
       const k = key(c.next);
       if (seen.has(k)) continue;
       seen.add(k);

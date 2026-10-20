@@ -1,3 +1,4 @@
+import { createRng, nextFloat } from '../../../engine/rng.ts';
 import { ParticlePool } from '../../../engine/particles.ts';
 import type { Scene } from '../../../engine/scenes.ts';
 import { drawPausedOverlay } from '../../../engine/ui.ts';
@@ -23,8 +24,8 @@ interface Landing {
 
 export class PlayScene implements Scene {
   readonly level: number;
-  private game: SortGame;
-  private start: Board;
+  private readonly game: SortGame;
+  private readonly start: Board;
   private current: Board;
   private history: Board[] = [];
   private liftedTube: number | null = null;
@@ -33,7 +34,8 @@ export class PlayScene implements Scene {
   private shake = 0; // seconds left
   private shine: number[] = []; // seconds left, per tube
   private celebrate: number | null = null; // seconds into the celebration
-  private particles = new ParticlePool(160);
+  private readonly particles = new ParticlePool(160);
+  private rng: number;
   private time = 0;
   private finished = false; // replaced by the next level
   paused = false;
@@ -44,6 +46,7 @@ export class PlayScene implements Scene {
   constructor(game: SortGame, level: number) {
     this.game = game;
     this.level = level;
+    this.rng = createRng(level);
     this.start = generateLevel(level);
     this.current = this.start;
   }
@@ -86,33 +89,48 @@ export class PlayScene implements Scene {
     this.time += dt;
     this.animate(dt);
     if (input.consumeKey('s')) this.toggleSymbols();
-    const { w, h } = this.game.view;
-    const controls = controlRects(w);
-    if (hitAllGames(click, controls.allGames)) {
+    const { w } = this.game.view;
+    if (hitAllGames(click, controlRects(w).allGames)) {
       this.navigate('../');
       return;
     }
     if (this.celebrate !== null) {
-      // Undo and restart can't take the win back; a click skips ahead.
-      for (const k of ['z', 'backspace', 'r']) input.consumeKey(k);
-      if (click || this.celebrate >= CELEBRATE_TIME) this.next();
+      this.updateCelebration(click);
       return;
     }
+    this.updatePlay(click, w);
+  }
+
+  // Undo and restart can't take the win back; a click skips ahead.
+  private updateCelebration(click: { x: number; y: number } | null): void {
+    for (const k of ['z', 'backspace', 'r']) this.game.input.consumeKey(k);
+    if (click || (this.celebrate ?? 0) >= CELEBRATE_TIME) this.next();
+  }
+
+  private updatePlay(click: { x: number; y: number } | null, w: number): void {
+    const { input } = this.game;
     if (input.consumeKey('z') || input.consumeKey('Backspace')) this.undo();
     if (input.consumeKey('r')) this.restart();
-    if (!click) return;
+    if (click) this.handleClick(click, w);
+  }
+
+  private handleClick(click: { x: number; y: number }, w: number): void {
+    const controls = controlRects(w);
     if (hitRect(controls.pause, click, 6)) {
       this.paused = true;
-      return;
-    }
-    if (hitRect(symbolsRect(w), click, 6)) {
+    } else if (hitRect(symbolsRect(w), click, 6)) {
       this.toggleSymbols();
-      return;
+    } else {
+      this.clickBoard(click);
     }
+  }
+
+  private clickBoard(click: { x: number; y: number }): void {
+    const { w, h } = this.game.view;
     const buttons = buttonRects(w, h);
-    if (hitRect(buttons.undo, click, 4)) return this.undo();
-    if (hitRect(buttons.restart, click, 4)) return this.restart();
-    this.clickTube(this.hitTube(click));
+    if (hitRect(buttons.undo, click, 4)) this.undo();
+    else if (hitRect(buttons.restart, click, 4)) this.restart();
+    else this.clickTube(this.hitTube(click));
   }
 
   // The tube under the pointer; a lifted tube is hit where it is drawn, too.
@@ -192,22 +210,28 @@ export class PlayScene implements Scene {
     if (this.anim.t >= 1) this.anim = null;
   }
 
+  private random(): number {
+    const [value, next] = nextFloat(this.rng);
+    this.rng = next;
+    return value;
+  }
+
   // Confetti in the level's colours, from the top of every tube.
   private burst(): void {
     const colors = new Set(this.current.tubes.flat());
     const palette = [...colors].map((c) => COLORS[c % COLORS.length]!);
     this.rects().forEach((r, i) => {
       for (let k = 0; k < 10; k++) {
-        const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
-        const speed = 260 + Math.random() * 260;
+        const a = -Math.PI / 2 + (this.random() - 0.5) * 1.6;
+        const speed = 260 + this.random() * 260;
         this.particles.emit({
           x: r.x + r.w / 2,
           y: r.y,
           vx: Math.cos(a) * speed,
           vy: Math.sin(a) * speed,
-          life: 1 + Math.random() * 0.5,
+          life: 1 + this.random() * 0.5,
           color: palette[(i + k) % palette.length] ?? '#FFFFFF',
-          size: 5 + Math.random() * 4,
+          size: 5 + this.random() * 4,
           spin: 0,
         });
       }
