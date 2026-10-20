@@ -21,13 +21,21 @@ const DT = 1 / 60;
 
 const cagesAt = (z: number) => level.spawns.filter((s) => s.type === 'cage' && Math.abs(s.z - z) < 0.01);
 
-// The bot plays until the fork's cages have just appeared.
+// Fork runs are slow (the bot plays up to each fork first), so give each test room.
+const SLOW = { timeout: 30_000 };
+
+// The bot plays until the fork's cages have just appeared. Each seed plays up
+// to each fork once; every route gets its own copy.
+const arrivals = new Map<string, GameState>();
 function atFork(seed: number, z: number): GameState {
-  const s = createState(level, seed);
-  while (s.phase === 'advance' && s.distance < z - SPAWN_HORIZON) step(s, botInput(s), DT);
-  // Spawning happens inside step, so one more frame brings the fork on screen.
-  step(s, botInput(s), DT);
-  return s;
+  const key = `${seed}@${z}`;
+  if (!arrivals.has(key)) {
+    const s = createState(level, seed);
+    while (s.phase === 'advance' && s.distance < z - SPAWN_HORIZON) step(s, botInput(s), DT);
+    step(s, botInput(s), DT);
+    arrivals.set(key, s);
+  }
+  return structuredClone(arrivals.get(key)!);
 }
 
 const forkCages = (s: GameState, z: number) =>
@@ -49,8 +57,25 @@ function twin(seed: number, z: number, opts: { scale?: number; burst?: boolean }
 }
 
 const aimAt = (target: Entity, burst = false) => (): Input => ({ targetX: target.x, burst });
-// Breaks the small cage, then turns to the big one.
-const both = (small: Entity, big: Entity, burst = false) => (): Input => ({ targetX: small.hp > 0 ? small.x : big.x, burst });
+// Breaks one cage, then turns to the other.
+const both = (first: Entity, second: Entity, burst = false) => (): Input => ({ targetX: first.hp > 0 ? first.x : second.x, burst });
+
+// Tries for both cages in either order; returns the most collected.
+function greedy(seed: number, z: number, opts: { scale?: number; burst?: boolean } = {}): number {
+  return Math.max(
+    ...([true, false] as const).map((smallFirst) => {
+      const t = twin(seed, z, opts);
+      const [first, second] = smallFirst ? [t.small, t.big] : [t.big, t.small];
+      return route(t.s, [t.small, t.big], both(first, second, opts.burst)).collected;
+    }),
+  );
+}
+
+// Plays the rest of the level as the bot, capped like runLevel.
+function finish(s: GameState): GameState {
+  for (let i = 0; i < 300 / DT && s.phase !== 'won' && s.phase !== 'lost'; i++) step(s, botInput(s), DT);
+  return s;
+}
 
 describe('level 6 reward forks', () => {
   it('has the three forks', () => {
@@ -74,28 +99,27 @@ describe('level 6 reward forks', () => {
       expect(big.value / small.value).toBeLessThanOrEqual(3);
     });
 
-    it.each(SEEDS)('seed %i: either cage alone can be broken, both cannot', (seed) => {
+    it.each(SEEDS)('seed %i: either cage alone can be broken, both cannot in either order', SLOW, (seed) => {
       for (const pick of ['small', 'big'] as const) {
         const t = twin(seed, z);
         expect(route(t.s, [t[pick]], aimAt(t[pick])).collected, pick).toBe(1);
       }
-      const t = twin(seed, z);
-      expect(route(t.s, [t.small, t.big], both(t.small, t.big)).collected).toBe(1);
+      expect(greedy(seed, z)).toBe(1);
     });
 
-    it.each(SEEDS)('seed %i: Rapid Fire breaks both', (seed) => {
-      const t = twin(seed, z, { burst: true });
-      expect(route(t.s, [t.small, t.big], both(t.small, t.big, true)).collected).toBe(2);
+    it.each(SEEDS)('seed %i: Rapid Fire breaks both', SLOW, (seed) => {
+      expect(greedy(seed, z, { burst: true })).toBe(2);
     });
 
-    it.each(SEEDS)('seed %i: a squad that lost soldiers earlier can still take the small cage', (seed) => {
+    it.each(SEEDS)('seed %i: a squad that lost soldiers earlier can still take either cage', SLOW, (seed) => {
       const t = twin(seed, z, { scale: 0.7 });
-      expect(route(t.s, [t.small], aimAt(t.small)).collected).toBe(1);
+      expect(route(t.s, [t.small], aimAt(t.small)).collected, 'small at 0.7').toBe(1);
+      const u = twin(seed, z, { scale: 0.8 });
+      expect(route(u.s, [u.big], aimAt(u.big)).collected, 'big at 0.8').toBe(1);
     });
 
-    it.each(SEEDS)('seed %i: a somewhat bigger squad still cannot take both without Rapid Fire', (seed) => {
-      const t = twin(seed, z, { scale: 1.2 });
-      expect(route(t.s, [t.small, t.big], both(t.small, t.big)).collected).toBe(1);
+    it.each(SEEDS)('seed %i: a somewhat bigger squad still cannot take both without Rapid Fire', SLOW, (seed) => {
+      expect(greedy(seed, z, { scale: 1.2 })).toBe(1);
     });
   });
 
@@ -103,7 +127,13 @@ describe('level 6 reward forks', () => {
   // Shooting through the crowd costs soldiers and time, but charges the meter.
   describe('the guarded cage', () => {
     // Soldiers gained or lost from when the fork appears until it has passed.
+    const runs = new Map<string, ReturnType<typeof play>>();
     function guarded(seed: number, pick: 'small' | 'big', burst = false) {
+      const key = `${seed}${pick}${burst}`;
+      if (!runs.has(key)) runs.set(key, play(seed, pick, burst));
+      return runs.get(key)!;
+    }
+    function play(seed: number, pick: 'small' | 'big', burst: boolean) {
       const s = atFork(seed, GUARDED);
       s.burstTime = 0;
       s.meter = burst ? level.burstKills : 0;
@@ -138,26 +168,26 @@ describe('level 6 reward forks', () => {
       expect(crowd.every((e) => e.z < GUARDED)).toBe(true);
     });
 
-    it.each(SEEDS)('seed %i: the small cage is safe', (seed) => {
+    it.each(SEEDS)('seed %i: the small cage is safe', SLOW, (seed) => {
       const r = guarded(seed, 'small');
       expect(r.collected).toBe(true);
       expect(r.net).toBeGreaterThanOrEqual(0.8 * r.small);
     });
 
-    it.each(SEEDS)('seed %i: the guarded cage pays more, but the crowd takes a real share', (seed) => {
+    it.each(SEEDS)('seed %i: the guarded cage pays more, but the crowd takes a real share', SLOW, (seed) => {
       const r = guarded(seed, 'big');
       expect(r.collected).toBe(true);
       expect(r.big - r.net).toBeGreaterThanOrEqual(0.3 * r.big);
       expect(r.kills).toBeGreaterThan(guarded(seed, 'small').kills);
     });
 
-    it.each(SEEDS)('seed %i: neither cage is far ahead of the other', (seed) => {
+    it.each(SEEDS)('seed %i: neither cage is far ahead of the other', SLOW, (seed) => {
       const small = guarded(seed, 'small');
       const big = guarded(seed, 'big');
       expect(Math.abs(big.net - small.net)).toBeLessThanOrEqual(0.5 * big.big);
     });
 
-    it.each(SEEDS)('seed %i: Rapid Fire through the crowd beats both', (seed) => {
+    it.each(SEEDS)('seed %i: Rapid Fire through the crowd beats both', SLOW, (seed) => {
       const r = guarded(seed, 'big', true);
       expect(r.collected).toBe(true);
       expect(r.net).toBeGreaterThan(guarded(seed, 'big').net);
@@ -166,27 +196,38 @@ describe('level 6 reward forks', () => {
   });
 
   describe('the third fork: Rapid Fire now or later', () => {
-    it.each(SEEDS)('seed %i: spending it on the cages and saving it both win the level', (seed) => {
+    it.each(SEEDS)('seed %i: spending it on the cages and saving it both win the level', SLOW, (seed) => {
       for (const spend of [true, false]) {
         const t = twin(seed, TWIN_3, { burst: true });
         const policy = spend ? both(t.small, t.big, true) : aimAt(t.small);
         const r = route(t.s, [t.small, t.big], policy);
         expect(r.collected, spend ? 'spend' : 'save').toBe(spend ? 2 : 1);
-        const s = r.state;
-        while (s.phase !== 'won' && s.phase !== 'lost') step(s, botInput(s), DT);
-        expect(s.phase, spend ? 'spend' : 'save').toBe('won');
+        expect(finish(r.state).phase, spend ? 'spend' : 'save').toBe('won');
       }
     });
 
-    it.each(SEEDS)('seed %i: arriving with an empty meter still wins', (seed) => {
-      const t = twin(seed, TWIN_3);
-      const s = route(t.s, [t.small, t.big], aimAt(t.small)).state;
-      while (s.phase !== 'won' && s.phase !== 'lost') step(s, botInput(s), DT);
-      expect(s.phase).toBe('won');
+    // A player who spent Rapid Fire earlier and lost a few soldiers on the way.
+    it.each(SEEDS)('seed %i: arriving with an empty meter and fewer soldiers still wins', SLOW, (seed) => {
+      const t = twin(seed, TWIN_3, { scale: 0.85 });
+      expect(finish(route(t.s, [t.small, t.big], aimAt(t.small)).state).phase).toBe('won');
     });
   });
 
-  it.each(SEEDS)('seed %i: the bot takes a cage at every twin fork', (seed) => {
+  // The first fork teaches "pick one"; Rapid Fire coming ready halfway
+  // through it would turn it into the third fork.
+  it.each(SEEDS)('seed %i: Rapid Fire is not ready during the first fork', SLOW, (seed) => {
+    const s = atFork(seed, TWIN_1);
+    const cages = forkCages(s, TWIN_1);
+    expect(cages).toHaveLength(2);
+    let peak = s.meter;
+    while (s.phase === 'advance' && cages.some((c) => c.hp > 0 && c.z > -1)) {
+      step(s, botInput(s), DT);
+      peak = Math.max(peak, s.meter);
+    }
+    expect(peak).toBeLessThan(level.burstKills);
+  });
+
+  it.each(SEEDS)('seed %i: the bot takes a cage at every twin fork', SLOW, (seed) => {
     const s = createState(level, seed);
     const seen = new Map<number, Entity[]>();
     while (s.phase === 'advance') {

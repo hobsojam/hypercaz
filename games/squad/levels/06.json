@@ -6,8 +6,8 @@
  "length": 450,
  "burstKills": 228,
  "stars": [
-  151,
-  227
+  119,
+  179
  ],
  "spawns": [
   {
@@ -37,10 +37,10 @@
    "z": 62.37,
    "x": 0.03,
    "type": "horde",
-   "count": 110,
+   "count": 50,
    "hp": 1,
    "width": 1.7,
-   "depth": 10.8
+   "depth": 6
   },
   {
    "z": 80.57,
@@ -54,14 +54,14 @@
    "x": -0.5,
    "type": "cage",
    "hp": 155,
-   "value": 12
+   "value": 8
   },
   {
    "z": 110,
    "x": 0.5,
    "type": "cage",
-   "hp": 240,
-   "value": 30
+   "hp": 330,
+   "value": 20
   },
   {
    "z": 132.58,
@@ -152,7 +152,7 @@
    "z": 315,
    "x": -0.5,
    "type": "cage",
-   "hp": 1000,
+   "hp": 700,
    "value": 38
   },
   {
@@ -215,10 +215,10 @@
   }
  ],
  "boss": {
-  "hp": 12500,
+  "hp": 9000,
   "pattern": "volley3",
   "fireEvery": 3,
-  "advance": 0.548,
+  "advance": 0.45,
   "summonEvery": 6.48,
   "summonCount": 38,
   "summonHp": 11,

@@ -16,7 +16,8 @@ describe('levels', () => {
   });
 
   describe.each(levels.map((l) => [l.id, l] as const))('level %i', (_id, level) => {
-    it.each([1, 2, 3])('the bot wins with seed %i and earns 2 stars', (seed) => {
+    // A whole level per test; slow on a busy CI runner.
+    it.each([1, 2, 3])('the bot wins with seed %i and earns 2 stars', { timeout: 30_000 }, (seed) => {
       const end = runLevel(level, seed, botInput);
       expect(end.phase).toBe('won');
       expect(end.squad.count).toBeGreaterThanOrEqual(level.stars[0]);
