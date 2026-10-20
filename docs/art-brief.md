@@ -72,7 +72,7 @@ Skin tones and hair are up to you, with variety welcome. Team colour should domi
 | `heavy_walk` | `heavy_walk.png` | 96×112 | 4 | 6 | front | Big armoured red brute with a shield or heavy plating, slow and stompy. Clearly tougher than `enemy_walk`. |
 | `boss_idle` | `boss_idle.png` | 320×256 | 2 | 3 | front | Level boss: a big chunky red armoured tank or mech with a cannon pointing at the camera. Frame 2 is a slight bob or idle shift. |
 | `boss_damaged` | `boss_damaged.png` | 320×256 | 2 | 3 | front | The same boss, visibly battered: dents, sparks, smoke puffs, a bent barrel. Same silhouette and position as `boss_idle`. |
-| `cage` | `cage.png` | 96×112 | 1 | – | front | Gold-barred cage holding one worried-looking **blue** soldier waving for help. |
+| `cage` | `cage.png` | 96×112 | 4 | – | front | Gold-barred cage holding one worried-looking **blue** soldier waving for help. The frames show it breaking open, not animating: all bars, then one bar gone, two gone, and finally every inner bar gone (only the frame left). The game picks the frame from the damage taken. |
 | `cage_broken` | `cage_broken.png` | 96×112 | 1 | – | front | The same cage with its bars burst open and empty. |
 | `gate_positive` | `gate_positive.png` | 256×96 | 1 | – | front | Gate frame (two posts plus a top banner) in green-gold tones meaning "good". Plain centre panel for the number. Stretched horizontally. |
 | `gate_negative` | `gate_negative.png` | 256×96 | 1 | – | front | The same gate shape in red tones meaning "bad". Plain centre panel. Stretched horizontally. |
