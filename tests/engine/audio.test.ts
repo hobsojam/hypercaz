@@ -120,8 +120,8 @@ describe('music', () => {
   it('loops the track once unlocked and started', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
     expect(ctx.sources).toHaveLength(1);
     expect(ctx.sources[0]).toMatchObject({ loop: true, started: 1 });
     expect(gain(ctx)).toBe(MUSIC_VOLUME);
@@ -130,16 +130,16 @@ describe('music', () => {
   it('starts as soon as a late track arrives, if play was already asked for', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.startMusic();
+    audio.startMusic('march');
     expect(ctx.sources).toHaveLength(0);
-    audio.setMusic(track, 22050);
+    audio.setMusic('march', track, 22050);
     expect(ctx.sources).toHaveLength(1);
   });
 
   it('waits for unlock before playing', () => {
     const { ctx, audio } = setup();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
     expect(ctx.sources).toHaveLength(0);
     audio.unlock();
     expect(ctx.sources).toHaveLength(1);
@@ -148,19 +148,19 @@ describe('music', () => {
   it('starting twice does not layer a second copy', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
+    audio.startMusic('march');
     expect(ctx.sources).toHaveLength(1);
   });
 
   it('builds the audio buffer once and reuses it', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
     audio.stopMusic();
-    audio.startMusic();
+    audio.startMusic('march');
     expect(ctx.buffers).toBe(1);
     expect(ctx.sources).toHaveLength(2);
   });
@@ -168,11 +168,11 @@ describe('music', () => {
   it('stopping stops the track, and a late track does not start it again', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.startMusic();
+    audio.startMusic('march');
     audio.stopMusic();
-    audio.setMusic(track, 22050);
+    audio.setMusic('march', track, 22050);
     expect(ctx.sources).toHaveLength(0);
-    audio.startMusic();
+    audio.startMusic('march');
     audio.stopMusic();
     expect(ctx.sources[0].stopped).toBe(1);
   });
@@ -180,8 +180,8 @@ describe('music', () => {
   it('mute silences the music and unmute brings it back', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
     audio.muted = true;
     expect(gain(ctx)).toBe(0);
     audio.muted = false;
@@ -191,12 +191,68 @@ describe('music', () => {
   it('ducking lowers the music without stopping it', () => {
     const { ctx, audio } = setup();
     audio.unlock();
-    audio.setMusic(track, 22050);
-    audio.startMusic();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
     audio.duckMusic(true);
     expect(gain(ctx)).toBeGreaterThan(0);
     expect(gain(ctx)).toBeLessThan(MUSIC_VOLUME);
     audio.duckMusic(false);
     expect(gain(ctx)).toBe(MUSIC_VOLUME);
+  });
+
+  it('switching tracks fades out the old one and starts the new one', () => {
+    const { ctx, audio } = setup();
+    audio.unlock();
+    audio.setMusic('march', track, 22050);
+    audio.setMusic('boss', track, 22050);
+    audio.startMusic('march');
+    const marchGain = ctx.musicGains.at(-1)!;
+    audio.startMusic('boss');
+    expect(ctx.sources).toHaveLength(2);
+    expect(ctx.sources[0].stopped).toBe(1);
+    expect(marchGain.value).toBe(0);
+    expect(ctx.sources[1]).toMatchObject({ loop: true, started: 1 });
+    expect(gain(ctx)).toBe(MUSIC_VOLUME);
+  });
+
+  it('keeps one buffer per track', () => {
+    const { ctx, audio } = setup();
+    audio.unlock();
+    audio.setMusic('march', track, 22050);
+    audio.setMusic('boss', track, 22050);
+    for (const name of ['march', 'boss', 'march', 'boss']) audio.startMusic(name);
+    expect(ctx.buffers).toBe(2);
+  });
+
+  it('a late track only starts if it is the one asked for', () => {
+    const { ctx, audio } = setup();
+    audio.unlock();
+    audio.startMusic('boss');
+    audio.setMusic('march', track, 22050);
+    expect(ctx.sources).toHaveLength(0);
+    audio.setMusic('boss', track, 22050);
+    expect(ctx.sources).toHaveLength(1);
+  });
+
+  it('asking for a track that has not arrived stops the old one meanwhile', () => {
+    const { ctx, audio } = setup();
+    audio.unlock();
+    audio.setMusic('march', track, 22050);
+    audio.startMusic('march');
+    audio.startMusic('boss');
+    expect(ctx.sources[0].stopped).toBe(1);
+    audio.setMusic('boss', track, 22050);
+    expect(ctx.sources).toHaveLength(2);
+  });
+
+  it('a switched-to track stays ducked while paused', () => {
+    const { ctx, audio } = setup();
+    audio.unlock();
+    audio.setMusic('march', track, 22050);
+    audio.setMusic('boss', track, 22050);
+    audio.startMusic('march');
+    audio.duckMusic(true);
+    audio.startMusic('boss');
+    expect(gain(ctx)).toBeLessThan(MUSIC_VOLUME);
   });
 });
