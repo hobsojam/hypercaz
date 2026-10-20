@@ -14,7 +14,7 @@ const level = validateLevel(
   '06.json',
 );
 const TWIN_1 = 110; // two cages side by side, nothing else around
-const GUARDED = 215; // a crowd on one side, a cage on the other
+const GUARDED = 215; // a small free cage, and a big one behind a crowd
 const TWIN_3 = 315; // two cages with the meter about full, a big crowd close behind
 const SEEDS = [1, 2, 3];
 const DT = 1 / 60;
@@ -31,7 +31,7 @@ function atFork(seed: number, z: number): GameState {
 }
 
 const forkCages = (s: GameState, z: number) =>
-  s.entities.filter((e) => e.type === 'cage' && Math.abs(e.z - (z - s.distance)) < 0.5).sort((a, b) => a.hp - b.hp);
+  s.entities.filter((e) => e.type === 'cage' && Math.abs(e.z - (z - s.distance)) < 0.5).sort((a, b) => a.value - b.value);
 
 // Plays a fixed route through the fork until its cages have passed or broken.
 function route(s: GameState, cages: Entity[], policy: (s: GameState) => Input): { collected: number; state: GameState } {
@@ -55,7 +55,7 @@ const both = (small: Entity, big: Entity, burst = false) => (): Input => ({ targ
 describe('level 6 reward forks', () => {
   it('has the three forks', () => {
     expect(cagesAt(TWIN_1)).toHaveLength(2);
-    expect(cagesAt(GUARDED)).toHaveLength(1);
+    expect(cagesAt(GUARDED)).toHaveLength(2);
     expect(cagesAt(TWIN_3)).toHaveLength(2);
     for (const z of [TWIN_1, TWIN_3]) {
       const [a, b] = cagesAt(z);
@@ -69,7 +69,7 @@ describe('level 6 reward forks', () => {
     ['third', TWIN_3],
   ])('the %s twin cages', (_name, z) => {
     it('the big cage holds about two and a half times the small one', () => {
-      const [small, big] = [...cagesAt(z)].sort((a, b) => a.hp - b.hp);
+      const [small, big] = [...cagesAt(z)].sort((a, b) => a.value - b.value);
       expect(big.value / small.value).toBeGreaterThanOrEqual(2);
       expect(big.value / small.value).toBeLessThanOrEqual(3);
     });
@@ -99,59 +99,69 @@ describe('level 6 reward forks', () => {
     });
   });
 
+  // A small free cage on one side; a big cage on the other, behind a crowd.
+  // Shooting through the crowd costs soldiers and time, but charges the meter.
   describe('the guarded cage', () => {
     // Soldiers gained or lost from when the fork appears until it has passed.
-    function guarded(seed: number, policy: (s: GameState, cage: Entity) => Input) {
+    function guarded(seed: number, pick: 'small' | 'big', burst = false) {
       const s = atFork(seed, GUARDED);
       s.burstTime = 0;
-      s.meter = 0;
-      const cage = forkCages(s, GUARDED)[0];
+      s.meter = burst ? level.burstKills : 0;
+      const [small, big] = forkCages(s, GUARDED);
+      const target = pick === 'small' ? small : big;
       const start = s.squad.count;
-      const kills = { n: 0 };
-      // The fork has passed once its cage and every enemy that was on screen with it are behind the squad.
-      const crowd = s.entities.filter((e) => e.type === 'enemy' || e.type === 'heavy');
-      while (s.phase === 'advance' && (cage.z > -1 || crowd.some((e) => e.hp > 0 && e.z > -1))) {
-        step(s, policy(s, cage), DT);
-        kills.n += s.events.filter((e) => e.type === 'destroyed' && (e.target === 'enemy' || e.target === 'heavy')).length;
+      let kills = 0;
+      // The crowd is every enemy that spawns within 15 m of the fork; hordes
+      // spawn row by row as they come into view. The fork has passed once its
+      // cages and the crowd are behind the squad.
+      const crowd = new Set<Entity>();
+      const gather = () => {
+        for (const e of s.entities) if ((e.type === 'enemy' || e.type === 'heavy') && Math.abs(e.z + s.distance - GUARDED) < 15) crowd.add(e);
+      };
+      gather();
+      const ahead = (e: Entity) => s.entities.includes(e) && e.z > -1;
+      while (s.phase === 'advance' && (ahead(small) || ahead(big) || [...crowd].some(ahead) || s.distance < GUARDED + 15 - SPAWN_HORIZON)) {
+        step(s, { targetX: target.x, burst }, DT);
+        gather();
+        kills += s.events.filter((e) => e.type === 'destroyed' && (e.target === 'enemy' || e.target === 'heavy')).length;
       }
-      return { net: s.squad.count - start, value: cage.value, collected: cage.hp <= 0, kills: kills.n, state: s };
+      return { net: s.squad.count - start, collected: target.hp <= 0, kills, small: small.value, big: big.value };
     }
-    const nearestEnemy = (s: GameState) =>
-      s.entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && e.z > 0).reduce<Entity | null>((a, e) => (!a || e.z < a.z ? e : a), null);
-    const cageOnly = (_s: GameState, cage: Entity): Input => ({ targetX: cage.x });
-    const crowdOnly = (s: GameState, cage: Entity): Input => ({ targetX: nearestEnemy(s)?.x ?? -cage.x });
-    // Thin the crowd first, then turn to the cage while there's still time.
-    const mixed = (s: GameState, cage: Entity): Input =>
-      cage.hp > 0 && cage.z < 32 ? { targetX: cage.x } : crowdOnly(s, cage);
 
-    it('has a crowd on the opposite side from the cage', () => {
-      const cage = cagesAt(GUARDED)[0];
-      const crowd = level.spawns.filter((s) => (s.type === 'enemy' || s.type === 'heavy') && Math.abs(s.z - GUARDED) < 12);
+    it('has a crowd in front of the big cage and none in front of the small one', () => {
+      const [small, big] = [...cagesAt(GUARDED)].sort((a, b) => a.value - b.value);
+      expect(Math.sign(small.x)).toBe(-Math.sign(big.x));
+      const crowd = level.spawns.filter((s) => (s.type === 'enemy' || s.type === 'heavy') && Math.abs(s.z - GUARDED) < 15);
       expect(crowd.length).toBeGreaterThan(20);
       const mid = crowd.reduce((a, e) => a + e.x, 0) / crowd.length;
-      expect(Math.sign(mid)).toBe(-Math.sign(cage.x));
+      expect(Math.sign(mid)).toBe(Math.sign(big.x));
+      expect(crowd.every((e) => e.z < GUARDED)).toBe(true);
     });
 
-    it.each(SEEDS)('seed %i: ignoring the crowd to take the cage costs soldiers', (seed) => {
-      const r = guarded(seed, cageOnly);
+    it.each(SEEDS)('seed %i: the small cage is safe', (seed) => {
+      const r = guarded(seed, 'small');
       expect(r.collected).toBe(true);
-      expect(r.value - r.net).toBeGreaterThanOrEqual(0.3 * r.value);
+      expect(r.net).toBeGreaterThanOrEqual(0.8 * r.small);
     });
 
-    it.each(SEEDS)('seed %i: fighting the crowd lets the cage go but charges the meter more', (seed) => {
-      const crowd = guarded(seed, crowdOnly);
-      const cage = guarded(seed, cageOnly);
-      expect(crowd.collected).toBe(false);
-      expect(crowd.kills).toBeGreaterThan(cage.kills);
-      // Neither route is far ahead of the other.
-      expect(Math.abs(cage.net - crowd.net)).toBeLessThanOrEqual(0.7 * cage.value);
+    it.each(SEEDS)('seed %i: the guarded cage pays more, but the crowd takes a real share', (seed) => {
+      const r = guarded(seed, 'big');
+      expect(r.collected).toBe(true);
+      expect(r.big - r.net).toBeGreaterThanOrEqual(0.3 * r.big);
+      expect(r.kills).toBeGreaterThan(guarded(seed, 'small').kills);
     });
 
-    it.each(SEEDS)('seed %i: thinning the crowd first and then taking the cage beats both', (seed) => {
-      const m = guarded(seed, mixed);
-      expect(m.collected).toBe(true);
-      expect(m.net).toBeGreaterThan(guarded(seed, cageOnly).net);
-      expect(m.net).toBeGreaterThan(guarded(seed, crowdOnly).net);
+    it.each(SEEDS)('seed %i: neither cage is far ahead of the other', (seed) => {
+      const small = guarded(seed, 'small');
+      const big = guarded(seed, 'big');
+      expect(Math.abs(big.net - small.net)).toBeLessThanOrEqual(0.5 * big.big);
+    });
+
+    it.each(SEEDS)('seed %i: Rapid Fire through the crowd beats both', (seed) => {
+      const r = guarded(seed, 'big', true);
+      expect(r.collected).toBe(true);
+      expect(r.net).toBeGreaterThan(guarded(seed, 'big').net);
+      expect(r.net).toBeGreaterThan(guarded(seed, 'small').net);
     });
   });
 
