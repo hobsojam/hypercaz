@@ -47,6 +47,28 @@ describe('Effects', () => {
     expect(magnitude(fx)).toBeLessThan(0.5);
   });
 
+  it('a boss charging shakes the screen and roars', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'bossCharge', x: 0 }], toScreen);
+    fx.update(1 / 60);
+    expect(magnitude(fx)).toBeGreaterThan(0);
+    expect(played).toContain('boss');
+  });
+
+  it('a barrage warning plays the warning sound', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'bossBarrage' }], toScreen);
+    expect(played).toContain('warn');
+  });
+
+  it('breaking a shield thumps', () => {
+    const { fx, played, toScreen } = setup();
+    fx.handle([{ type: 'shieldBreak' }], toScreen);
+    fx.update(1 / 60);
+    expect(magnitude(fx)).toBeGreaterThan(0);
+    expect(played).toContain('hit');
+  });
+
   it('a boss winding up plays a warning sound', () => {
     const { fx, played, toScreen } = setup();
     fx.handle([{ type: 'bossWindup' }], toScreen);

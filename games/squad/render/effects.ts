@@ -81,6 +81,17 @@ export class Effects {
         case 'bossWindup':
           this.audio.play('warn');
           break;
+        case 'bossCharge':
+          this.kick(10);
+          this.audio.play('boss');
+          break;
+        case 'bossBarrage':
+          this.audio.play('warn');
+          break;
+        case 'shieldBreak':
+          this.kick(6);
+          this.audio.play('hit');
+          break;
         case 'bossSummon':
           this.kick(3);
           this.audio.play('boss');
