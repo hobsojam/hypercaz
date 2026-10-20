@@ -11,6 +11,7 @@ export class ErrorScene implements Scene {
 
   constructor(game: Game, message: string, next: () => Scene) {
     this.game = game;
+    game.audio.startMusic('menu');
     this.message = message;
     this.next = next;
   }

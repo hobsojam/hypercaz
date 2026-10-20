@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { MUTE_BUTTON, takeClick } from '../../games/squad/controls.ts';
+import type { Game } from '../../games/squad/game.ts';
+import { ErrorScene } from '../../games/squad/scenes/error.ts';
 import { LevelSelectScene } from '../../games/squad/scenes/levelSelect.ts';
+import { ResultsScene } from '../../games/squad/scenes/results.ts';
 import { TitleScene } from '../../games/squad/scenes/title.ts';
 import { stubGame } from './stubGame.ts';
 
@@ -51,5 +54,18 @@ describe('menus', () => {
     press('m');
     new LevelSelectScene(game).update();
     expect(game.audio.muted).toBe(true);
+  });
+});
+
+describe('menu music', () => {
+  it.each([
+    ['title', (g: Game) => new TitleScene(g)],
+    ['level select', (g: Game) => new LevelSelectScene(g)],
+    ['results', (g: Game) => new ResultsScene(g, 0, true, 2, 10)],
+    ['error', (g: Game) => new ErrorScene(g, 'bad level', () => new TitleScene(g))],
+  ])('the %s screen plays the menu music', (_name, open) => {
+    const { game, calls } = stubGame();
+    open(game);
+    expect(calls).toEqual(['start:menu']);
   });
 });

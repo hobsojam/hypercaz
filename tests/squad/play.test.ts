@@ -9,7 +9,7 @@ describe('play scene music', () => {
   it('starts the music when a level starts', () => {
     const { game, calls } = stubGame();
     new PlayScene(game, 0);
-    expect(calls).toEqual(['start']);
+    expect(calls).toEqual(['start:gameplay']);
   });
 
   it('ducks the music while paused', () => {
@@ -19,7 +19,7 @@ describe('play scene music', () => {
     scene.update(1 / 60);
     press('Escape');
     scene.update(1 / 60);
-    expect(calls).toEqual(['start', 'duck', 'unduck']);
+    expect(calls).toEqual(['start:gameplay', 'duck', 'unduck']);
   });
 
   it('stops the music as soon as the level is decided, once', () => {
@@ -28,6 +28,13 @@ describe('play scene music', () => {
     for (let i = 0; i < 60 * 20 && !calls.includes('leave'); i++) scene.update(1 / 60);
     expect(calls.filter((c) => c === 'stop')).toHaveLength(1);
     expect(calls.indexOf('stop')).toBeLessThan(calls.indexOf('leave'));
+  });
+
+  it('switches to the boss music when the boss arrives, then silence, then the menu music on the results', () => {
+    const { game, calls } = stubGame();
+    const scene = new PlayScene(game, 0);
+    for (let i = 0; i < 60 * 20 && !calls.includes('leave'); i++) scene.update(1 / 60);
+    expect(calls).toEqual(['start:gameplay', 'start:boss', 'stop', 'start:menu', 'leave']);
   });
 });
 
@@ -76,16 +83,16 @@ describe('play scene on a phone', () => {
     expect(stateOf(scene).time).toBe(time);
     tap(270, 800);
     scene.update(1 / 60);
-    expect(calls).toEqual(['start', 'duck', 'unduck']);
+    expect(calls).toEqual(['start:gameplay', 'duck', 'unduck']);
   });
 
   it('pauses itself when the page is hidden', () => {
     const { game, calls } = stubGame();
     const scene = new PlayScene(game, 0);
     scene.suspend();
-    expect(calls).toEqual(['start', 'duck']);
+    expect(calls).toEqual(['start:gameplay', 'duck']);
     scene.suspend();
-    expect(calls).toEqual(['start', 'duck']);
+    expect(calls).toEqual(['start:gameplay', 'duck']);
   });
 
   it('tapping the top bar does not drag the squad there', () => {

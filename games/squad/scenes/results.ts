@@ -18,6 +18,7 @@ export class ResultsScene implements Scene {
 
   constructor(game: Game, index: number, won: boolean, stars: Stars, count: number) {
     this.game = game;
+    game.audio.startMusic('menu');
     this.index = index;
     this.won = won;
     this.stars = stars;
