@@ -87,7 +87,7 @@ function drop(state: StackState): void {
 
   state.floors.push(placed);
   // Alternate the starting side each floor.
-  const fromLeft = state.floors.length % 2 === 0;
+  const fromLeft = state.floors.length % 2 === 1;
   state.moving = {
     x: fromLeft ? -placed.width / 2 : WIDTH - placed.width / 2,
     width: placed.width,

@@ -114,19 +114,33 @@ describe('stack sim', () => {
       const top = s.floors.at(-1)!;
       expect(Number.isFinite(top.width)).toBe(true);
       expect(top.width).toBeGreaterThanOrEqual(0);
+      expect(top.width).toBeCloseTo(30);
     }
   });
 
-  it('bounces inside its bounds and alternates the starting side', () => {
+  it('bounces inside its bounds', () => {
     const s = createStack(7);
     for (let i = 0; i < 600; i++) {
       step(s, IDLE, 1 / 60);
       expect(s.moving.x).toBeGreaterThanOrEqual(-s.moving.width / 2 - 1e-9);
       expect(s.moving.x).toBeLessThanOrEqual(WIDTH - s.moving.width / 2 + 1e-9);
     }
-    const first = s.moving.dir;
-    dropAt(s, s.floors[0]!.x + 4);
-    expect(s.moving.dir).toBe(-first);
+  });
+
+  it('alternates the starting side on every floor', () => {
+    const s = createStack(7);
+    const side = () => {
+      const { x, width, dir } = s.moving;
+      if (x === -width / 2 && dir === 1) return 'left';
+      if (x === WIDTH - width / 2 && dir === -1) return 'right';
+      return 'other';
+    };
+    const sides = [side()];
+    for (let i = 0; i < 3; i++) {
+      dropAt(s, s.floors.at(-1)!.x); // perfect, so the width stays put
+      sides.push(side());
+    }
+    expect(sides).toEqual(['left', 'right', 'left', 'right']);
   });
 
   it('drops debris with gravity and removes it far below the tower', () => {
