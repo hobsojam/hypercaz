@@ -59,6 +59,7 @@ export const CHARGE_LUNGE = 0.4;
 export const CHARGE_EXPOSED = 2.5;
 export const CHARGE_RETURN = 1;
 export const CHARGE_HALF_W = 0.35; // half the stripe's width
+export const CHARGE_REACH_Z = 2.5; // where the lunge stops: the boss's front just short of the squad
 export const CHARGE_ENRAGED = 0.7; // charge interval multiplier once enraged
 export const EXPOSED_DAMAGE = 2;
 export const BARRAGE_WARN = 1.5; // seconds the shadows show before the shells land

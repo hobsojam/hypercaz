@@ -15,6 +15,7 @@ import {
 } from './constants.ts';
 import { changeCount } from './contact.ts';
 import { formationSlots } from './formation.ts';
+import { bossDamageFactor } from './signature.ts';
 import type { Entity, GameState } from './state.ts';
 
 export interface SweptBullet {
@@ -58,7 +59,7 @@ export function updateCombat(state: GameState, dt: number): void {
       continue;
     }
     if (hitsBoss(state, swept)) {
-      applyBossHit(state, b.damage);
+      applyBossHit(state, b.damage * bossDamageFactor(state));
       continue;
     }
     b.z = swept.zTo;

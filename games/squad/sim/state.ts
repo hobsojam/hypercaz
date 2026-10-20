@@ -58,7 +58,7 @@ export interface Boss {
 
 // A boss's signature attack in progress (see signature.ts).
 export type BossAttack =
-  | { kind: 'charge'; stage: 'warn' | 'lunge' | 'exposed' | 'return'; t: number; laneX: number; fromX: number }
+  | { kind: 'charge'; stage: 'warn' | 'lunge' | 'exposed' | 'return'; t: number; laneX: number; fromX: number; fromZ: number }
   | { kind: 'barrage'; t: number; gapX: number; left: number } // t counts down to landing; left includes this one
   | { kind: 'shield'; hp: number; maxHp: number }
   | { kind: 'stunned'; t: number };

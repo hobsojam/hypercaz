@@ -21,7 +21,7 @@ import {
 import { changeCount, soldiersHit } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import { expandHorde } from './level.ts';
-import { updateSignature } from './signature.ts';
+import { signatureBusy, updateSignature } from './signature.ts';
 import { spawnEntity, type GameState } from './state.ts';
 
 export function updateBoss(state: GameState, dt: number): void {
@@ -65,6 +65,11 @@ export function updateBoss(state: GameState, dt: number): void {
 function fight(state: GameState, dt: number): void {
   const boss = state.boss!;
   const cfg = state.level.boss;
+  updateSignature(state, dt);
+  if (state.phase !== 'boss') return;
+  // A charge takes over the boss: it neither creeps forward nor fires.
+  if (signatureBusy(state)) return;
+
   boss.z -= cfg.advance * dt;
   if (boss.z - BOSS_HALF_D <= 0) {
     boss.z = BOSS_HALF_D;
@@ -72,7 +77,6 @@ function fight(state: GameState, dt: number): void {
     return;
   }
 
-  updateSignature(state, dt);
   boss.fireTimer -= dt;
   if (boss.fireTimer <= 0) {
     boss.fireTimer += cfg.fireEvery * (boss.enraged ? BOSS_ENRAGE_FIRE : 1);
