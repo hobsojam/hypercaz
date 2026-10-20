@@ -1,7 +1,7 @@
 // Tiny synthesized sound effects: no audio files. Silent until unlock() is
 // called from a user gesture (browser autoplay rules).
 
-export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst';
+export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst' | 'place' | 'perfect';
 
 interface Voice {
   type: OscillatorType;
@@ -35,6 +35,14 @@ const VOICES: Record<Sfx, Voice[]> = {
     { type: 'triangle', from: 1175, to: 1568, dur: 0.2, vol: 0.12 },
   ],
   burst: [{ type: 'sawtooth', from: 200, to: 900, dur: 0.35, vol: 0.1 }],
+  // A soft thud.
+  place: [{ type: 'triangle', from: 260, to: 130, dur: 0.09, vol: 0.16 }],
+  // A bright bell: a pure note, its octave, and a short inharmonic shimmer.
+  perfect: [
+    { type: 'sine', from: 660, to: 660, dur: 0.6, vol: 0.14 },
+    { type: 'sine', from: 1320, to: 1320, dur: 0.4, vol: 0.06 },
+    { type: 'sine', from: 1850, to: 1850, dur: 0.2, vol: 0.03 },
+  ],
 };
 
 // Rapid-fire sounds are rate-limited so big squads don't stack dozens of
@@ -152,7 +160,8 @@ export class GameAudio {
     this.music.gain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.05);
   }
 
-  play(s: Sfx): void {
+  // `pitch` scales every voice's frequency (2 is an octave up).
+  play(s: Sfx, pitch = 1): void {
     const ctx = this.ctx;
     if (!ctx || this.isMuted) return;
     if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
@@ -167,8 +176,8 @@ export class GameAudio {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = v.type;
-      osc.frequency.setValueAtTime(v.from, t);
-      osc.frequency.exponentialRampToValueAtTime(v.to, t + v.dur);
+      osc.frequency.setValueAtTime(v.from * pitch, t);
+      osc.frequency.exponentialRampToValueAtTime(v.to * pitch, t + v.dur);
       gain.gain.setValueAtTime(v.vol, t);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + v.dur);
       osc.connect(gain).connect(ctx.destination);

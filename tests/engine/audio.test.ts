@@ -10,6 +10,7 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
     currentTime: 0,
     resumed: 0,
     oscillators: 0,
+    frequencies: [] as number[],
     buffers: 0,
     sources,
     musicGains,
@@ -25,7 +26,7 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
     },
     createOscillator() {
       ctx.oscillators++;
-      return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (n: unknown) => n, start() {}, stop() {} };
+      return { type: '', frequency: { setValueAtTime(v: number) { ctx.frequencies.push(v); }, exponentialRampToValueAtTime(v: number) { ctx.frequencies.push(v); } }, connect: (n: unknown) => n, start() {}, stop() {} };
     },
     createGain() {
       const gain = {
@@ -99,6 +100,27 @@ test('falls silent while the page is hidden, and the next gesture wakes it', () 
 
 test('hiding before any sound has played is harmless', () => {
   expect(() => new GameAudio(() => fakeContext() as unknown as AudioContext).hide()).not.toThrow();
+});
+
+test('pitch multiplies every voice frequency', () => {
+  const play = (pitch?: number) => {
+    const ctx = fakeContext();
+    const audio = new GameAudio(() => ctx as unknown as AudioContext);
+    audio.unlock();
+    audio.play('perfect', pitch);
+    return ctx.frequencies;
+  };
+  const plain = play();
+  expect(plain.length).toBeGreaterThan(0);
+  expect(play(2)).toEqual(plain.map((f) => f * 2));
+});
+
+test('place has a voice', () => {
+  const ctx = fakeContext();
+  const audio = new GameAudio(() => ctx as unknown as AudioContext);
+  audio.unlock();
+  audio.play('place');
+  expect(ctx.oscillators).toBeGreaterThan(0);
 });
 
 test('nothing plays before unlock', () => {

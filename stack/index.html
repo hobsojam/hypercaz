@@ -7,15 +7,22 @@
     <title>Stack</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" sizes="any" />
+    <!-- Add to home screen: opens full screen, like an app. -->
     <link rel="manifest" href="../manifest.webmanifest" />
     <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Stack" />
     <style>
       html, body { margin: 0; height: 100%; background: #1A1A2E; overflow: hidden; overscroll-behavior: none; }
-      body { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+      /* No text selection, long-press callouts or tap flashes over the game. */
+      body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
       canvas { display: block; touch-action: none; }
     </style>
   </head>
   <body>
     <canvas id="game"></canvas>
+    <script type="module" src="../games/stack/main.ts"></script>
   </body>
 </html>

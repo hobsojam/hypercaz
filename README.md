@@ -29,6 +29,19 @@ Level 6, Pincer, has reward forks, where you can't have everything:
 - **On a phone:** use "Add to Home Screen" (Safari's share menu, or Chrome's menu) to get an app icon that opens the game full screen. Once opened, it also starts with no signal.
 - **Reporting a problem:** the title screen shows the build (date and commit) at the bottom; mention it.
 
+### Stack
+
+Drop sliding slabs onto a tower. Whatever overhangs is sliced off, so the tower narrows, and a drop that misses entirely ends the run. Each floor you land is one point, and your best is saved on this device. The slab speeds up as the tower grows, reaching top speed around floor 40.
+
+A drop within 4 px of the slab below is **perfect**: it snaps into place and nothing is trimmed. Perfect drops get a white ring, a small screen kick and a bell note that climbs one step up the major scale for each perfect in a row. From the third perfect in a row, each one also grows the slab back a little. A normal drop ends the streak and resets the scale.
+
+- **Mouse / touch / keyboard:** click, tap or press Space to drop.
+- **Buttons:** pause and mute in the top-right corner, and "All games" on the title and game-over screens. Esc pauses and M mutes. The game pauses itself if you switch app or tab.
+
+### Game picker
+
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best). Squad Shooter lives at `/squad/` and Stack at `/stack/`. Each game saves under its own storage name, so they never touch each other's progress.
+
 ## Development
 
 Requires Node 24.
@@ -45,6 +58,8 @@ npm run check-assets  # validate art against the manifest
 ### Layout
 
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
+- `games/picker/`: the front-page game picker.
+- `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.
 - `games/squad/sim/`: pure game logic (`step(state, input, dt)`), with no DOM access, tested headlessly.
 - `games/squad/render/`: draws the sim state. It is read-only.
 - `games/squad/scenes/`: the title, level select, play and results screens.
