@@ -31,10 +31,10 @@ Interfaces: readonly `Arrow`, `Puzzle`, `Cell`; `cells(arrow)`, `blocker(puzzle,
 Files: `games/arrows/progress.ts`, `session.ts`, `layout.ts`, `render.ts`, `scene.ts`, `game.ts`; corresponding session/scene/render tests.
 Interfaces: `Session` with select/retry/attempt/hint/togglePause/update, explicit screen/focus/flight/feedback and sanitized completion; game adapter uses existing engine input/audio/storage/SceneStack and a status callback.
 
-- [ ] Write failing tests for hints, animated removal lock, delayed success, pause/hide, retry/select reset, saved completion, mute and corrupt/blocked progress.
-- [ ] Implement session rules and a readable portrait canvas with blocked ray/first blocker feedback, exit flights, visible keyboard cursor, puzzle grid and success panel.
-- [ ] Test touch/mouse hit mapping across the full shaft, keyboard selection and activation, menu/pause buttons and navigation; render each screen without changing state.
-- [ ] Run focused tests and commit.
+- [x] Write failing tests for hints, animated removal lock, delayed success, pause/hide, retry/select reset, saved completion, mute and corrupt/blocked progress.
+- [x] Implement session rules and a readable portrait canvas with blocked ray/first blocker feedback, exit flights, visible keyboard cursor, puzzle grid and success panel.
+- [x] Test touch/mouse hit mapping across the full shaft, keyboard selection and activation, menu/pause buttons and navigation; render each screen without changing state.
+- [x] Run focused tests and commit.
 
 ## Task 3: Browser and integration
 
@@ -49,3 +49,4 @@ Files: `games/arrows/main.ts`, `arrows/index.html`; picker main/tiles, root HTML
 
 - Baseline main: 564 tests across 50 files pass.
 - Task 1: 32 rule/layout tests pass, including all 12 independent puzzle solutions and every available legal first removal. TypeScript and diff checks pass.
+- Task 2: all 46 Arrow Escape rule, session, input, layout and rendering tests pass; typing/lint/diff checks pass.
