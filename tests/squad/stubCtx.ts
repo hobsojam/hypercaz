@@ -3,7 +3,8 @@
 export function stubCtx() {
   const calls: Record<string, unknown[][]> = {};
   const record = (name: string) => (...args: unknown[]) => {
-    (calls[name] ??= []).push(args);
+    calls[name] ??= [];
+    calls[name].push(args);
     return proxy;
   };
   const proxy: object = new Proxy({}, { get: (_t, prop) => (prop === 'calls' ? calls : record(String(prop))), set: () => true });
