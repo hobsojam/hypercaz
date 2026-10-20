@@ -5,6 +5,7 @@ import { drawMuteButton, drawPauseButton, hitRect, PAUSE_BUTTON, takeClick } fro
 import { recordResult, saveProgress } from '../progress.ts';
 import { BURST_BUTTON, renderGame } from '../render/draw.ts';
 import { Effects } from '../render/effects.ts';
+import { Introduction } from '../render/introduction.ts';
 import { projectPlayfieldPoint } from '../render/projection.ts';
 import { SquadView } from '../render/squadView.ts';
 import { formationSlots } from '../sim/formation.ts';
@@ -30,11 +31,13 @@ export class PlayScene implements Scene {
   private paused = false;
   private endTimer = 0;
   private finalHit?: LossEvent;
+  private introduction?: Introduction;
 
   constructor(game: Game, index: number) {
     this.game = game;
     this.index = index;
     this.state = createState(game.levels[index].level!, Date.now() >>> 0);
+    if (this.state.level.id === 1 && !game.progress.best[1]) this.introduction = new Introduction();
     this.lastPointerX = null; // follow wherever the pointer already is
     this.effects = new Effects(game.audio);
     game.audio.startMusic('gameplay');
@@ -66,6 +69,7 @@ export class PlayScene implements Scene {
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX, burst }, dt);
     for (const event of this.state.events) if (event.type === 'lose') this.finalHit = event;
+    this.introduction?.update(this.state);
     this.squadView.update(formationSlots(this.state.squad.count), dt);
     if (this.state.events.some((e) => e.type === 'bossArrive')) this.game.audio.startMusic('boss');
     this.effects.handle(this.state.events, (x, z) => projectPlayfieldPoint(DEFAULT_VIEW, x, z));
@@ -116,6 +120,7 @@ export class PlayScene implements Scene {
       drawCenteredText(ctx, 'Paused', WIDTH / 2, HEIGHT / 2 - 30, 64);
       drawCenteredText(ctx, this.game.input.touch ? 'Tap to resume' : 'Esc or click to resume', WIDTH / 2, HEIGHT / 2 + 40, 24);
     } else {
+      this.introduction?.draw(ctx, this.state, this.game.input.touch);
       drawPauseButton(ctx);
     }
     drawMuteButton(ctx, this.game.audio.muted);
