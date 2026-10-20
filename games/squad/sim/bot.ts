@@ -20,11 +20,14 @@ function wantsBurst(state: GameState, targetX: number): boolean {
   if (state.boss) return true;
   const close = state.entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && e.z > 0 && e.z < 20);
   if (close.length >= 12) return true;
-  const fire = (state.squad.count * 2.5) / 3; // rough share of shots that reach a cage
   return state.entities.some(
-    (e) => e.type === 'cage' && e.z > 0 && Math.abs(e.x - targetX) < 0.05 && e.hp / fire > e.z / state.level.speed,
+    (e) => e.type === 'cage' && e.z > 0 && Math.abs(e.x - targetX) < 0.05 && e.hp / cageFire(state) > e.z / state.level.speed,
   );
 }
+
+// Rough damage per second a squad lined up on a cage deals to it: only the
+// middle columns' shots hit something that narrow.
+const cageFire = (state: GameState) => (state.squad.count * 2.5) / 3;
 
 function steer(state: GameState): Input {
   const { squad, entities } = state;
@@ -84,15 +87,32 @@ function steer(state: GameState): Input {
   if (threat && threat.z < 12) return { targetX: threat.x };
   const goodGate = nearest(entities.filter((e) => e.type === 'gate' && e.value > 0 && ahead(e, 10)));
   if (goodGate) return { targetX: goodGate.x };
-  const bonus = nearest(entities.filter((e) => (e.type === 'cage' || (e.type === 'gate' && e.value <= 0)) && ahead(e, 40)));
   // Commit to a cage the squad can break before it arrives, unless a crowd is close.
   const breakable = (e: Entity) => e.type === 'cage' && e.hp / (squad.count * 2.5) < e.z / state.level.speed;
+  const bonus = chosenCage(state) ?? nearest(entities.filter((e) => (e.type === 'cage' || (e.type === 'gate' && e.value <= 0)) && ahead(e, 40)));
   if (bonus && breakable(bonus) && (!threat || threat.z > 15)) return { targetX: bonus.x };
   const pick = nearest([threat, bonus].filter((e): e is Entity => e !== null));
   if (pick) return { targetX: pick.x };
 
   // 4. Boss, or centre.
   return { targetX: state.boss ? state.boss.x : 0 };
+}
+
+// Cages that arrive together are a fork: take the biggest reward the squad can
+// still break (or the quickest one if none), and stay with it until it's gone.
+const chosen = new WeakMap<GameState, Entity>();
+
+function chosenCage(state: GameState): Entity | null {
+  const held = chosen.get(state);
+  if (held && held.hp > 0 && held.z > 0) return held;
+  const cages = state.entities.filter((e) => e.type === 'cage' && e.z > 0);
+  const twins = cages.filter((c) => cages.some((o) => o !== c && Math.abs(o.z - c.z) < 2));
+  if (twins.length === 0) return null;
+  const inTime = (c: Entity) => c.hp / cageFire(state) < c.z / state.level.speed;
+  const reachable = twins.filter(inTime).sort((a, b) => b.value - a.value);
+  const pick = reachable[0] ?? [...twins].sort((a, b) => a.hp - b.hp)[0];
+  chosen.set(state, pick);
+  return pick;
 }
 
 export function runLevel(level: Level, seed: number, policy: (s: GameState) => Input, maxSeconds = 300): GameState {
