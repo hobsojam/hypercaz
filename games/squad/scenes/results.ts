@@ -2,6 +2,7 @@ import type { Scene } from '../../../engine/scenes.ts';
 import { ease, tweenValue } from '../../../engine/tween.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import type { Stars } from '../progress.ts';
+import { drawMuteButton, takeClick } from '../controls.ts';
 import { type Button, drawButton, drawCenteredText, drawMenuBackground, drawStar, hitButton } from '../ui.ts';
 import { LevelSelectScene } from './levelSelect.ts';
 import { PlayScene } from './play.ts';
@@ -32,7 +33,7 @@ export class ResultsScene implements Scene {
 
   update(dt: number): void {
     this.t += dt;
-    const c = this.game.input.consumeClick();
+    const c = takeClick(this.game);
     if (c) for (const { button, action } of this.buttons) if (hitButton(button, c.x, c.y)) return action();
     if (this.game.input.consumeKey('Enter')) this.buttons[0].action();
   }
@@ -46,5 +47,6 @@ export class ResultsScene implements Scene {
     }
     drawCenteredText(ctx, `${this.count} soldiers left`, WIDTH / 2, 450, 32);
     for (const { button } of this.buttons) drawButton(ctx, button, button.label === 'Next' ? '#4E9F3D' : '#2F7DE1');
+    drawMuteButton(ctx, this.game.audio.muted);
   }
 }

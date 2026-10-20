@@ -19,6 +19,10 @@ function fakeContext(state: 'running' | 'suspended' = 'running') {
       this.state = 'running';
       return Promise.resolve();
     },
+    suspend() {
+      this.state = 'suspended';
+      return Promise.resolve();
+    },
     createOscillator() {
       ctx.oscillators++;
       return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (n: unknown) => n, start() {}, stop() {} };
@@ -81,6 +85,20 @@ test('hit sounds are throttled like shots', () => {
   ctx.currentTime = 0.1;
   audio.play('hit');
   expect(ctx.oscillators).toBe(2);
+});
+
+test('falls silent while the page is hidden, and the next gesture wakes it', () => {
+  const ctx = fakeContext();
+  const audio = new GameAudio(() => ctx as unknown as AudioContext);
+  audio.unlock();
+  audio.hide();
+  expect(ctx.state).toBe('suspended');
+  audio.unlock();
+  expect(ctx.state).toBe('running');
+});
+
+test('hiding before any sound has played is harmless', () => {
+  expect(() => new GameAudio(() => fakeContext() as unknown as AudioContext).hide()).not.toThrow();
 });
 
 test('nothing plays before unlock', () => {

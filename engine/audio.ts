@@ -78,6 +78,12 @@ export class GameAudio {
     this.syncMusic();
   }
 
+  // The page went into the background: stop all sound. The next gesture's
+  // unlock() resumes it.
+  hide(): void {
+    if (this.ctx?.state === 'running') void this.ctx.suspend().catch(() => {});
+  }
+
   get muted(): boolean {
     return this.isMuted;
   }

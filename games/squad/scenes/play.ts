@@ -1,6 +1,7 @@
 import type { Scene } from '../../../engine/scenes.ts';
 import { DEFAULT_VIEW, project, unprojectX } from '../../../engine/perspective.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
+import { drawMuteButton, drawPauseButton, hitRect, PAUSE_BUTTON, takeClick } from '../controls.ts';
 import { recordResult, saveProgress } from '../progress.ts';
 import { BURST_BUTTON, renderGame } from '../render/draw.ts';
 import { Effects } from '../render/effects.ts';
@@ -14,12 +15,8 @@ import { ResultsScene } from './results.ts';
 
 const KEY_SPEED = 1.6;
 const END_DELAY = 1.2;
-const TAP_SLOP = 12; // forgiving edges for thumbs
-
-function onBurstButton({ x, y }: { x: number; y: number }): boolean {
-  const b = BURST_BUTTON;
-  return x >= b.x - TAP_SLOP && x <= b.x + b.w + TAP_SLOP && y >= b.y - TAP_SLOP && y <= b.y + b.h + TAP_SLOP;
-}
+// Pointer positions above this belong to the HUD buttons, not steering.
+const HUD_BOTTOM = BURST_BUTTON.y + BURST_BUTTON.h + 20;
 
 export class PlayScene implements Scene {
   private game: Game;
@@ -46,20 +43,23 @@ export class PlayScene implements Scene {
     this.game.audio.duckMusic(paused);
   }
 
+  suspend(): void {
+    if (!this.paused && this.state.phase !== 'won' && this.state.phase !== 'lost') this.setPaused(true);
+  }
+
   update(dt: number): void {
     const { input } = this.game;
     if (input.consumeKey('Escape')) this.setPaused(!this.paused);
-    if (input.consumeKey('m')) {
-      this.game.audio.muted = !this.game.audio.muted;
-      this.game.progress = { ...this.game.progress, muted: this.game.audio.muted };
-      saveProgress(this.game.storage, this.game.progress);
-    }
+    const click = takeClick(this.game);
     if (this.paused) {
-      if (input.consumeClick()) this.setPaused(false);
+      if (click) this.setPaused(false);
       return;
     }
-    const click = input.consumeClick();
-    const burst = input.consumeKey(' ') || (click !== null && onBurstButton(click));
+    if (click && hitRect(PAUSE_BUTTON, click, 6)) {
+      this.setPaused(true);
+      return;
+    }
+    const burst = input.consumeKey(' ') || (click !== null && hitRect(BURST_BUTTON, click, 12));
 
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX, burst }, dt);
@@ -81,7 +81,7 @@ export class PlayScene implements Scene {
     const right = input.isDown('ArrowRight') || input.isDown('d');
     if (left || right) {
       this.targetX += (right ? 1 : 0) * KEY_SPEED * dt - (left ? 1 : 0) * KEY_SPEED * dt;
-    } else if (input.pointerX !== null && input.pointerX !== this.lastPointerX) {
+    } else if (input.pointerX !== null && input.pointerX !== this.lastPointerX && (input.pointerY ?? HEIGHT) > HUD_BOTTOM) {
       this.targetX = unprojectX(DEFAULT_VIEW, input.pointerX, 0);
     }
     this.lastPointerX = input.pointerX;
@@ -113,8 +113,10 @@ export class PlayScene implements Scene {
       ctx.fillStyle = 'rgba(26,26,46,0.55)';
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
       drawCenteredText(ctx, 'Paused', WIDTH / 2, HEIGHT / 2 - 30, 64);
-      drawCenteredText(ctx, 'Esc or click to resume · M to mute', WIDTH / 2, HEIGHT / 2 + 40, 22);
+      drawCenteredText(ctx, this.game.input.touch ? 'Tap to resume' : 'Esc or click to resume', WIDTH / 2, HEIGHT / 2 + 40, 24);
+    } else {
+      drawPauseButton(ctx);
     }
-    if (this.game.audio.muted) drawCenteredText(ctx, 'MUTED', WIDTH - 50, 24, 16);
+    drawMuteButton(ctx, this.game.audio.muted);
   }
 }

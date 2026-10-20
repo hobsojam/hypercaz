@@ -20,6 +20,7 @@ const PREVENT = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']
 export class Input {
   pointerX: number | null = null;
   pointerY: number | null = null;
+  touch = false; // whether the last press was a finger, for "tap"/"click" wording
   private down = new Set<string>();
   private pressed = new Set<string>();
   private click: { x: number; y: number } | null = null;
@@ -29,9 +30,13 @@ export class Input {
     this.getLetterbox = getLetterbox;
     window.addEventListener('pointermove', (e) => this.move(e));
     window.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return; // right/middle clicks are not taps
+      this.touch = e.pointerType === 'touch';
       this.move(e);
       this.click = toLogical(this.getLetterbox(), e.clientX, e.clientY);
     });
+    // Right-click and long-press menus would cover the game.
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
       if (PREVENT.has(e.key)) e.preventDefault();
       if (!e.repeat) this.pressed.add(e.key.toLowerCase());

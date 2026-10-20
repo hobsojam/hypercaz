@@ -1,6 +1,7 @@
 export interface Scene {
   enter?(): void;
   exit?(): void;
+  suspend?(): void; // the page went into the background
   update(dt: number): void;
   render(ctx: CanvasRenderingContext2D, alpha: number): void;
 }
