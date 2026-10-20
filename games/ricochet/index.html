@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#14313c">
+    <title>Ricochet Rescue · hypercaz</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #14313c; font: 18px "Trebuchet MS", sans-serif; }
+      canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; outline: none; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <canvas id="game" aria-label="Ricochet Rescue. Drag to aim and release to fire. Arrow keys aim, Space fires, R retries, Escape pauses, M toggles sound." aria-describedby="status"></canvas>
+    <p id="status" class="sr-only" aria-live="polite"></p>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

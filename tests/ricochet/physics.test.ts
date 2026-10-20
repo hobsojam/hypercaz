@@ -62,6 +62,14 @@ describe('rescue shots', () => {
     finishShot(s);
     expect(s.phase).toBe('aiming');
   });
+  it('reflects both axes once at an exact courtyard corner during live flight', () => {
+    const s = createState(level({ cages: [{ id: 'a', x: 450, y: 250 }] }));
+    shoot(s, Math.atan2(178 - 764, 36 - 270));
+    step(s, 1.2);
+    expect(s.ball!.vx).toBeGreaterThan(0);
+    expect(s.ball!.vy).toBeGreaterThan(0);
+    expect(s.events.filter(e => e.type === 'bank')).toHaveLength(1);
+  });
   it('rejects invalid angles and a second shot in flight without spending shots', () => {
     const s = createState(level());
     for (const angle of [NaN, Infinity, 0, Math.PI / 2]) expect(shoot(s, angle)).toBe(false);

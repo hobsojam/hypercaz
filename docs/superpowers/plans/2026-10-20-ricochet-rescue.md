@@ -53,14 +53,18 @@
 
 **Interfaces:** Consumes Session/renderer. Produces `mountRicochet(canvas, options?) => Promise<() => void>`; the returned disposer is idempotent. Boot mounts only from its own standalone HTML.
 
-- [ ] Write/run failing browser-adapter tests for cancellation, one active pointer, button/aim separation, keyboard controls, hiding and disposal. Expected: missing behavior.
-- [ ] Implement abortable listeners, pointer capture, DPR/letterbox resizing, sound unlock/mute, failure fallback and loop teardown.
-- [ ] Run the full repository suite, build/lint/diff checks and standalone build. Expected: all green without shared-infrastructure edits.
-- [ ] Exercise actual touch, mouse and keyboard in a browser, solve a bank puzzle and complete a level, check phone and desktop layouts and mount/dispose.
-- [ ] Request independent whole-branch review, resolve material findings, re-verify, then commit and open a PR. Document the direct URL, build command and deferred picker wiring.
+- [x] Write/run failing browser-adapter tests for cancellation, one active pointer, button/aim separation, keyboard controls, hiding and disposal. Expected: missing behavior.
+- [x] Implement abortable listeners, pointer capture, DPR/letterbox resizing, sound unlock/mute, failure fallback and loop teardown.
+- [x] Run the full repository suite, build/lint/diff checks and standalone build. Expected: all green without shared-infrastructure edits.
+- [x] Exercise actual touch, mouse and keyboard in a browser, solve a bank puzzle and complete a level, check phone and desktop layouts and mount/dispose.
+- [x] Request independent whole-branch review, resolve material findings, re-verify, then commit and open a PR. Document the direct URL, build command and deferred picker wiring.
 
 ## Verification record
 
 - Baseline: 440 tests across 38 files pass on updated main.
 - Tasks 1–2: 34 physics/level cases and 16 session/control/render cases pass. Every puzzle has an independent par solution.
 - Browser: touch, mouse and keyboard exercise real input; all eight puzzles solve at par. Saved stars, canceled/outside releases and actual mount/dispose were checked with no browser errors.
+- Final validation: 495 tests across 44 files pass, including 55 Ricochet cases. TypeScript, ESLint, root and standalone production builds and diff checks pass.
+- Independent branch review found a startup-failure cleanup leak. Added a failing regression, fixed initialization to reuse idempotent cleanup, and verified failed startup followed by remount. Added live exact-corner reflection coverage.
+- Repeated Chromium checks on the final implementation: all eight puzzles at par, no browser errors, and zero pending animation callbacks after disposal. Phone and desktop captures inspected.
+- Latest fetched main remains `1fa6c7f`; the task branch already contains it. Changes are limited to game, tests and these planning documents.
