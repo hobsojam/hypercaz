@@ -9,7 +9,7 @@ import { projectPlayfieldPoint } from '../render/projection.ts';
 import { SquadView } from '../render/squadView.ts';
 import { formationSlots } from '../sim/formation.ts';
 import { starsFor } from '../sim/stars.ts';
-import { createState, type GameState } from '../sim/state.ts';
+import { createState, type GameState, type LossEvent } from '../sim/state.ts';
 import { step } from '../sim/step.ts';
 import { drawCenteredText } from '../ui.ts';
 import { ResultsScene } from './results.ts';
@@ -29,6 +29,7 @@ export class PlayScene implements Scene {
   private lastPointerX: number | null;
   private paused = false;
   private endTimer = 0;
+  private finalHit?: LossEvent;
 
   constructor(game: Game, index: number) {
     this.game = game;
@@ -64,6 +65,7 @@ export class PlayScene implements Scene {
 
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX, burst }, dt);
+    for (const event of this.state.events) if (event.type === 'lose') this.finalHit = event;
     this.squadView.update(formationSlots(this.state.squad.count), dt);
     if (this.state.events.some((e) => e.type === 'bossArrive')) this.game.audio.startMusic('boss');
     this.effects.handle(this.state.events, (x, z) => projectPlayfieldPoint(DEFAULT_VIEW, x, z));
@@ -96,7 +98,7 @@ export class PlayScene implements Scene {
     const stars = starsFor(state.level, won, state.squad.count);
     game.progress = recordResult(game.progress, state.level.id, stars);
     saveProgress(game.storage, game.progress);
-    game.stack.replace(new ResultsScene(game, this.index, won, stars, state.squad.count));
+    game.stack.replace(new ResultsScene(game, this.index, won, stars, state.squad.count, this.finalHit));
   }
 
   render(ctx: CanvasRenderingContext2D): void {
@@ -106,11 +108,8 @@ export class PlayScene implements Scene {
       time: this.state.time,
       squadView: this.squadView,
       shake: this.effects.shake,
+      drawEffects: (ctx) => this.effects.draw(ctx),
     });
-    ctx.save();
-    ctx.translate(this.effects.shake.x, this.effects.shake.y);
-    this.effects.draw(ctx);
-    ctx.restore();
     if (this.paused) {
       ctx.fillStyle = 'rgba(26,26,46,0.55)';
       ctx.fillRect(0, 0, WIDTH, HEIGHT);

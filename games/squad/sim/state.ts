@@ -53,11 +53,15 @@ export interface Boss {
   flash: number;
 }
 
+export type LossCause = 'enemy' | 'heavy' | 'gate' | HazardKind | 'bossShot' | 'bossContact';
+export type LossEvent = { type: 'lose'; amount: number; x: number; z: number; cause?: LossCause };
+
 export type GameEvent =
   | { type: 'shot'; x: number; z: number }
   | { type: 'hit'; x: number; z: number; target: SpawnType | 'boss' }
   | { type: 'destroyed'; x: number; z: number; target: SpawnType }
-  | { type: 'gain' | 'lose'; amount: number; x: number; z: number }
+  | { type: 'gain'; amount: number; x: number; z: number }
+  | LossEvent
   | { type: 'bossArrive' }
   | { type: 'bossFire'; x: number }
   | { type: 'bossWindup' }

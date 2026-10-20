@@ -193,3 +193,30 @@ test('rear-row shots and a rescue target behind the front share the same play ar
   expect(sy).toBeGreaterThanOrEqual(target.y);
   expect(sy).toBeLessThanOrEqual(target.y + target.h);
 });
+
+test.each([
+  { count: 3, goal: '2 stars: finish with 5' },
+  { count: 5, goal: '3 stars: finish with 10' },
+  { count: 10, goal: '3 stars: finish with 10' },
+])('the HUD shows the next survival target at $count soldiers', ({ count, goal }) => {
+  expect(textsDrawn(createState(makeLevel({ startSquad: count }), 1))).toContain(goal);
+});
+
+test('rescue labels and boss shots remain above cosmetic effects', () => {
+  const state = createState(makeLevel({ spawns: [{ type: 'cage', x: 0, z: 10, hp: 37, value: 8 }] }), 1);
+  state.entities = [spawnEntity(state, state.level.spawns[0], 10)];
+  state.projectiles = [{ x: 0, z: 5, originX: 0, originZ: 18 }];
+  const ctx = stubCtx();
+  renderGame(ctx, state, {
+    persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 },
+    drawEffects: () => {
+      expect(ctx.calls.arc ?? []).toHaveLength(0);
+      ctx.fillText('effects', 0, 0);
+    },
+  });
+  const texts = ctx.calls.fillText.map(([text]) => text);
+  expect(texts).toContain('effects');
+  expect(texts.indexOf('37')).toBeGreaterThan(texts.indexOf('effects'));
+  expect(texts.indexOf('+8')).toBeGreaterThan(texts.indexOf('effects'));
+  expect(ctx.calls.arc).toHaveLength(1);
+});

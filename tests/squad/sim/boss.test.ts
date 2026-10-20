@@ -60,6 +60,7 @@ describe('boss', () => {
     // Rows of 7 + 4: 3 of the front row and all 4 of the second row are in the blast.
     expect(s.squad.count).toBe(4);
     expect(s.projectiles).toHaveLength(0);
+    expect(s.events).toContainEqual(expect.objectContaining({ type: 'lose', cause: 'bossShot', amount: 7 }));
   });
 
   it('a projectile only hits soldiers near where it lands, not its whole column', () => {
@@ -95,6 +96,7 @@ describe('boss pressure', () => {
     expect(s.phase).toBe('lost');
     expect(s.squad.count).toBe(0);
     expect(events.filter((e) => e.type === 'lost')).toHaveLength(1);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'lose', cause: 'bossContact', amount: 5 }));
   });
 
   it('stays at its fighting distance when it has no advance', () => {

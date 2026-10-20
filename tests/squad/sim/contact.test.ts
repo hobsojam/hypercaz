@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createState, type GameState } from '../../../games/squad/sim/state.ts';
+import { updateContacts } from '../../../games/squad/sim/contact.ts';
+import { createState, spawnEntity, type GameState } from '../../../games/squad/sim/state.ts';
 import { step } from '../../../games/squad/sim/step.ts';
 import { DT, makeLevel } from '../fixtures.ts';
 
@@ -72,5 +73,21 @@ describe('losing', () => {
     expect(s.squad.count).toBe(0);
     expect(s.phase).toBe('lost');
     expect(s.events.filter((e) => e.type === 'lost')).toHaveLength(1);
+  });
+});
+
+describe('loss attribution', () => {
+  it.each([
+    { type: 'enemy', hp: 1000, kills: 2, cause: 'enemy', amount: 2 },
+    { type: 'heavy', hp: 1000, kills: 3, cause: 'heavy', amount: 3 },
+    { type: 'gate', width: 1, value: -99, cause: 'gate', amount: 5 },
+    { type: 'hazard', width: 2, kind: 'blade', cause: 'blade', amount: 5 },
+    { type: 'hazard', width: 2, kind: 'fire', cause: 'fire', amount: 5 },
+    { type: 'hazard', width: 2, kind: 'barricade', cause: 'barricade', amount: 5 },
+  ])('$cause reports the soldiers actually lost', ({ cause, amount, ...spawn }) => {
+    const s = createState(makeLevel({ startSquad: 5, spawns: [{ z: 0, x: 0, ...spawn }] }), 1);
+    s.entities = [spawnEntity(s, s.level.spawns[0], 0)];
+    updateContacts(s);
+    expect(s.events).toContainEqual(expect.objectContaining({ type: 'lose', cause, amount }));
   });
 });
