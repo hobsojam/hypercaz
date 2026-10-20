@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BARRAGE_GAP, BARRAGE_MAX_SHIFT, BARRAGE_WARN, CHARGE_HALF_W, SHIELD_BURST, SHIELD_DAMAGE } from '../../../games/squad/sim/constants.ts';
+import { botInput } from '../../../games/squad/sim/bot.ts';
+import { formationHalfWidth, formationSlots } from '../../../games/squad/sim/formation.ts';
 import { absorbHit, bossDamageFactor } from '../../../games/squad/sim/signature.ts';
 import { createState, type GameState } from '../../../games/squad/sim/state.ts';
 import { step } from '../../../games/squad/sim/step.ts';
@@ -299,5 +301,44 @@ describe('fortress', () => {
     };
     expect(gaps(3)).toEqual(gaps(3));
     expect(gaps(3)).not.toEqual(gaps(4));
+  });
+});
+
+describe('the bot', () => {
+  const fighting = (extra: Record<string, unknown>, squad = 30) => {
+    const s = createState(bossLevel(extra, squad), 1);
+    run(s, 4.5, 0);
+    return s;
+  };
+
+  it.each([0, 0.5, -0.65])('steps out of a charge stripe on lane %d', (lane) => {
+    const s = fighting({ signature: 'charge', chargeEvery: 7 });
+    s.squad.x = lane;
+    s.boss!.attack = { kind: 'charge', stage: 'warn', t: 0.2, laneX: lane, fromX: 0, fromZ: 18 };
+    const hw = formationHalfWidth(formationSlots(s.squad.count));
+    expect(Math.abs(botInput(s).targetX - lane)).toBeGreaterThanOrEqual(CHARGE_HALF_W + hw);
+  });
+
+  it('holds its spot outside the stripe until the lunge is over', () => {
+    const s = fighting({ signature: 'charge', chargeEvery: 7 });
+    s.squad.x = 0.7;
+    s.boss!.x = 0;
+    s.boss!.attack = { kind: 'charge', stage: 'warn', t: 0.5, laneX: 0, fromX: 0, fromZ: 18 };
+    expect(botInput(s).targetX).toBeCloseTo(0.7);
+  });
+
+  it('heads for a showing barrage\'s gap', () => {
+    const s = fighting({ signature: 'fortress', shieldHp: 100 });
+    s.boss!.attack = { kind: 'barrage', t: 1, gapX: -0.6, left: 2 };
+    expect(botInput(s).targetX).toBeCloseTo(-0.6);
+  });
+
+  it('saves Rapid Fire for a Fortress shield', () => {
+    const s = fighting({ signature: 'fortress', shieldHp: 100 });
+    s.meter = s.level.burstKills;
+    s.boss!.attack = { kind: 'stunned', t: 2 };
+    expect(botInput(s).burst).toBe(false);
+    s.boss!.attack = { kind: 'shield', hp: 100, maxHp: 100 };
+    expect(botInput(s).burst).toBe(true);
   });
 });
