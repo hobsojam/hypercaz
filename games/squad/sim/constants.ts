@@ -72,6 +72,7 @@ export const BARRAGE_SPACING_ENRAGED = 2;
 export const SHIELD_DAMAGE = 0.2; // share of damage that reaches a shielded boss
 export const SHIELD_BURST = 3; // Rapid Fire's damage multiplier against the shield
 export const STUN_SECONDS = 4;
+export const FORTRESS_FIRST_BARRAGE = 3.5; // seconds after settling: after the opening volley has landed
 
 export const PROJECTILE_SPEED = 10;
 export const PROJECTILE_RADIUS = 0.12;

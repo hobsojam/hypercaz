@@ -1,6 +1,5 @@
 import { nextFloat } from '../../../engine/rng.ts';
 import {
-  BARRAGE_SPACING,
   BOSS_AIM_JITTER,
   BOSS_ENRAGE_AT,
   BOSS_ENRAGE_FIRE,
@@ -11,6 +10,7 @@ import {
   BOSS_HALF_D,
   BOSS_SUMMON_WIDTH,
   BOSS_WINDUP,
+  FORTRESS_FIRST_BARRAGE,
   BOSS_Z,
   ENRAGED_PATTERN,
   PATTERNS,
@@ -21,7 +21,7 @@ import {
 import { changeCount, soldiersHit } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import { expandHorde } from './level.ts';
-import { signatureBusy, updateSignature } from './signature.ts';
+import { signatureBusy, summonsNow, updateSignature } from './signature.ts';
 import { spawnEntity, type GameState } from './state.ts';
 
 export function updateBoss(state: GameState, dt: number): void {
@@ -38,7 +38,7 @@ export function updateBoss(state: GameState, dt: number): void {
       charging: false,
       flash: 0,
       attack: null,
-      signatureTimer: cfg.chargeEvery || BARRAGE_SPACING,
+      signatureTimer: cfg.signature === 'fortress' ? FORTRESS_FIRST_BARRAGE : cfg.chargeEvery,
       strafeT: 0,
     };
     state.events.push({ type: 'bossArrive' });
@@ -81,12 +81,15 @@ function fight(state: GameState, dt: number): void {
   if (boss.fireTimer <= 0) {
     boss.fireTimer += cfg.fireEvery * (boss.enraged ? BOSS_ENRAGE_FIRE : 1);
     fireVolley(state);
+    // The Fortress opens with a volley; after that its barrages are its attack.
+    if (cfg.signature === 'fortress') boss.fireTimer = Infinity;
   }
   const charging = boss.fireTimer <= BOSS_WINDUP;
   if (charging && !boss.charging) state.events.push({ type: 'bossWindup' });
-  boss.charging = charging;
+  // A barrage's warning glows the same way as a volley's.
+  boss.charging = charging || boss.attack?.kind === 'barrage';
 
-  if (cfg.summonEvery > 0) {
+  if (cfg.summonEvery > 0 && summonsNow(state)) {
     boss.summonTimer -= dt;
     if (boss.summonTimer <= 0) {
       boss.summonTimer += cfg.summonEvery * (boss.enraged ? BOSS_ENRAGE_SUMMON : 1);

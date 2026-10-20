@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CHARGE_HALF_W } from '../../../games/squad/sim/constants.ts';
-import { bossDamageFactor } from '../../../games/squad/sim/signature.ts';
+import { BARRAGE_GAP, BARRAGE_MAX_SHIFT, BARRAGE_WARN, CHARGE_HALF_W, SHIELD_BURST, SHIELD_DAMAGE } from '../../../games/squad/sim/constants.ts';
+import { absorbHit, bossDamageFactor } from '../../../games/squad/sim/signature.ts';
 import { createState, type GameState } from '../../../games/squad/sim/state.ts';
 import { step } from '../../../games/squad/sim/step.ts';
 import { DT, makeLevel } from '../fixtures.ts';
@@ -181,5 +181,123 @@ describe('charger', () => {
     const events = run(s, 3, 0);
     expect(s.phase).toBe('won');
     expect(events.filter((e) => e.type === 'lose')).toHaveLength(0);
+  });
+});
+
+describe('fortress', () => {
+  const fortress = (extra: Record<string, unknown> = {}, seed = 1, squad = 7) =>
+    createState(bossLevel({ signature: 'fortress', shieldHp: 1e9, ...extra }, squad), seed);
+  // Stands in each barrage's gap; otherwise holds the centre.
+  const inGap = (s: GameState) => (s.boss?.attack?.kind === 'barrage' ? s.boss.attack.gapX : 0);
+  const kinds = (events: GameState['events']) =>
+    events.map((e) => e.type).filter((t) => ['bossBarrage', 'shieldUp', 'shieldBreak'].includes(t));
+
+  it('fires its opening volley, then alternates barrages with a shield', () => {
+    const s = fortress();
+    const first = run(s, 20, inGap);
+    expect(first.filter((e) => e.type === 'bossFire')).toHaveLength(1);
+    expect(kinds(first)).toEqual(['bossBarrage', 'bossBarrage', 'bossBarrage', 'shieldUp']);
+    if (s.boss!.attack?.kind === 'shield') s.boss!.attack.hp = 0.5;
+    const after = run(s, 7, inGap);
+    expect(kinds(after).slice(0, 2)).toEqual(['shieldBreak', 'bossBarrage']);
+    expect(after.filter((e) => e.type === 'bossFire')).toHaveLength(0);
+  });
+
+  it('is stunned for four seconds after the shield breaks', () => {
+    const s = fortress();
+    run(s, 20, inGap);
+    if (s.boss!.attack?.kind === 'shield') s.boss!.attack.hp = 0.5;
+    let broke = -1;
+    let next = -1;
+    run(s, 7, inGap, (st) => {
+      if (st.events.some((e) => e.type === 'shieldBreak')) broke = st.time;
+      if (broke > 0 && next < 0 && st.events.some((e) => e.type === 'bossBarrage')) next = st.time;
+    });
+    expect(next - broke).toBeCloseTo(4, 1);
+  });
+
+  it('enraged, it fires two barrages per phase', () => {
+    const s = fortress();
+    run(s, 4.5, inGap);
+    s.boss!.hp = s.boss!.maxHp * 0.4;
+    expect(kinds(run(s, 20, inGap))).toEqual(['bossBarrage', 'bossBarrage', 'shieldUp']);
+  });
+
+  it('shows each barrage for at least 1.5 s before it lands, with the warning glow', () => {
+    const s = fortress();
+    run(s, 20, inGap, (st) => {
+      if (st.boss?.attack?.kind === 'barrage' && st.boss.attack.t <= BARRAGE_WARN) expect(st.boss.charging).toBe(true);
+      if (st.events.some((e) => e.type === 'bossBarrage') && st.boss!.attack?.kind === 'barrage') {
+        expect(st.boss!.attack.t).toBeGreaterThanOrEqual(BARRAGE_WARN - 2 * DT);
+      }
+    });
+  });
+
+  it('always leaves a reachable gap on the road', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const s = fortress({}, seed);
+      const gaps: number[] = [];
+      run(s, 20, inGap, (st) => {
+        if (st.events.some((e) => e.type === 'bossBarrage') && st.boss!.attack?.kind === 'barrage') gaps.push(st.boss!.attack.gapX);
+      });
+      expect(gaps).toHaveLength(3);
+      for (const g of gaps) expect(Math.abs(g)).toBeLessThanOrEqual(1 - BARRAGE_GAP / 2);
+      for (let i = 1; i < gaps.length; i++) expect(Math.abs(gaps[i] - gaps[i - 1])).toBeLessThanOrEqual(BARRAGE_MAX_SHIFT + 1e-9);
+    }
+  });
+
+  it('spares a squad in the gap and hits one outside it', () => {
+    const safe = fortress();
+    const safeLosses = run(safe, 13, inGap).filter((e) => e.type === 'lose');
+    expect(safeLosses).toHaveLength(0);
+    const exposed = fortress({}, 1, 30);
+    const away = (st: GameState) => (st.boss?.attack?.kind === 'barrage' ? (st.boss.attack.gapX > 0 ? -0.75 : 0.75) : 0);
+    const hits = run(exposed, 13, away).filter((e) => e.type === 'lose');
+    expect(hits).toContainEqual(expect.objectContaining({ cause: 'bossShot' }));
+  });
+
+  it('a shield takes the damage: 20% reaches the boss, Rapid Fire hits the shield three times as hard', () => {
+    const s = fortress();
+    run(s, 20, inGap);
+    const shield = s.boss!.attack;
+    expect(shield?.kind).toBe('shield');
+    if (shield?.kind !== 'shield') return;
+    expect(bossDamageFactor(s)).toBe(SHIELD_DAMAGE);
+    const before = shield.hp;
+    expect(absorbHit(s, 10)).toBeCloseTo(10 * SHIELD_DAMAGE);
+    expect(before - shield.hp).toBeCloseTo(10);
+    s.burstTime = 1;
+    absorbHit(s, 10);
+    expect(before - shield.hp).toBeCloseTo(10 + 10 * SHIELD_BURST);
+  });
+
+  it('a broken shield leaves the boss open to full damage', () => {
+    const s = fortress();
+    run(s, 20, inGap);
+    expect(absorbHit(s, 2e9)).toBeCloseTo(2e9 * SHIELD_DAMAGE);
+    expect(s.boss!.attack?.kind).toBe('stunned');
+    expect(absorbHit(s, 10)).toBe(10);
+  });
+
+  it('summons only while shielded or stunned', () => {
+    const s = fortress({ summonEvery: 1, summonCount: 1, summonHp: 1 });
+    run(s, 30, inGap, (st) => {
+      if (st.events.some((e) => e.type === 'bossSummon')) expect(['shield', 'stunned']).toContain(st.boss!.attack?.kind);
+      // Break the shield late on, so the stunned phase is covered too.
+      if (st.time > 22 && st.boss!.attack?.kind === 'shield') st.boss!.attack.hp = 0.5;
+    });
+  });
+
+  it('the same seed gives the same gaps', () => {
+    const gaps = (seed: number) => {
+      const s = fortress({}, seed);
+      const out: number[] = [];
+      run(s, 20, inGap, (st) => {
+        if (st.events.some((e) => e.type === 'bossBarrage') && st.boss!.attack?.kind === 'barrage') out.push(st.boss!.attack.gapX);
+      });
+      return out;
+    };
+    expect(gaps(3)).toEqual(gaps(3));
+    expect(gaps(3)).not.toEqual(gaps(4));
   });
 });
