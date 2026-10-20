@@ -1,6 +1,7 @@
 import type { Scene } from '../../../engine/scenes.ts';
-import { drawCenteredText } from '../../squad/ui.ts';
-import { ALL_GAMES_BUTTON, drawAllGamesButton, drawMuteButton, hitRect, takeClick } from '../controls.ts';
+import { drawCenteredText } from '../../../engine/ui.ts';
+import { drawAllGamesButton, titleAction } from '../../../engine/controls.ts';
+import { drawMuteButton, takeClick } from '../controls.ts';
 import { HEIGHT, loadBest, type StackGame, WIDTH } from '../game.ts';
 import { renderStack } from '../render/draw.ts';
 import { createStack, type StackState } from '../sim/state.ts';
@@ -26,14 +27,9 @@ export class TitleScene implements Scene {
     this.t += dt;
     step(this.demo, { drop: false }, dt);
     const click = takeClick(this.game);
-    if (click && hitRect(ALL_GAMES_BUTTON, click, 0)) {
-      this.navigate('../');
-      return;
-    }
-    if (click || this.game.input.consumeKey('Enter') || this.game.input.consumeKey(' ')) {
-      this.game.audio.unlock();
-      this.game.stack.replace(new PlayScene(this.game));
-    }
+    const action = titleAction(this.game, click);
+    if (action === 'games') this.navigate('../');
+    else if (action === 'start') this.game.stack.replace(new PlayScene(this.game));
   }
 
   render(ctx: CanvasRenderingContext2D): void {

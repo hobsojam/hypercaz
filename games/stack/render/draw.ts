@@ -1,5 +1,5 @@
 // Draws a StackState. Read-only: nothing here changes the simulation.
-import { drawCenteredText } from '../../squad/ui.ts';
+import { drawCenteredText } from '../../../engine/ui.ts';
 import { HEIGHT, WIDTH } from '../game.ts';
 import { DEBRIS_GRAVITY } from '../sim/constants.ts';
 import type { StackState } from '../sim/state.ts';

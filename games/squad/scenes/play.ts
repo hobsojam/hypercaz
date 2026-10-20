@@ -1,3 +1,4 @@
+import { drawPausedOverlay } from '../../../engine/ui.ts';
 import type { Scene } from '../../../engine/scenes.ts';
 import { DEFAULT_VIEW, unprojectX } from '../../../engine/perspective.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
@@ -12,7 +13,6 @@ import { formationSlots } from '../sim/formation.ts';
 import { starsFor } from '../sim/stars.ts';
 import { createState, type GameState, type LossEvent } from '../sim/state.ts';
 import { step } from '../sim/step.ts';
-import { drawCenteredText } from '../ui.ts';
 import { ResultsScene } from './results.ts';
 
 const KEY_SPEED = 1.6;
@@ -119,10 +119,7 @@ export class PlayScene implements Scene {
       drawEffects: (ctx) => this.effects.draw(ctx),
     });
     if (this.paused) {
-      ctx.fillStyle = 'rgba(26,26,46,0.55)';
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-      drawCenteredText(ctx, 'Paused', WIDTH / 2, HEIGHT / 2 - 30, 64);
-      drawCenteredText(ctx, this.game.input.touch ? 'Tap to resume' : 'Esc or click to resume', WIDTH / 2, HEIGHT / 2 + 40, 24);
+      drawPausedOverlay(ctx, WIDTH, HEIGHT, this.game.input.touch);
     } else {
       this.introduction?.draw(ctx, this.state, this.game.input.touch);
       drawPauseButton(ctx);

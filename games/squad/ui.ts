@@ -1,4 +1,7 @@
 // Shared drawing helpers and hit testing for menu screens.
+import { drawCenteredText, FONT } from '../../engine/ui.ts';
+
+export { drawCenteredText, FONT };
 
 export interface Button {
   x: number;
@@ -8,8 +11,6 @@ export interface Button {
   label: string;
   enabled: boolean;
 }
-
-export const FONT = '"Trebuchet MS", "Segoe UI", sans-serif';
 
 export function hitButton(b: Button, px: number, py: number): boolean {
   return b.enabled && px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h;
@@ -28,18 +29,6 @@ export function drawButton(ctx: CanvasRenderingContext2D, b: Button, color = '#2
   ctx.roundRect(b.x + 6, b.y + 5, b.w - 12, b.h * 0.38, 10);
   ctx.fill();
   drawCenteredText(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + 1, Math.min(30, b.h * 0.45), '#FFFFFF');
-}
-
-export function drawCenteredText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color = '#FFFFFF'): void {
-  ctx.font = `bold ${Math.round(size)}px ${FONT}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Math.max(3, size / 5);
-  ctx.strokeStyle = '#1A1A2E';
-  ctx.strokeText(text, x, y);
-  ctx.fillStyle = color;
-  ctx.fillText(text, x, y);
 }
 
 export function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, filled: boolean): void {

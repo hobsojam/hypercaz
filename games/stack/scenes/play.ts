@@ -1,5 +1,5 @@
 import type { Scene } from '../../../engine/scenes.ts';
-import { drawCenteredText } from '../../squad/ui.ts';
+import { drawCenteredText, drawPausedOverlay } from '../../../engine/ui.ts';
 import {
   ALL_GAMES_BUTTON,
   drawAllGamesButton,
@@ -133,10 +133,7 @@ export class PlayScene implements Scene {
       drawCenteredText(ctx, 'Click, press Space or tap to play again', WIDTH / 2, 600, 24);
       drawAllGamesButton(ctx);
     } else if (this.paused) {
-      ctx.fillStyle = 'rgba(26,26,46,0.55)';
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-      drawCenteredText(ctx, 'Paused', WIDTH / 2, HEIGHT / 2 - 30, 64);
-      drawCenteredText(ctx, this.game.input.touch ? 'Tap to resume' : 'Esc or click to resume', WIDTH / 2, HEIGHT / 2 + 40, 24);
+      drawPausedOverlay(ctx, WIDTH, HEIGHT, this.game.input.touch);
     } else {
       drawPauseButton(ctx);
     }
