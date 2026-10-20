@@ -56,3 +56,29 @@ test('the sky hue follows the top floor', () => {
   expect(skyColors(0)).not.toEqual(skyColors(30));
   expect(skyColors(90)).toEqual(skyColors(0)); // 90 floors x 4 degrees is a full turn
 });
+
+// Debris starts where it was cut. After a trim that is the slab just placed
+// (the sim has already pushed it, so it is floors.length - 1); after a miss
+// nothing was pushed and it is the moving slab's row, floors.length.
+function withDebris(n: number, phase: 'play' | 'over') {
+  const state = tower(n);
+  state.phase = phase;
+  state.debris.push({ x: 100, width: 40, y: 0, vy: 0, spin: 0 });
+  const ctx = stubCtx();
+  renderStack(ctx, state, { camera: n - 1, time: 0, ring: 0 });
+  const [, y] = ctx.calls.translate!.at(-1)!;
+  const hues = (ctx.calls['=fillStyle'] ?? []).map(([c]) => c).filter((c): c is string => typeof c === 'string' && c.startsWith('hsl(')).slice(-3);
+  return { y: y as number, hues };
+}
+
+test('debris after a trimmed drop sits on the slab that was cut, in its colour', () => {
+  const { y, hues } = withDebris(3, 'play');
+  expect(y).toBe(640 + 12); // the top floor's row (camera is on it), plus half a floor
+  for (const h of hues) expect(h).toContain('hsl(208 '); // floor 2: 200 + 2 x 4
+});
+
+test('debris after a miss falls from the moving slab, in its colour', () => {
+  const { y, hues } = withDebris(3, 'over');
+  expect(y).toBe(640 - 24 + 12);
+  for (const h of hues) expect(h).toContain('hsl(212 ');
+});

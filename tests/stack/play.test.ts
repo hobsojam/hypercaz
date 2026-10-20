@@ -101,6 +101,11 @@ test('a normal drop plays the place sound and resets the notes', () => {
   press(' ');
   scene.update(DT);
   expect(sounds.map((s) => s.sfx)).toEqual(['perfect', 'place']);
+  // Two perfects in a row would now play the second note; after a normal drop it starts over.
+  alignPerfect(scene);
+  press(' ');
+  scene.update(DT);
+  expect(sounds.at(-1)).toEqual({ sfx: 'perfect', pitch: 1 });
 });
 
 describe('game over', () => {
