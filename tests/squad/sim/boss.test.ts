@@ -28,7 +28,7 @@ describe('boss', () => {
     const s = createState(makeLevel({ boss: { hp: 100, pattern: 'volley3', fireEvery: 2 } }), 7);
     s.phase = 'boss';
     s.squad.x = -0.7;
-    s.boss = { hp: 100, maxHp: 100, x: 0.3, z: 18, fireTimer: 0, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+    s.boss = { hp: 100, maxHp: 100, x: 0.3, z: 18, fireTimer: 0, summonTimer: 5, enraged: false, charging: false, flash: 0, attack: null, signatureTimer: 5, strafeT: 0 };
     updateBoss(s, 0);
     expect(s.projectiles).toHaveLength(3);
     expect(new Set(s.projectiles.map(p => p.x)).size).toBe(3);

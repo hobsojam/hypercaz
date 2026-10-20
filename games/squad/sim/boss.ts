@@ -1,5 +1,6 @@
 import { nextFloat } from '../../../engine/rng.ts';
 import {
+  BARRAGE_SPACING,
   BOSS_AIM_JITTER,
   BOSS_ENRAGE_AT,
   BOSS_ENRAGE_FIRE,
@@ -34,6 +35,9 @@ export function updateBoss(state: GameState, dt: number): void {
       enraged: false,
       charging: false,
       flash: 0,
+      attack: null,
+      signatureTimer: cfg.chargeEvery || BARRAGE_SPACING,
+      strafeT: 0,
     };
     state.events.push({ type: 'bossArrive' });
   }

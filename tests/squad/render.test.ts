@@ -93,7 +93,7 @@ test('a cage shows its remaining hit points as well as its reward', () => {
 test('the boss shows its remaining health as a number', () => {
   const state = createState(makeLevel({ startSquad: 5 }), 1);
   state.phase = 'boss';
-  state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0, attack: null, signatureTimer: 5, strafeT: 0 };
   expect(textsDrawn(state)).toContain('1235');
 });
 
@@ -105,7 +105,7 @@ test.each([
   const state = createState(makeLevel(), 1);
   // The tank has since moved: an in-flight shell must retain its own origin.
   state.phase = 'boss';
-  state.boss = { hp: 100, maxHp: 100, x: -0.4, z: 8, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  state.boss = { hp: 100, maxHp: 100, x: -0.4, z: 8, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0, attack: null, signatureTimer: 5, strafeT: 0 };
   state.projectiles = [{ x: 0.8, z, originX: 0.2, originZ: 20 }];
   const before = structuredClone(state);
   const ctx = stubCtx();

@@ -5,6 +5,7 @@ import { createRng, nextFloat } from '../../../engine/rng.ts';
 export type SpawnType = 'enemy' | 'heavy' | 'cage' | 'gate' | 'hazard';
 export type HazardKind = 'blade' | 'fire' | 'barricade';
 export type BossPattern = 'single' | 'volley3' | 'spread5';
+export type BossSignature = 'strafe' | 'charge' | 'fortress';
 
 export interface Spawn {
   z: number;
@@ -35,6 +36,9 @@ export interface Level {
     summonEvery: number; // seconds between summoned crowds; 0 = never
     summonCount: number;
     summonHp: number;
+    signature: BossSignature | null; // a later boss's own attack; null = none
+    chargeEvery: number; // charge only: seconds between charges
+    shieldHp: number; // fortress only: the shield's hit points
   };
 }
 
@@ -49,6 +53,7 @@ export class LevelError extends Error {
 const SPAWN_TYPES: readonly (SpawnType | 'horde')[] = ['enemy', 'heavy', 'cage', 'gate', 'hazard', 'horde'];
 const HAZARD_KINDS: readonly HazardKind[] = ['blade', 'fire', 'barricade'];
 const BOSS_PATTERNS: readonly BossPattern[] = ['single', 'volley3', 'spread5'];
+const BOSS_SIGNATURES: readonly BossSignature[] = ['strafe', 'charge', 'fortress'];
 
 type Obj = Record<string, unknown>;
 
@@ -187,6 +192,13 @@ export function validateLevel(raw: unknown, file: string): Level {
     summonCount = intMin(b, 'summonCount', 'boss.summonCount', 1);
     summonHp = intMin(b, 'summonHp', 'boss.summonHp', 1);
   }
+  const signature = b.signature === undefined ? null : oneOf(b, 'signature', 'boss.signature', BOSS_SIGNATURES);
+  let chargeEvery = 0;
+  if (signature === 'charge') {
+    if (typeof b.chargeEvery !== 'number' || b.chargeEvery <= 0) fail('boss.chargeEvery', 'must be > 0 for a charging boss');
+    chargeEvery = b.chargeEvery as number;
+  }
+  const shieldHp = signature === 'fortress' ? intMin(b, 'shieldHp', 'boss.shieldHp', 1) : 0;
 
   return {
     id,
@@ -197,7 +209,7 @@ export function validateLevel(raw: unknown, file: string): Level {
     stars: [(stars as number[])[0], (stars as number[])[1]],
     burstKills,
     spawns,
-    boss: { hp: bossHp, pattern, fireEvery, advance, summonEvery, summonCount, summonHp },
+    boss: { hp: bossHp, pattern, fireEvery, advance, summonEvery, summonCount, summonHp, signature, chargeEvery, shieldHp },
   };
 }
 
