@@ -12,6 +12,8 @@ export interface Popup {
   y: number;
   age: number;
   color: string;
+  amount: number;
+  anchorY: number;
 }
 
 type ToScreen = (x: number, z: number) => { sx: number; sy: number };
@@ -27,6 +29,10 @@ export class Effects {
   private pool: ParticlePool;
   private list: Popup[] = [];
   private shakeMag = 0;
+  private routineBudget = 16;
+  private crowdKills = 0;
+  private crowdWindow = 0;
+  private celebrationCooldown = 0;
   private shakeVec = { x: 0, y: 0 };
 
   constructor(audio: { play(s: Sfx): void }, pool: ParticlePool = new ParticlePool(600)) {
@@ -43,22 +49,33 @@ export class Effects {
         case 'hit': {
           this.audio.play('hit');
           const p = toScreen(e.x, e.z);
-          this.burst(p.sx, p.sy - 20, 2, () => '#FFFFFF', 120, 0.25);
+          this.routineBurst(p.sx, p.sy - 20, '#FFFFFF');
           if (e.target === 'boss') this.kick(4);
           break;
         }
         case 'destroyed': {
           const p = toScreen(e.x, e.z);
           const color = TARGET_COLORS[e.target] ?? '#FFFFFF';
-          this.burst(p.sx, p.sy - 20, 12, (i) => (i % 2 === 0 ? color : CONFETTI[i % CONFETTI.length]), 220, 0.8);
+          if (e.target === 'enemy' || e.target === 'heavy') {
+            this.routineBurst(p.sx, p.sy - 20, color);
+            this.crowdKills++;
+            if (this.crowdWindow === 0) this.crowdWindow = 0.25;
+            if (this.crowdKills >= 8 && this.celebrationCooldown <= 0) {
+              this.burst(p.sx, p.sy - 20, 12, (i) => CONFETTI[i % CONFETTI.length], 180, 0.6);
+              this.crowdKills = 0;
+              this.celebrationCooldown = 0.7;
+            }
+          } else {
+            this.burst(p.sx, p.sy - 20, 12, (i) => (i % 2 === 0 ? color : CONFETTI[i % CONFETTI.length]), 220, 0.8);
+          }
           break;
         }
         case 'gain':
         case 'lose': {
           const p = toScreen(e.x, e.z);
           const good = e.type === 'gain';
-          this.list.push({ text: `${good ? '+' : '−'}${e.amount}`, x: p.sx, y: p.sy - 50, age: 0, color: good ? '#7CFC6A' : '#FF6B6B' });
-          if (!good) this.burst(p.sx, p.sy - 20, Math.min(30, 4 + e.amount * 2), (i) => (i % 3 === 0 ? '#FFFFFF' : '#2F7DE1'), 200, 0.7);
+          this.addPopup(e.amount, good, p.sx, p.sy - 50);
+          if (!good) this.routineBurst(p.sx, p.sy - 20, '#2F7DE1');
           this.audio.play(e.type);
           break;
         }
@@ -100,6 +117,10 @@ export class Effects {
   }
 
   update(dt: number): void {
+    this.routineBudget = Math.min(16, this.routineBudget + dt * 90);
+    this.crowdWindow = Math.max(0, this.crowdWindow - dt);
+    if (this.crowdWindow === 0) this.crowdKills = 0;
+    this.celebrationCooldown = Math.max(0, this.celebrationCooldown - dt);
     this.pool.update(dt, GRAVITY);
     for (const p of this.list) p.age += dt;
     this.list = this.list.filter((p) => p.age < POPUP_LIFE);
@@ -134,6 +155,31 @@ export class Effects {
 
   get popups(): readonly Popup[] {
     return this.list;
+  }
+
+  private addPopup(amount: number, good: boolean, x: number, y: number): void {
+    x = Math.max(48, Math.min(492, x));
+    y = Math.max(180, Math.min(850, y));
+    const color = good ? '#7CFC6A' : '#FF6B6B';
+    const nearby = this.list.filter(p => Math.abs(p.x - x) < 48 && Math.abs(p.anchorY - y) < 36);
+    const existing = nearby.find(p => p.color === color && p.age < 0.12);
+    if (existing) {
+      existing.amount += amount;
+      existing.text = `${good ? '+' : '−'}${existing.amount}`;
+      return;
+    }
+    // Keep gains and losses separate and stagger simultaneous reward numbers.
+    const occupied = this.list.map(p => p.y - tweenValue(0, POPUP_RISE, p.age / POPUP_LIFE, ease.outCubic));
+    let displayY = y;
+    while (this.list.some((p, i) => Math.abs(p.x - x) < 80 && Math.abs(occupied[i] - displayY) < 32)) displayY -= 34;
+    if (this.list.length >= 6) this.list.shift();
+    this.list.push({ text: `${good ? '+' : '−'}${amount}`, x, y: displayY, anchorY: y, amount, age: 0, color });
+  }
+
+  private routineBurst(x: number, y: number, color: string): void {
+    const count = Math.min(2, Math.floor(this.routineBudget));
+    this.routineBudget -= count;
+    this.burst(x, y, count, () => color, 100, 0.22);
   }
 
   private kick(mag: number): void {

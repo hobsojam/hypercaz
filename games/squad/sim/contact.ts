@@ -1,15 +1,16 @@
 import { formationHalfWidth, formationSlots, type Slot } from './formation.ts';
-import type { Entity, GameState } from './state.ts';
+import type { Entity, GameState, LossCause } from './state.ts';
 
 // Every change to the squad size goes through here so peak tracking, events
 // and the lose condition stay consistent.
-export function changeCount(state: GameState, delta: number, x: number, z: number): void {
+export function changeCount(state: GameState, delta: number, x: number, z: number, cause?: LossCause): void {
   const { squad } = state;
   const before = squad.count;
   squad.count = Math.max(0, squad.count + delta);
   squad.peak = Math.max(squad.peak, squad.count);
   const applied = squad.count - before;
-  if (applied !== 0) state.events.push({ type: applied > 0 ? 'gain' : 'lose', amount: Math.abs(applied), x, z });
+  if (applied > 0) state.events.push({ type: 'gain', amount: applied, x, z });
+  if (applied < 0) state.events.push({ type: 'lose', amount: -applied, x, z, cause });
   if (squad.count === 0 && (state.phase === 'advance' || state.phase === 'boss')) {
     state.phase = 'lost';
     state.events.push({ type: 'lost' });
@@ -35,7 +36,7 @@ export function updateContacts(state: GameState): void {
       case 'enemy':
       case 'heavy':
         if (e.z - e.halfD <= 0 && Math.abs(e.x - x) <= formationHalfWidth(slots) + e.halfW) {
-          changeCount(state, -e.kills, e.x, 0);
+          changeCount(state, -e.kills, e.x, 0, e.type);
           removed.add(e);
         }
         break;
@@ -43,7 +44,7 @@ export function updateContacts(state: GameState): void {
         if (e.z <= 0 && !e.resolved) {
           e.resolved = true;
           if (Math.abs(x - e.x) <= e.halfW) {
-            changeCount(state, e.value, e.x, 0);
+            changeCount(state, e.value, e.x, 0, 'gate');
             removed.add(e);
           }
         }
@@ -52,7 +53,7 @@ export function updateContacts(state: GameState): void {
         if (e.z <= 0 && !e.resolved) {
           e.resolved = true;
           const kills = soldiersHit(state, slots, e.x, e.halfW);
-          if (kills > 0) changeCount(state, -kills, e.x, 0);
+          if (kills > 0) changeCount(state, -kills, e.x, 0, e.kind ?? undefined);
         }
         break;
     }

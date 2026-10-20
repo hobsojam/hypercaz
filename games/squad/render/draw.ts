@@ -12,6 +12,7 @@ export interface RenderView {
   time: number;
   squadView: SquadView;
   shake: { x: number; y: number };
+  drawEffects?: (ctx: CanvasRenderingContext2D) => void;
 }
 
 const ROAD_NEAR = -3;
@@ -68,14 +69,12 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
         }
         const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
         drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
-        // Health left, counting down as it's shot, like gate and cage numbers.
-        label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
-        if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
       },
     });
   }
+  const threats: Draw[] = [];
   for (const pr of state.projectiles) {
-    items.push({
+    threats.push({
       z: pr.z,
       draw: () => {
         // Fan out from the captured muzzle position, then descend to the
@@ -119,6 +118,10 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   }
   items.sort((a, b) => b.z - a.z);
   for (const item of items) item.draw();
+  view.drawEffects?.(ctx);
+  // Threats and target numbers stay readable over cosmetic particles.
+  for (const threat of threats) threat.draw();
+  drawCombatLabels(ctx, state, view);
 
   ctx.restore();
   drawHud(ctx, state, view);
@@ -221,13 +224,9 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
       break;
     case 'heavy':
       drawSprite(ctx, assets, 'heavy_walk', time + e.id * 0.13, p.sx, p.sy, p.scale * UNIT_SCALE, { flash: e.flash });
-      label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 100 * p.scale, 18 * p.scale + 6, '#FFFFFF');
       break;
     case 'cage':
       drawSprite(ctx, assets, 'cage', time, p.sx, p.sy, p.scale, { flash: e.flash });
-      label(ctx, `+${e.value}`, p.sx, p.sy - 66 * p.scale, 22 * p.scale + 6, '#F5C242');
-      // Hits left to break it, counting down as it's shot.
-      label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 28 * p.scale, 18 * p.scale + 6, '#FFFFFF');
       break;
     case 'gate': {
       const good = e.value > 0;
@@ -235,8 +234,6 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
         stretchX: widthPx / 128,
         flash: e.flash,
       });
-      const text = good ? `+${e.value}` : e.value === 0 ? '0' : `−${-e.value}`;
-      label(ctx, text, p.sx, p.sy - 26 * p.scale, 30 * p.scale + 6, good ? '#7CFC6A' : '#FF6B6B');
       break;
     }
     case 'hazard':
@@ -252,6 +249,32 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
         drawSprite(ctx, assets, id, time, p.sx, p.sy, p.scale, { stretchX: widthPx / 128 });
       }
       break;
+  }
+}
+
+// Annotation pass: particles and player bullets cannot cover rescue goals.
+function drawCombatLabels(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
+  for (const e of state.entities) {
+    const p = projectPlayfieldPoint(view.persp, e.x, e.z);
+    ctx.save();
+    ctx.globalAlpha = fadeIn(e.z);
+    if (e.type === 'heavy') label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 100 * p.scale, 18 * p.scale + 6, '#FFFFFF');
+    if (e.type === 'cage') {
+      label(ctx, `+${e.value}`, p.sx, p.sy - 66 * p.scale, 22 * p.scale + 6, '#F5C242');
+      label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 28 * p.scale, 18 * p.scale + 6, '#FFFFFF');
+    }
+    if (e.type === 'gate') {
+      const text = e.value > 0 ? `+${e.value}` : e.value === 0 ? '0' : `−${-e.value}`;
+      label(ctx, text, p.sx, p.sy - 26 * p.scale, 30 * p.scale + 6, e.value > 0 ? '#7CFC6A' : '#FF6B6B');
+    }
+    ctx.restore();
+  }
+  if (state.boss) {
+    const boss = state.boss;
+    const p = project(view.persp, boss.x, boss.z);
+    const s = p.scale * (2 * BOSS_HALF_W * view.persp.roadHalfWidthPx) / 160;
+    label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
+    if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
   }
 }
 
@@ -334,4 +357,7 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderVi
   ctx.fillStyle = '#1A1A2E';
   ctx.fillText(state.level.name, 16, 24);
   drawKillMeter(ctx, state, view.time);
+  const targetStars = state.squad.count < state.level.stars[0] ? 2 : 3;
+  const target = state.level.stars[targetStars - 2];
+  label(ctx, `${targetStars} stars: finish with ${target}`, persp.width / 2, 142, 18, '#F5C242');
 }

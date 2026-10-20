@@ -62,7 +62,7 @@ function fight(state: GameState, dt: number): void {
   boss.z -= cfg.advance * dt;
   if (boss.z - BOSS_HALF_D <= 0) {
     boss.z = BOSS_HALF_D;
-    changeCount(state, -state.squad.count, boss.x, 0);
+    changeCount(state, -state.squad.count, boss.x, 0, 'bossContact');
     return;
   }
 
@@ -126,7 +126,7 @@ function updateProjectiles(state: GameState, dt: number): void {
     }
     if (state.phase === 'lost') continue;
     const kills = soldiersHit(state, formationSlots(state.squad.count), p.x, PROJECTILE_RADIUS, PROJECTILE_BLAST_DEPTH);
-    if (kills > 0) changeCount(state, -kills, p.x, 0);
+    if (kills > 0) changeCount(state, -kills, p.x, 0, 'bossShot');
   }
   state.projectiles = remaining;
 }

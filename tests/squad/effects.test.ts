@@ -69,10 +69,13 @@ describe('Effects', () => {
     expect(played).toContain('boss');
   });
 
-  it('destroyed units burst into 12 confetti particles', () => {
+  it('routine enemy deaths leave a small, short-lived red burst', () => {
     const { fx, pool, toScreen } = setup();
     fx.handle([{ type: 'destroyed', x: 0, z: 10, target: 'enemy' }], toScreen);
-    expect(pool.count).toBe(12);
+    expect(pool.count).toBeLessThanOrEqual(3);
+    pool.forEach(p => expect(p.color).toBe('#E04040'));
+    fx.update(0.3);
+    expect(pool.count).toBe(0);
   });
 
   it('losing the run plays the fail sound', () => {
@@ -90,4 +93,29 @@ describe('Effects', () => {
     fx.update(0);
     expect(magnitude(fx)).toBeGreaterThan(0);
   });
+});
+
+it('a dense crowd wipe is celebrated once while routine particles stay bounded', () => {
+  const { fx, pool, toScreen } = setup();
+  fx.handle(Array.from({ length: 100 }, () => ({ type: 'destroyed' as const, target: 'enemy' as const, x: 0, z: 10 })), toScreen);
+  expect(pool.count).toBeLessThanOrEqual(30);
+  const colors: string[] = [];
+  pool.forEach(p => colors.push(p.color));
+  expect(new Set(colors).size).toBeGreaterThan(2);
+});
+
+it('nearby losses combine without hiding a simultaneous recruitment reward', () => {
+  const { fx, toScreen } = setup();
+  fx.handle([
+    ...Array.from({ length: 20 }, () => ({ type: 'lose' as const, amount: 1, x: 0, z: 0 })),
+    { type: 'gain', amount: 8, x: 0, z: 0 },
+  ], toScreen);
+  expect(fx.popups.map(p => p.text)).toEqual(['−20', '+8']);
+  expect(fx.popups[0].y).not.toBe(fx.popups[1].y);
+});
+
+it('rescuing a cage keeps a more prominent celebration than a routine kill', () => {
+  const { fx, pool, toScreen } = setup();
+  fx.handle([{ type: 'destroyed', target: 'cage', x: 0, z: 10 }], toScreen);
+  expect(pool.count).toBeGreaterThanOrEqual(10);
 });
