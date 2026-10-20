@@ -78,20 +78,15 @@ export function renderStack(ctx: CanvasRenderingContext2D, state: StackState, vi
   const dropY = yOf(floors.length);
   if (state.phase === 'play') drawSlab(ctx, state.moving.x, dropY, state.moving.width, hueOf(floors.length));
 
-  // Sliced-off pieces tumble down from where they were cut. Gravity pulls
-  // from rest, so the time since the cut follows from how far they have fallen.
-  // After a trim the sim has already pushed the placed slab, so the cut was
-  // made on the top floor; after a miss nothing was pushed and the piece is
-  // the moving slab itself.
-  const cutFloor = state.phase === 'play' ? topIndex : floors.length;
-  const cutY = yOf(cutFloor);
+  // Sliced-off pieces tumble down from the row they were cut from. Gravity
+  // pulls from rest, so the time since the cut follows from how far they have fallen.
   for (const d of state.debris) {
     const t = Math.sqrt((2 * d.y) / DEBRIS_GRAVITY);
     ctx.save();
-    ctx.translate(d.x + d.width / 2, cutY + d.y * FLOOR_H + FLOOR_H / 2);
+    ctx.translate(d.x + d.width / 2, yOf(d.floor) + d.y * FLOOR_H + FLOOR_H / 2);
     ctx.rotate(d.spin * t);
     ctx.globalAlpha = Math.max(0, 1 - d.y / 12);
-    drawSlab(ctx, -d.width / 2, -FLOOR_H / 2, d.width, hueOf(cutFloor));
+    drawSlab(ctx, -d.width / 2, -FLOOR_H / 2, d.width, hueOf(d.floor));
     ctx.restore();
   }
 

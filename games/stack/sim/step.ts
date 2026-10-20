@@ -25,8 +25,10 @@ export function step(state: StackState, input: StackInput, dt: number): void {
   if (state.phase === 'over') return;
 
   state.speed = speedFor(state.floors.length);
-  slide(state, dt);
+  // A drop lands where the player last saw the slab, so it resolves before
+  // the slab slides; the new slab starts sliding next step.
   if (input.drop) drop(state);
+  else slide(state, dt);
   state.time += dt;
 }
 
@@ -62,7 +64,7 @@ function drop(state: StackState): void {
   if (right <= left) {
     state.phase = 'over';
     state.events.push({ type: 'miss' });
-    addDebris(state, { x: m.x, width: m.width });
+    addDebris(state, { x: m.x, width: m.width }, state.floors.length);
     return;
   }
 
@@ -81,8 +83,9 @@ function drop(state: StackState): void {
     const trimmed = m.width - placed.width;
     // The overhang is whichever side of the moving slab sticks out.
     const overhangX = m.x < top.x ? m.x : right;
-    addDebris(state, { x: overhangX, width: trimmed });
     state.events.push({ type: 'place', perfect: false, trimmed });
+    // The cut floor is the one about to be pushed.
+    addDebris(state, { x: overhangX, width: trimmed }, state.floors.length);
   }
 
   state.floors.push(placed);
@@ -96,10 +99,11 @@ function drop(state: StackState): void {
   state.speed = speedFor(state.floors.length);
 }
 
-function addDebris(state: StackState, piece: Slab): void {
+// `floor` is the row the piece was cut from.
+function addDebris(state: StackState, piece: Slab, floor: number): void {
   const [r, next] = nextFloat(state.rng);
   state.rng = next;
-  state.debris.push({ ...piece, y: 0, vy: 0, spin: (r * 2 - 1) * DEBRIS_SPIN_MAX });
+  state.debris.push({ ...piece, floor, y: 0, vy: 0, spin: (r * 2 - 1) * DEBRIS_SPIN_MAX });
 }
 
 function moveDebris(state: StackState, dt: number): void {

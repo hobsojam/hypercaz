@@ -9,6 +9,7 @@ export interface Slab {
 export interface Debris {
   x: number; // left edge, logical px
   width: number;
+  floor: number; // the row it was cut from, which fixes its colour and where it falls from
   y: number; // floors below where the slab was dropped (positive is down)
   vy: number; // floors per second
   spin: number; // radians per second

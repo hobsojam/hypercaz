@@ -1,4 +1,5 @@
 import { GameAudio } from '../../engine/audio.ts';
+import { registerWorker } from '../../engine/offline.ts';
 import { fitLetterbox, Input, type Letterbox } from '../../engine/input.ts';
 import { startLoop } from '../../engine/loop.ts';
 import { SceneStack } from '../../engine/scenes.ts';
@@ -99,3 +100,5 @@ try {
 } catch (err) {
   showCrash('The game failed to start', err);
 }
+
+if (import.meta.env.PROD) await registerWorker('../sw.js');

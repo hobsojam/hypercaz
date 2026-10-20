@@ -4,7 +4,6 @@ import { createStorage } from '../../engine/storage.ts';
 import type { StackGame } from '../../games/stack/game.ts';
 import { PlayScene, perfectPitch } from '../../games/stack/scenes/play.ts';
 import { TitleScene } from '../../games/stack/scenes/title.ts';
-import { speedFor } from '../../games/stack/sim/step.ts';
 import type { StackState } from '../../games/stack/sim/state.ts';
 import { stubCtx } from '../squad/stubCtx.ts';
 
@@ -46,11 +45,10 @@ function stubStack(backend: Parameters<typeof createStorage>[1] = null) {
 
 const stateOf = (s: PlayScene) => (s as unknown as { state: StackState }).state;
 
-// Lines the sliding slab up so the next frame's drop lands dead on the top slab.
+// Lines the sliding slab up dead on the top slab, as the player sees it.
 function alignPerfect(scene: PlayScene): void {
   const st = stateOf(scene);
-  const top = st.floors[st.floors.length - 1]!;
-  st.moving.x = top.x - st.moving.dir * speedFor(st.floors.length) * DT;
+  st.moving.x = st.floors[st.floors.length - 1]!.x;
 }
 
 test('Space drops the slab', () => {
@@ -59,6 +57,16 @@ test('Space drops the slab', () => {
   press(' ');
   scene.update(DT);
   expect(stateOf(scene).floors).toHaveLength(2);
+});
+
+test('a single frame after Space on an aligned slab is a perfect', () => {
+  const { game, press, sounds } = stubStack();
+  const scene = new PlayScene(game);
+  alignPerfect(scene);
+  press(' ');
+  scene.update(DT);
+  expect(stateOf(scene).events.map((e) => e.type)).toEqual(['perfect']);
+  expect(sounds.map((s) => s.sfx)).toContain('perfect');
 });
 
 test('a click or tap drops the slab too', () => {

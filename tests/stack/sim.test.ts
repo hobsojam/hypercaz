@@ -168,4 +168,38 @@ describe('stack sim', () => {
     };
     expect(run()).toEqual(run());
   });
+
+  it('a drop on an aligned slab is perfect, with no slide first', () => {
+    const s = createStack(1);
+    s.moving.x = s.floors[0]!.x;
+    s.moving.dir = 1;
+    step(s, DROP, 1 / 60);
+    expect(s.floors).toHaveLength(2);
+    expect(s.floors[1]!.width).toBe(BASE_WIDTH);
+    expect(s.events).toEqual([{ type: 'perfect', streak: 1 }]);
+  });
+
+  it('a piece cut off by a trim remembers its floor, and a miss uses the moving slab floor', () => {
+    const s = createStack(1);
+    dropAt(s, s.floors[0]!.x + 50);
+    expect(s.debris[0]!.floor).toBe(1);
+    s.moving.x = 5000;
+    step(s, DROP, 0);
+    expect(s.debris[1]!.floor).toBe(2);
+  });
+
+  it('500 perfect drops keep speed, widths and debris sane', () => {
+    const s = createStack(1);
+    for (let i = 0; i < 500; i++) {
+      s.moving.x = s.floors[s.floors.length - 1]!.x;
+      step(s, DROP, 1 / 60);
+    }
+    expect(s.floors).toHaveLength(501);
+    expect(s.speed).toBeLessThanOrEqual(SPEED_MAX);
+    for (const f of s.floors) {
+      expect(Number.isFinite(f.width)).toBe(true);
+      expect(f.width).toBeGreaterThan(0);
+      expect(Number.isFinite(f.x)).toBe(true);
+    }
+  });
 });

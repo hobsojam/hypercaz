@@ -9,7 +9,7 @@ export const REGROW = 0.03; // of BASE_WIDTH, per perfect from REGROW_FROM on
 
 // Slider speed ramps linearly from SPEED_START to SPEED_MAX over SPEED_FULL_AT floors.
 export const SPEED_START = 300;
-export const SPEED_MAX = 700;
+export const SPEED_MAX = 700; // one 1/60 s step is ~11.7 px here, wider than PERFECT_TOLERANCE; tune after playtest
 export const SPEED_FULL_AT = 40;
 
 // Debris is measured in floor heights, so the renderer converts with its floor height.
