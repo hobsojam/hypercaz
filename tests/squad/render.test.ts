@@ -8,7 +8,7 @@ import { SquadView } from '../../games/squad/render/squadView.ts';
 import { botInput } from '../../games/squad/sim/bot.ts';
 import { formationSlots } from '../../games/squad/sim/formation.ts';
 import { validateLevel } from '../../games/squad/sim/level.ts';
-import { createState } from '../../games/squad/sim/state.ts';
+import { createState, spawnEntity } from '../../games/squad/sim/state.ts';
 import { step } from '../../games/squad/sim/step.ts';
 import { makeLevel } from './fixtures.ts';
 
@@ -141,4 +141,74 @@ test('a full kill meter prompts the player to fire', () => {
   expect(textsDrawn(state)).not.toContain('RAPID FIRE!');
   state.meter = state.level.burstKills;
   expect(textsDrawn(state)).toContain('RAPID FIRE!');
+});
+
+// Supply decoded sprite dimensions while recording the real renderer's output.
+function squadFrame(count: number, x = 0, bullets: ReturnType<typeof createState>['bullets'] = [], entities: ReturnType<typeof createState>['entities'] = []) {
+  const store = AssetStore.fromManifest(parseManifest(JSON.parse(readFileSync(join(root, 'games/squad/assets/manifest.json'), 'utf8'))));
+  const soldier = { width: 256, height: 80 } as HTMLImageElement;
+  const bullet = { width: 16, height: 24 } as HTMLImageElement;
+  const cage = { width: 96, height: 112 } as HTMLImageElement;
+  store.image = id => id === 'soldier_run' ? soldier : id === 'bullet' ? bullet : id === 'cage' ? cage : null;
+  const state = createState(makeLevel({ startSquad: count }), 1);
+  state.squad.x = x;
+  state.bullets = bullets;
+  state.entities = entities;
+  const before = structuredClone(state);
+  const squadView = new SquadView();
+  squadView.update(formationSlots(count), 1);
+  const ctx = stubCtx();
+  renderGame(ctx, state, { persp: DEFAULT_VIEW, assets: store, time: 0, squadView, shake: { x: 0, y: 0 } });
+  expect(state).toEqual(before);
+  const rectangles = (image: HTMLImageElement) => (ctx.calls.drawImage ?? [])
+    .filter(call => call[0] === image)
+    .map(call => ({ x: call[5] as number, y: call[6] as number, w: call[7] as number, h: call[8] as number }));
+  return { soldiers: rectangles(soldier), bullets: rectangles(bullet), cages: rectangles(cage), texts: (ctx.calls.fillText ?? []).map(call => call[0]) };
+}
+
+test.each([30, 100, 300].flatMap(count => [-0.79, 0, 0.79].map(x => ({ count, x }))))(
+  'the whole displayed army fits the play area (count=$count, x=$x)', ({ count, x }) => {
+    const { soldiers } = squadFrame(count, x);
+    expect(soldiers).toHaveLength(Math.min(count, 150));
+    for (const r of soldiers) {
+      expect(r.x).toBeGreaterThanOrEqual(0);
+      expect(r.x + r.w).toBeLessThanOrEqual(DEFAULT_VIEW.width);
+      expect(r.y + r.h).toBeLessThanOrEqual(DEFAULT_VIEW.height - 32);
+    }
+    expect(Math.min(...soldiers.map(r => r.y + r.h))).toBeCloseTo(DEFAULT_VIEW.squadLineY);
+  },
+);
+
+test('rear-row shots originate inside the displayed army and stay put when its size changes', () => {
+  const rear = formationSlots(150).at(-1)!;
+  const bullets = [{ x: rear.dx, z: rear.dz, damage: 1, vx: 0 }];
+  const large = squadFrame(150, 0, bullets);
+  const shot = large.bullets[0];
+  const sx = shot.x + shot.w / 2, sy = shot.y + shot.h / 2;
+  expect(large.soldiers.some(r => sx >= r.x && sx <= r.x + r.w && sy >= r.y && sy <= r.y + r.h)).toBe(true);
+  expect(sy).toBeLessThan(DEFAULT_VIEW.height);
+  expect(squadFrame(30, 0, bullets).bullets[0]).toEqual(shot);
+});
+
+test('shots carrying extra army damage look heavier without changing their path', () => {
+  const ordinary = squadFrame(150, 0, [{ x: 0.2, z: 10, damage: 1, vx: 0 }]).bullets[0];
+  const heavy = squadFrame(300, 0, [{ x: 0.2, z: 10, damage: 2, vx: 0 }]).bullets[0];
+  expect(heavy.w).toBeGreaterThan(ordinary.w);
+  expect(heavy.h).toBeGreaterThan(ordinary.h);
+  expect(heavy.x + heavy.w / 2).toBeCloseTo(ordinary.x + ordinary.w / 2);
+  expect(heavy.y + heavy.h / 2).toBeCloseTo(ordinary.y + ordinary.h / 2);
+  expect(squadFrame(300).texts).toContain('HEAVY FIRE');
+  expect(squadFrame(100).texts).not.toContain('HEAVY FIRE');
+});
+
+test('rear-row shots and a rescue target behind the front share the same play area', () => {
+  const state = createState(makeLevel({ spawns: [{ z: 4, x: 0.79, type: 'cage', hp: 10, value: 3 }] }), 1);
+  const cage = spawnEntity(state, state.level.spawns[0], -4);
+  const frame = squadFrame(300, 0.79, [{ x: 0.79, z: -4, damage: 1, vx: 0 }], [cage]);
+  const shot = frame.bullets[0], target = frame.cages[0];
+  const sx = shot.x + shot.w / 2, sy = shot.y + shot.h / 2;
+  expect(sx).toBeGreaterThanOrEqual(target.x);
+  expect(sx).toBeLessThanOrEqual(target.x + target.w);
+  expect(sy).toBeGreaterThanOrEqual(target.y);
+  expect(sy).toBeLessThanOrEqual(target.y + target.h);
 });

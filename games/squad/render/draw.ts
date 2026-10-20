@@ -1,8 +1,9 @@
 // Draws the game state. Read-only: never changes gameplay.
 import { type AssetStore, drawSprite } from '../../../engine/assets.ts';
 import { type PerspectiveConfig, project } from '../../../engine/perspective.ts';
-import { BOSS_HALF_W, BURST_SECONDS, SPAWN_HORIZON } from '../sim/constants.ts';
+import { BOSS_HALF_W, BURST_SECONDS, MAX_DRAWN, SPAWN_HORIZON } from '../sim/constants.ts';
 import type { Entity, GameState } from '../sim/state.ts';
+import { projectPlayfieldPoint } from './projection.ts';
 import type { SquadView } from './squadView.ts';
 
 export interface RenderView {
@@ -97,8 +98,11 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
     items.push({
       z: b.z,
       draw: () => {
-        const p = project(persp, b.x, b.z);
-        drawSprite(ctx, view.assets, 'bullet', view.time, p.sx, p.sy - 18 * p.scale, p.scale);
+        const p = projectPlayfieldPoint(persp, b.x, b.z);
+        // Once shot count is capped, extra soldiers increase each shot's
+        // damage. Make that extra firepower visible without moving its aim.
+        const weight = Math.min(2.5, Math.sqrt(Math.max(1, b.damage)));
+        drawSprite(ctx, view.assets, 'bullet', view.time, p.sx, p.sy - 18 * p.scale, p.scale * weight);
       },
     });
   }
@@ -108,7 +112,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
     items.push({
       z: s.dz,
       draw: () => {
-        const p = project(persp, state.squad.x + s.dx, s.dz);
+        const p = projectPlayfieldPoint(persp, state.squad.x + s.dx, s.dz);
         drawSprite(ctx, view.assets, 'soldier_run', view.time + i * 0.07, p.sx, p.sy, p.scale * UNIT_SCALE);
       },
     });
@@ -199,7 +203,7 @@ function addProps(items: Draw[], ctx: CanvasRenderingContext2D, state: GameState
       items.push({
         z,
         draw: () => {
-          const p = project(view.persp, x, z);
+          const p = projectPlayfieldPoint(view.persp, x, z);
           drawSprite(ctx, view.assets, PROPS[i % PROPS.length], view.time, p.sx, p.sy, p.scale, { alpha: fadeIn(z) });
         },
       });
@@ -209,7 +213,7 @@ function addProps(items: Draw[], ctx: CanvasRenderingContext2D, state: GameState
 
 function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView): void {
   const { persp, assets, time } = view;
-  const p = project(persp, e.x, e.z);
+  const p = projectPlayfieldPoint(persp, e.x, e.z);
   const widthPx = 2 * e.halfW * persp.roadHalfWidthPx;
   switch (e.type) {
     case 'enemy':
@@ -240,7 +244,7 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
         const n = Math.max(1, Math.round(widthPx / 64));
         for (let i = 0; i < n; i++) {
           const x = e.x - e.halfW + (e.halfW * 2 * (i + 0.5)) / n;
-          const q = project(persp, x, e.z);
+          const q = projectPlayfieldPoint(persp, x, e.z);
           drawSprite(ctx, assets, 'hazard_blade', time, q.sx, q.sy, q.scale * Math.min(1, widthPx / n / 64));
         }
       } else {
@@ -292,7 +296,8 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderVi
   const front = project(persp, state.squad.x, 0);
   const bx = front.sx;
   const by = front.sy - 62;
-  ctx.fillStyle = '#2F7DE1';
+  const heavyFire = state.squad.count > MAX_DRAWN;
+  ctx.fillStyle = heavyFire ? '#F5C242' : '#2F7DE1';
   ctx.strokeStyle = '#1A1A2E';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -300,6 +305,7 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderVi
   ctx.fill();
   ctx.stroke();
   label(ctx, String(state.squad.count), bx, by + 1, 24, '#FFFFFF');
+  if (heavyFire) label(ctx, 'HEAVY FIRE', bx, by - 32, 14, '#F5C242');
 
   // Top bar: progress along the road, or boss health.
   const x = 70;

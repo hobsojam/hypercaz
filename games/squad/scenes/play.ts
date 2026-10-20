@@ -1,10 +1,11 @@
 import type { Scene } from '../../../engine/scenes.ts';
-import { DEFAULT_VIEW, project, unprojectX } from '../../../engine/perspective.ts';
+import { DEFAULT_VIEW, unprojectX } from '../../../engine/perspective.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { drawMuteButton, drawPauseButton, hitRect, PAUSE_BUTTON, takeClick } from '../controls.ts';
 import { recordResult, saveProgress } from '../progress.ts';
 import { BURST_BUTTON, renderGame } from '../render/draw.ts';
 import { Effects } from '../render/effects.ts';
+import { projectPlayfieldPoint } from '../render/projection.ts';
 import { SquadView } from '../render/squadView.ts';
 import { formationSlots } from '../sim/formation.ts';
 import { starsFor } from '../sim/stars.ts';
@@ -64,7 +65,7 @@ export class PlayScene implements Scene {
     this.readSteering(dt);
     step(this.state, { targetX: this.targetX, burst }, dt);
     this.squadView.update(formationSlots(this.state.squad.count), dt);
-    this.effects.handle(this.state.events, (x, z) => project(DEFAULT_VIEW, x, z));
+    this.effects.handle(this.state.events, (x, z) => projectPlayfieldPoint(DEFAULT_VIEW, x, z));
     this.effects.update(dt);
 
     if (this.state.phase === 'won' || this.state.phase === 'lost') {
