@@ -240,6 +240,7 @@ export class PlayScene implements Scene {
   }
 
   private next(): void {
+    this.land(); // a skip never swallows the landing: the clear sound and confetti still happen
     this.finished = true; // only once, whatever else arrives
     this.game.stack.replace(new PlayScene(this.game, this.level + 1));
   }

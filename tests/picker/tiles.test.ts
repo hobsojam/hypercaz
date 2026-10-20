@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -38,5 +38,23 @@ describe('tiles', () => {
     const storage = createStorage(STACK_STORAGE, memoryBackend());
     storage.set('best', 'lots');
     expect(stackTile(storage).progress).toBe('New');
+  });
+});
+
+describe('sortTile', () => {
+  it('reads "New" on empty storage', () => {
+    expect(sortTile(createStorage('hypercaz.sort', memoryBackend()))).toEqual({ name: 'Water Sort', href: 'sort/', progress: 'New' });
+  });
+
+  it('shows the saved level', () => {
+    const storage = createStorage('hypercaz.sort', memoryBackend());
+    storage.set('level', 12);
+    expect(sortTile(storage).progress).toBe('Level 12');
+  });
+
+  it('ignores a saved level that is not a sane number', () => {
+    const storage = createStorage('hypercaz.sort', memoryBackend());
+    storage.set('level', 'x');
+    expect(sortTile(storage).progress).toBe('New');
   });
 });

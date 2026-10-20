@@ -363,16 +363,20 @@ export function drawScene(ctx: CanvasRenderingContext2D, m: SceneModel): void {
   if (m.celebrating !== null) drawCelebration(ctx, m, m.celebrating);
 }
 
-// The symbols on/off button: a white star, struck through when off.
+// The symbols on/off button: a cluster of circle, triangle and square, dimmed
+// and struck through when off.
 export function drawSymbolsButton(ctx: CanvasRenderingContext2D, r: Rect, on: boolean): void {
   const cx = r.x + r.w / 2;
   const cy = r.y + r.h / 2;
+  const u = r.w * 0.17;
   ctx.fillStyle = 'rgba(26,26,46,0.55)';
   ctx.beginPath();
   ctx.arc(cx, cy, r.w / 2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = on ? '#FFFFFF' : 'rgba(255,255,255,0.55)';
-  drawSymbol(ctx, SYMBOLS.indexOf('star'), cx, cy, r.w * 0.26);
+  ctx.fillStyle = on ? '#FFFFFF' : 'rgba(255,255,255,0.4)';
+  drawSymbol(ctx, SYMBOLS.indexOf('circle'), cx - u * 1.1, cy - u * 0.9, u);
+  drawSymbol(ctx, SYMBOLS.indexOf('square'), cx + u * 1.1, cy - u * 0.9, u);
+  drawSymbol(ctx, SYMBOLS.indexOf('triangle'), cx, cy + u * 1.1, u);
   if (!on) {
     ctx.strokeStyle = '#FF6B6B';
     ctx.lineWidth = 3;

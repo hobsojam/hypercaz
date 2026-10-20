@@ -248,6 +248,16 @@ describe('winning', () => {
     expect((stub.scenes[0] as PlayScene).level).toBe(2);
   });
 
+  test('a click before the liquid lands still plays the clear flourish', () => {
+    const stub = stubSort();
+    const scene = new PlayScene(stub.game, 1);
+    playToWin(stub, scene);
+    expect(stub.sounds).not.toContain('clear');
+    stub.tap(640, 400, scene);
+    expect(stub.sounds).toContain('clear');
+    expect(stub.scenes).toHaveLength(1);
+  });
+
   test('Review Focus 4: Z and R during the celebration neither undo the win nor skip a level twice', () => {
     const stub = stubSort();
     const scene = new PlayScene(stub.game, 5);
