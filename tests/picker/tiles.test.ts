@@ -1,0 +1,42 @@
+import { describe, expect, it } from 'vitest';
+import { createStorage } from '../../engine/storage.ts';
+import { saveProgress } from '../../games/squad/progress.ts';
+import { STACK_STORAGE, squadTile, stackTile } from '../../games/picker/tiles.ts';
+
+function memoryBackend() {
+  const m = new Map<string, string>();
+  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
+}
+
+describe('tiles', () => {
+  it('read "New" from empty storage', () => {
+    const backend = memoryBackend();
+    expect(squadTile(createStorage('hypercaz.squad', backend))).toEqual({ name: 'Squad Shooter', href: 'squad/', progress: 'New' });
+    expect(stackTile(createStorage(STACK_STORAGE, backend))).toEqual({ name: 'Stack', href: 'stack/', progress: 'New' });
+  });
+
+  it('show Squad\'s next level and star total', () => {
+    const storage = createStorage('hypercaz.squad', memoryBackend());
+    saveProgress(storage, { best: { 1: 3, 2: 2, 3: 1, 4: 1, 5: 2 }, muted: false });
+    expect(squadTile(storage).progress).toBe('Level 6 · 9★');
+  });
+
+  it('say Complete once every level is beaten', () => {
+    const storage = createStorage('hypercaz.squad', memoryBackend());
+    saveProgress(storage, { best: { 1: 3, 2: 3 }, muted: false });
+    expect(squadTile(storage, 2).progress).toBe('Complete · 6★');
+  });
+
+  it('show the Stack best', () => {
+    const storage = createStorage(STACK_STORAGE, memoryBackend());
+    storage.set('best', 47);
+    expect(STACK_STORAGE).toBe('hypercaz.stack');
+    expect(stackTile(storage).progress).toBe('Best: 47 floors');
+  });
+
+  it('ignore a junk Stack best', () => {
+    const storage = createStorage(STACK_STORAGE, memoryBackend());
+    storage.set('best', 'lots');
+    expect(stackTile(storage).progress).toBe('New');
+  });
+});

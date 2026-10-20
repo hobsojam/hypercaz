@@ -1,7 +1,7 @@
 {
-  "name": "Squad Shooter",
-  "short_name": "Squad",
-  "description": "Grow your squad, smash the horde, beat the boss.",
+  "name": "Hypercaz",
+  "short_name": "Hypercaz",
+  "description": "Quick games, no ads.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

@@ -15,11 +15,19 @@ describe('precacheList', () => {
   it('lists the start page and every built and public file once, minus source maps and the worker itself', () => {
     expect(precacheList(['index.html', 'assets/index-abc.js', 'assets/index-abc.js.map', 'sw.js'], ['favicon.svg', 'index.html', 'icons/a.png'])).toEqual([
       './',
+      'squad/',
+      'stack/',
       'assets/index-abc.js',
       'favicon.svg',
       'icons/a.png',
       'index.html',
     ]);
+  });
+});
+
+describe('precacheList pages', () => {
+  it('lists the page directories the browser requests', () => {
+    expect(precacheList(['index.html'], [])).toEqual(expect.arrayContaining(['./', 'squad/', 'stack/']));
   });
 });
 
