@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { PAUSE_BUTTON } from '../../games/squad/controls.ts';
 import { BURST_BUTTON } from '../../games/squad/render/draw.ts';
+import type { Effects } from '../../games/squad/render/effects.ts';
+import { spawnEntity } from '../../games/squad/sim/state.ts';
+import { makeLevel } from './fixtures.ts';
 import { PlayScene } from '../../games/squad/scenes/play.ts';
 import type { GameState } from '../../games/squad/sim/state.ts';
 import { stubGame } from './stubGame.ts';
@@ -110,4 +113,19 @@ describe('play scene on a phone', () => {
     scene.update(1 / 60);
     expect((scene as unknown as { targetX: number }).targetX).toBeGreaterThan(0.5);
   });
+});
+
+it('a rescue behind the front shows its reward at the displayed target', () => {
+  const { game } = stubGame();
+  game.levels[0].level = makeLevel({ startSquad: 150, spawns: [{ z: 4, x: 0.79, type: 'cage', hp: 1, value: 3 }] });
+  const scene = new PlayScene(game, 0);
+  const { state, effects } = scene as unknown as { state: GameState; effects: Effects };
+  state.entities = [spawnEntity(state, state.level.spawns[0], -4)];
+  state.bullets = [{ x: 0.79, z: -4, damage: 1, vx: 0 }];
+  scene.update(0);
+  expect(effects.popups).toHaveLength(1);
+  expect(effects.popups[0].text).toBe('+3');
+  expect(effects.popups[0].x).toBeCloseTo(451.7);
+  expect(effects.popups[0].y).toBeGreaterThan(800);
+  expect(effects.popups[0].y).toBeLessThan(850);
 });
