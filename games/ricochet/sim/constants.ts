@@ -1,0 +1,10 @@
+export const WIDTH = 540;
+export const HEIGHT = 960;
+export const BOARD = { x: 28, y: 170, w: 484, h: 620 };
+export const LAUNCHER = { x: 270, y: 764 };
+export const BALL_RADIUS = 8;
+export const CAGE_RADIUS = 25;
+export const SHOT_SPEED = 540;
+export const MAX_BANKS = 8;
+export const MIN_ANGLE = -Math.PI + 0.18;
+export const MAX_ANGLE = -0.18;
