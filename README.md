@@ -9,6 +9,7 @@ Simple, ad-free hyper-casual browser games. No monetisation, no currencies, no t
 Your squad fires automatically up a 2.5D road. Slide left and right to shoot enemies before they reach you, break cages to recruit soldiers, shoot number gates up into the positives, dodge hazards, and beat the boss at the end of each level. Enemy crowds close in on you, and every kill charges the Rapid Fire meter; fire it when it's full for a few seconds of 2.5× firepower.
 
 - **Mouse / touch:** move left and right to steer; tap the Rapid Fire meter when it's full.
+- **Buttons:** pause and mute in the top-right corner (mute works on every screen). The game pauses itself if you switch app or tab.
 - **Keyboard:** ← → or A / D to steer, Space for Rapid Fire, Esc to pause, M to mute.
 
 ## Development

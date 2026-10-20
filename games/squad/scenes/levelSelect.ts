@@ -1,4 +1,5 @@
 import type { Scene } from '../../../engine/scenes.ts';
+import { drawMuteButton, takeClick } from '../controls.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { isUnlocked } from '../progress.ts';
 import { type Button, drawButton, drawCenteredText, drawMenuBackground, drawStar, hitButton } from '../ui.ts';
@@ -26,7 +27,7 @@ export class LevelSelectScene implements Scene {
   }
 
   update(): void {
-    const c = this.game.input.consumeClick();
+    const c = takeClick(this.game);
     if (!c) return;
     for (const { button, index } of this.buttons()) {
       if (!hitButton(button, c.x, c.y)) continue;
@@ -47,5 +48,6 @@ export class LevelSelectScene implements Scene {
       const stars = this.game.progress.best[id] ?? 0;
       for (let s = 0; s < 3; s++) drawStar(ctx, button.x + button.w / 2 + (s - 1) * 34, button.y + 98, 13, s < stars);
     }
+    drawMuteButton(ctx, this.game.audio.muted);
   }
 }

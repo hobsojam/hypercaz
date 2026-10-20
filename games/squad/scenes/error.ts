@@ -1,4 +1,5 @@
 import type { Scene } from '../../../engine/scenes.ts';
+import { drawMuteButton, takeClick } from '../controls.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { type Button, drawButton, drawCenteredText, drawMenuBackground, FONT, hitButton } from '../ui.ts';
 
@@ -15,7 +16,7 @@ export class ErrorScene implements Scene {
   }
 
   update(): void {
-    const c = this.game.input.consumeClick();
+    const c = takeClick(this.game);
     if ((c && hitButton(this.back, c.x, c.y)) || this.game.input.consumeKey('Escape')) this.game.stack.replace(this.next());
   }
 
@@ -27,6 +28,7 @@ export class ErrorScene implements Scene {
     ctx.textAlign = 'center';
     wrap(this.message, 40).forEach((line, i) => ctx.fillText(line, WIDTH / 2, 360 + i * 24));
     drawButton(ctx, this.back);
+    drawMuteButton(ctx, this.game.audio.muted);
   }
 }
 
