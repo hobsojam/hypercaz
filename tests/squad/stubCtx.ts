@@ -8,7 +8,9 @@ export function stubCtx() {
     return proxy;
   };
   const proxy: object = new Proxy({}, { get: (_t, prop) => (prop === 'calls' ? calls : record(String(prop))), set: (_t, prop, value) => {
-    (calls[`=${String(prop)}`] ??= []).push([value]);
+    const name = `=${String(prop)}`;
+    calls[name] ??= [];
+    calls[name].push([value]);
     return true;
   } });
   return proxy as CanvasRenderingContext2D & { calls: Record<string, unknown[][]> };
