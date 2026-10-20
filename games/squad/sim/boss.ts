@@ -1,5 +1,6 @@
 import { nextFloat } from '../../../engine/rng.ts';
 import {
+  BARRAGE_WARN,
   BOSS_AIM_JITTER,
   BOSS_ENRAGE_AT,
   BOSS_ENRAGE_FIRE,
@@ -21,7 +22,7 @@ import {
 import { changeCount, soldiersHit } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import { expandHorde } from './level.ts';
-import { holdsGround, signatureBusy, summonsNow, updateSignature } from './signature.ts';
+import { holdsGround, quietBeforeCharge, signatureBusy, summonsNow, updateSignature } from './signature.ts';
 import { spawnEntity, type GameState } from './state.ts';
 
 export function updateBoss(state: GameState, dt: number): void {
@@ -77,17 +78,19 @@ function fight(state: GameState, dt: number): void {
     return;
   }
 
-  boss.fireTimer -= dt;
+  const quiet = quietBeforeCharge(state);
+  if (!quiet) boss.fireTimer -= dt;
   if (boss.fireTimer <= 0) {
     boss.fireTimer += cfg.fireEvery * (boss.enraged ? BOSS_ENRAGE_FIRE : 1);
     fireVolley(state);
     // The Fortress opens with a volley; after that its barrages are its attack.
     if (cfg.signature === 'fortress') boss.fireTimer = Infinity;
   }
-  const charging = boss.fireTimer <= BOSS_WINDUP;
+  const charging = !quiet && boss.fireTimer <= BOSS_WINDUP;
   if (charging && !boss.charging) state.events.push({ type: 'bossWindup' });
-  // A barrage's warning glows the same way as a volley's.
-  boss.charging = charging || boss.attack?.kind === 'barrage';
+  // A showing barrage glows the same way as a volley's warning.
+  const barrage = boss.attack?.kind === 'barrage' && boss.attack.t <= BARRAGE_WARN;
+  boss.charging = charging || barrage;
 
   if (cfg.summonEvery > 0 && summonsNow(state)) {
     boss.summonTimer -= dt;

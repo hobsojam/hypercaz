@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BARRAGE_GAP, BARRAGE_MAX_SHIFT, BARRAGE_WARN, CHARGE_HALF_W, SHIELD_BURST, SHIELD_DAMAGE } from '../../../games/squad/sim/constants.ts';
+import { BARRAGE_GAP, BARRAGE_MAX_SHIFT, BARRAGE_SPACING, BARRAGE_WARN, BOSS_WINDUP, CHARGE_HALF_W, SHIELD_BURST, SHIELD_DAMAGE } from '../../../games/squad/sim/constants.ts';
 import { botInput } from '../../../games/squad/sim/bot.ts';
 import { formationHalfWidth, formationSlots } from '../../../games/squad/sim/formation.ts';
 import { absorbHit, bossDamageFactor } from '../../../games/squad/sim/signature.ts';
@@ -72,7 +72,7 @@ describe('charger', () => {
     run(s, 4.5, x); // settled
     s.boss!.signatureTimer = 0;
   };
-  const stage = (s: GameState) => (s.boss!.attack?.kind === 'charge' ? s.boss!.attack.stage : null);
+  const stage = (s: GameState) => (s.boss?.attack?.kind === 'charge' ? s.boss.attack.stage : null);
   // Steers to the far side of any charge stripe, otherwise holds `x`.
   const dodging = (x: number) => (s: GameState) => {
     const a = s.boss?.attack;
@@ -151,6 +151,37 @@ describe('charger', () => {
     expect(events.filter((e) => e.type === 'bossFire')).toHaveLength(0);
   });
 
+  it('no shells are still in the air when a charge warning starts', () => {
+    const s = charger({ fireEvery: 0.8 }, 200);
+    let warnings = 0;
+    for (let i = 0; i < 40 / DT && s.phase !== 'won' && s.phase !== 'lost'; i++) {
+      const was = stage(s);
+      step(s, { targetX: dodging(0.5)(s) }, DT);
+      if (was === null && stage(s) === 'warn') {
+        warnings++;
+        expect(s.projectiles).toHaveLength(0);
+      }
+    }
+    expect(warnings).toBeGreaterThanOrEqual(2);
+  });
+
+  it('after a charge, the next volley waits a full interval and glows first', () => {
+    const s = charger({ fireEvery: 2 }, 200);
+    let ended = -1;
+    let windup = -1;
+    let fired = -1;
+    for (let i = 0; i < 40 / DT && fired < 0; i++) {
+      const was = stage(s);
+      step(s, { targetX: dodging(0.5)(s) }, DT);
+      s.projectiles = [];
+      if (was === 'return' && stage(s) === null) ended = s.time;
+      if (ended > 0 && windup < 0 && s.boss?.charging) windup = s.time;
+      if (ended > 0 && s.events.some((e) => e.type === 'bossFire')) fired = s.time;
+    }
+    expect(fired - ended).toBeGreaterThanOrEqual(2 - 2 * DT);
+    expect(fired - windup).toBeGreaterThanOrEqual(BOSS_WINDUP - 2 * DT);
+  });
+
   it('reaching the squad is not boss contact unless every soldier is in the stripe', () => {
     const s = charger({ advance: 0.5 });
     startCharge(s, 0);
@@ -223,6 +254,35 @@ describe('fortress', () => {
     run(s, 4.5, inGap);
     s.boss!.hp = s.boss!.maxHp * 0.4;
     expect(kinds(run(s, 20, inGap))).toEqual(['bossBarrage', 'bossBarrage', 'shieldUp']);
+  });
+
+  it('enraging mid-phase keeps that phase\'s barrage spacing', () => {
+    const s = fortress();
+    const landings: number[] = [];
+    let left = 0;
+    run(s, 20, inGap, (st) => {
+      if (!st.boss) return;
+      const a = st.boss.attack;
+      const nowLeft = a?.kind === 'barrage' ? a.left : 0;
+      if (nowLeft < left || (left === 1 && a?.kind !== 'barrage')) landings.push(st.time);
+      left = nowLeft;
+      if (landings.length === 1) st.boss.hp = Math.min(st.boss.hp, st.boss.maxHp * 0.4); // enrage after the first landing
+    });
+    expect(landings[1] - landings[0]).toBeCloseTo(BARRAGE_SPACING, 1);
+    expect(landings[2] - landings[1]).toBeCloseTo(BARRAGE_SPACING, 1);
+  });
+
+  it('the warning glow is off between barrages', () => {
+    const s = fortress();
+    let hiddenSeen = false;
+    run(s, 20, inGap, (st) => {
+      const a = st.boss?.attack;
+      if (a?.kind === 'barrage' && a.t > BARRAGE_WARN) {
+        hiddenSeen = true;
+        expect(st.boss!.charging).toBe(false);
+      }
+    });
+    expect(hiddenSeen).toBe(true);
   });
 
   it('shows each barrage for at least 1.5 s before it lands, with the warning glow', () => {
@@ -338,7 +398,7 @@ describe('the bot', () => {
 
   it('heads for a showing barrage\'s gap', () => {
     const s = fighting({ signature: 'fortress', shieldHp: 100 });
-    s.boss!.attack = { kind: 'barrage', t: 1, gapX: -0.6, left: 2 };
+    s.boss!.attack = { kind: 'barrage', t: 1, gapX: -0.6, left: 2, spacing: 2.5 };
     expect(botInput(s).targetX).toBeCloseTo(-0.6);
   });
 

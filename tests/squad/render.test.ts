@@ -237,8 +237,8 @@ describe('boss signature attacks are drawn', () => {
     { kind: 'charge', stage: 'lunge', t: 0.1, laneX: 0.2, fromX: 0, fromZ: 18 },
     { kind: 'charge', stage: 'exposed', t: 1, laneX: 0.2, fromX: 0, fromZ: 18 },
     { kind: 'charge', stage: 'return', t: 0.5, laneX: 0.2, fromX: 0, fromZ: 18 },
-    { kind: 'barrage', t: 1, gapX: 0.75, left: 2 },
-    { kind: 'barrage', t: 2, gapX: -0.75, left: 1 },
+    { kind: 'barrage', t: 1, gapX: 0.75, left: 2, spacing: 2.5 },
+    { kind: 'barrage', t: 2, gapX: -0.75, left: 1, spacing: 2.5 },
     { kind: 'shield', hp: 300, maxHp: 400 },
     { kind: 'stunned', t: 2 },
   ] as Boss['attack'][])('%o renders', (attack) => {
@@ -252,9 +252,9 @@ describe('boss signature attacks are drawn', () => {
   });
 
   it('a showing barrage outlines its safe gap in green', () => {
-    expect(withAttack({ kind: 'barrage', t: 1, gapX: 0.5, left: 1 }).written('strokeStyle')).toContain('#5BE37A');
+    expect(withAttack({ kind: 'barrage', t: 1, gapX: 0.5, left: 1, spacing: 2.5 }).written('strokeStyle')).toContain('#5BE37A');
     // Not yet showing: more than the warning time to go.
-    expect(withAttack({ kind: 'barrage', t: 2, gapX: 0.5, left: 1 }).written('strokeStyle')).not.toContain('#5BE37A');
+    expect(withAttack({ kind: 'barrage', t: 2, gapX: 0.5, left: 1, spacing: 2.5 }).written('strokeStyle')).not.toContain('#5BE37A');
   });
 
   it('a shield shows its remaining strength', () => {

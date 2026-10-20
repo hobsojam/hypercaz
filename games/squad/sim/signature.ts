@@ -3,6 +3,8 @@
 // with a shield. Each one is announced on the road before it lands.
 import {
   BARRAGE_COUNT,
+  BOSS_ENRAGE_FIRE,
+  PROJECTILE_SPEED,
   BARRAGE_COUNT_ENRAGED,
   BARRAGE_GAP,
   BARRAGE_MAX_SHIFT,
@@ -35,6 +37,14 @@ export function updateSignature(state: GameState, dt: number): void {
   if (signature === 'strafe') strafe(state, dt);
   if (signature === 'charge') charge(state, dt);
   if (signature === 'fortress') fortress(state, dt);
+}
+
+// A Charger stops firing in time for its last shells to land before the
+// charge warning starts, so the stripe is the only thing to read.
+export function quietBeforeCharge(state: GameState): boolean {
+  const boss = state.boss!;
+  if (state.level.boss.signature !== 'charge' || boss.attack) return false;
+  return boss.signatureTimer < boss.z / PROJECTILE_SPEED + 0.1;
 }
 
 // A Fortress holds its ground while its shield is up.
@@ -129,6 +139,8 @@ function charge(state: GameState, dt: number): void {
       if (attack.t < CHARGE_RETURN) return;
       boss.attack = null;
       boss.signatureTimer = state.level.boss.chargeEvery * (boss.enraged ? CHARGE_ENRAGED : 1);
+      // A full interval before the next volley, so it gets its whole warning.
+      boss.fireTimer = state.level.boss.fireEvery * (boss.enraged ? BOSS_ENRAGE_FIRE : 1);
   }
 }
 
@@ -157,17 +169,19 @@ function fortress(state: GameState, dt: number): void {
   boss.charging = false;
   if (attack.left > 1) {
     // The next one lands a spacing later; it shows for the last BARRAGE_WARN seconds.
-    const spacing = boss.enraged ? BARRAGE_SPACING_ENRAGED : BARRAGE_SPACING;
-    boss.attack = { kind: 'barrage', t: spacing, gapX: nextGap(state, attack.gapX), left: attack.left - 1 };
-    if (spacing <= BARRAGE_WARN) announceBarrage(state);
+    boss.attack = { ...attack, t: attack.spacing, gapX: nextGap(state, attack.gapX), left: attack.left - 1 };
+    if (attack.spacing <= BARRAGE_WARN) announceBarrage(state);
     return;
   }
   boss.attack = { kind: 'shield', hp: state.level.boss.shieldHp, maxHp: state.level.boss.shieldHp };
   state.events.push({ type: 'shieldUp' });
 }
 
+// The phase's count and spacing are fixed when it starts: an enrage partway
+// through only changes the next phase.
 function startBarrage(state: GameState, count: number, fromX: number): void {
-  state.boss!.attack = { kind: 'barrage', t: BARRAGE_WARN, gapX: nextGap(state, fromX), left: count };
+  const spacing = state.boss!.enraged ? BARRAGE_SPACING_ENRAGED : BARRAGE_SPACING;
+  state.boss!.attack = { kind: 'barrage', t: BARRAGE_WARN, gapX: nextGap(state, fromX), left: count, spacing };
   announceBarrage(state);
 }
 
