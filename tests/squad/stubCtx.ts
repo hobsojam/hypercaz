@@ -2,18 +2,10 @@
 // call's arguments by method name.
 export function stubCtx() {
   const calls: Record<string, unknown[][]> = {};
-  const proxy: object = new Proxy(
-    {},
-    {
-      get(_t, prop) {
-        if (prop === 'calls') return calls;
-        return (...args: unknown[]) => {
-          (calls[String(prop)] ??= []).push(args);
-          return proxy;
-        };
-      },
-      set: () => true,
-    },
-  );
+  const record = (name: string) => (...args: unknown[]) => {
+    (calls[name] ??= []).push(args);
+    return proxy;
+  };
+  const proxy: object = new Proxy({}, { get: (_t, prop) => (prop === 'calls' ? calls : record(String(prop))), set: () => true });
   return proxy as CanvasRenderingContext2D & { calls: Record<string, unknown[][]> };
 }

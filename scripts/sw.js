@@ -1,4 +1,4 @@
-/* global self, caches, fetch, URL, setTimeout */
+/* global self, caches, fetch, Response, URL, setTimeout */
 // The game's service worker, so it still starts with a weak or no signal once
 // it has been opened. scripts/pwa.ts puts VERSION and PRECACHE in front of
 // this at build time.
@@ -33,12 +33,13 @@ function fromCache(request) {
 
 // The page itself comes from the network when it answers in time, so a new
 // deploy shows up straight away; otherwise from the cache.
-function page(request) {
-  const network = fetch(request);
-  const late = new Promise((resolve) => setTimeout(resolve, NETWORK_WAIT_MS));
-  return Promise.race([network, late])
-    .then((res) => (res?.ok ? res : fromCache(request).then((hit) => hit ?? network)))
-    .catch(() => fromCache(request));
+async function page(request) {
+  const network = fetch(request).catch(() => null);
+  const late = new Promise((resolve) => setTimeout(() => resolve(null), NETWORK_WAIT_MS));
+  const fresh = await Promise.race([network, late]);
+  if (fresh?.ok) return fresh;
+  const cached = await fromCache(request);
+  return cached ?? (await network) ?? Response.error();
 }
 
 // Everything else has a content hash in its name (or is an icon), so a cached

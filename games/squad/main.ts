@@ -121,14 +121,18 @@ async function boot(): Promise<void> {
   );
 }
 
-// Caches the game so it starts again without a signal. Only for real builds:
-// in development it would serve stale files.
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('offline play unavailable:', err));
-}
-
 try {
   await boot();
 } catch (err) {
   showCrash('The game failed to start', err);
+}
+
+// Caches the game so it starts again without a signal. Only for real builds:
+// in development it would serve stale files.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  try {
+    await navigator.serviceWorker.register('./sw.js');
+  } catch (err) {
+    console.warn('offline play unavailable:', err);
+  }
 }

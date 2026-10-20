@@ -1,7 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import { buildStamp, currentSha, pwa } from './scripts/pwa.ts';
+import { buildStamp, pwa } from './scripts/pwa.ts';
 
-const build = buildStamp(new Date(), currentSha());
+// CI names the commit it builds; a local build says "dev".
+const build = buildStamp(new Date(), process.env.GITHUB_SHA ?? null);
 
 export default defineConfig({
   base: './',
