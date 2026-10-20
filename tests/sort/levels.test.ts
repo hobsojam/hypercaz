@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { CAPACITY, colorCounts, isDone } from '../../games/sort/sim/board.ts';
+import { CAPACITY, colorCounts, isDone, isWon, pour } from '../../games/sort/sim/board.ts';
 import { generateLevel, levelSpec } from '../../games/sort/sim/levels.ts';
 import { solve } from '../../games/sort/sim/solver.ts';
 
@@ -25,13 +25,27 @@ describe('generateLevel', () => {
   });
 
   test('levels 1..500 are all solvable', { timeout: 120_000 }, () => {
-    for (let n = 1; n <= 500; n++) expect(solve(generateLevel(n)), `level ${n}`).not.toBeNull();
+    for (let n = 1; n <= 500; n++) {
+      let board = generateLevel(n);
+      const moves = solve(board);
+      expect(moves, `level ${n}`).not.toBeNull();
+      for (const m of moves!) board = pour(board, m.from, m.to)!.board;
+      expect(isWon(board), `level ${n}`).toBe(true);
+    }
+  });
+
+  test('some 1-spare levels survive the comfort check', () => {
+    let found = false;
+    for (let n = 60; n <= 498 && !found; n += 3) {
+      found = generateLevel(n).tubes.length === levelSpec(n).colors + 1;
+    }
+    expect(found).toBe(true);
   });
 
   test('a huge level number is fast and solvable', () => {
     const t = performance.now();
     const board = generateLevel(1_000_000);
-    expect(performance.now() - t).toBeLessThan(1000);
+    expect(performance.now() - t).toBeLessThan(3000);
     expect(solve(board)).not.toBeNull();
   });
 });

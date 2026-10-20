@@ -60,4 +60,3 @@ export function solve(board: Board, maxNodes = 200_000): Move[] | null {
   seen.add(key(board));
   return search(board) ? path : null;
 }
-
