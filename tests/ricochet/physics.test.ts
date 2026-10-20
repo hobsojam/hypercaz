@@ -70,15 +70,15 @@ describe('rescue shots', () => {
     expect(shoot(s, -Math.PI / 2)).toBe(false);
     expect(s.shotsUsed).toBe(1);
   });
-  it('returns a trapped ball after eight banks rather than looping forever', () => {
-    const s = createState(level({ cages: [{ id: 'a', x: 450, y: 250 }], walls: [{ x: 200, y: 670, w: 140, h: 20 }] }));
-    shoot(s, -Math.PI / 2);
+  it('returns a long shallow shot after exactly eight banks', () => {
+    const s = createState(level({ cages: [{ id: 'a', x: 270, y: 240 }] }));
+    shoot(s, -0.2);
     let banks = 0;
     for (let i = 0; i < 2000 && s.phase === 'flying'; i++) {
       step(s, 1 / 60);
       banks += s.events.filter(e => e.type === 'bank').length;
     }
-    expect(banks).toBeLessThanOrEqual(8);
+    expect(banks).toBe(8);
     expect(s.phase).toBe('aiming');
   });
   it('keeps rescued cages across shots, exhausts the budget and resets on retry', () => {

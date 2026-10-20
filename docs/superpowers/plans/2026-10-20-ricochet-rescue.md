@@ -1,6 +1,6 @@
 # Ricochet Rescue Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Ship eight playable bank-shot rescue puzzles with a standalone entry and a disposable mount API, ready for later picker integration.
 
@@ -31,10 +31,10 @@
 
 **Interfaces:** Produces `Point`, `Rect`, `Level`, `State`, `createState(level)`, `shoot(state, angle)`, `step(state, dt)`, `preview(state, angle)`, `starsFor(state)` and typed simulation events. The session consumes these without DOM dependencies.
 
-- [ ] Write and run failing tests for swept rectangle/circle collisions, exact corners, a straight rescue, a bank rescue, multiple rescues, budget exhaustion, drain/bank return, invalid/double shots and preview/live agreement. Expected: missing implementation or failing behavior.
-- [ ] Implement the exact geometry/constants from the spec with finite collision iteration and no randomness in simulation.
-- [ ] Author eight validated layouts with varied bank decisions. Put known par solutions only in tests and verify them through `shoot` + `step`. Expected: all eight win at par and each malformed geometry fixture is rejected.
-- [ ] Run the task's focused tests and commit the simulation and level deliverable.
+- [x] Write and run failing tests for swept rectangle/circle collisions, exact corners, a straight rescue, a bank rescue, multiple rescues, budget exhaustion, drain/bank return, invalid/double shots and preview/live agreement. Expected: missing implementation or failing behavior.
+- [x] Implement the exact geometry/constants from the spec with finite collision iteration and no randomness in simulation.
+- [x] Author eight validated layouts with varied bank decisions. Put known par solutions only in tests and verify them through `shoot` + `step`. Expected: all eight win at par and each malformed geometry fixture is rejected.
+- [x] Run the task's focused tests and commit the simulation and level deliverable.
 
 ## Task 2: Playable session and presentation
 
@@ -42,10 +42,10 @@
 
 **Interfaces:** Consumes Task 1 exports. Produces `Session` with explicit aim/fire/retry/select/pause/update commands and read-only render data; renderer consumes Session + AssetStore. Persist best stars in a dedicated `hypercaz.ricochet` namespace through injected storage.
 
-- [ ] Write/run failing tests for progression, retry reset, pause, results, saved best sanitization and render phases. Expected: missing behavior.
-- [ ] Implement the session with small named operations; keep DOM events out. Draw the courtyard, target/cage art, trajectory preview, shot/rescue/par HUD, short rescue effects and accessible-sized menu controls.
-- [ ] Reuse only selected cage and soldier sprite entries and existing sound effects. Verify instructions and result messages through real renderer output.
-- [ ] Run all task tests and commit.
+- [x] Write/run failing tests for progression, retry reset, pause, results, saved best sanitization and render phases. Expected: missing behavior.
+- [x] Implement the session with small named operations; keep DOM events out. Draw the courtyard, target/cage art, trajectory preview, shot/rescue/par HUD, short rescue effects and accessible-sized menu controls.
+- [x] Reuse only selected cage and soldier sprite entries and existing sound effects. Verify instructions and result messages through real renderer output.
+- [x] Run all task tests and commit.
 
 ## Task 3: Standalone browser adapter and review
 
@@ -58,3 +58,9 @@
 - [ ] Run the full repository suite, build/lint/diff checks and standalone build. Expected: all green without shared-infrastructure edits.
 - [ ] Exercise actual touch, mouse and keyboard in a browser, solve a bank puzzle and complete a level, check phone and desktop layouts and mount/dispose.
 - [ ] Request independent whole-branch review, resolve material findings, re-verify, then commit and open a PR. Document the direct URL, build command and deferred picker wiring.
+
+## Verification record
+
+- Baseline: 440 tests across 38 files pass on updated main.
+- Tasks 1–2: 34 physics/level cases and 16 session/control/render cases pass. Every puzzle has an independent par solution.
+- Browser: touch, mouse and keyboard exercise real input; all eight puzzles solve at par. Saved stars, canceled/outside releases and actual mount/dispose were checked with no browser errors.

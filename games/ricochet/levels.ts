@@ -44,7 +44,7 @@ export function validateLevel(level: Level): Level {
 
 export const LEVELS: readonly Level[] = [
   {
-    id: 1, name: 'First Rescue', lesson: 'Aim at the cage. Release to launch your rescue ball.', par: 1, shots: 3,
+    id: 1, name: 'First Rescue', lesson: 'Drag to aim at the cage. Release to fire.', par: 1, shots: 3,
     walls: [], cages: [{ id: 'a', x: 270, y: 330 }],
   },
   {
