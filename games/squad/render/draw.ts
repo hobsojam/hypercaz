@@ -264,7 +264,9 @@ function drawCombatLabels(ctx: CanvasRenderingContext2D, state: GameState, view:
       label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 28 * p.scale, 18 * p.scale + 6, '#FFFFFF');
     }
     if (e.type === 'gate') {
-      const text = e.value > 0 ? `+${e.value}` : e.value === 0 ? '0' : `−${-e.value}`;
+      let text = '0';
+      if (e.value > 0) text = `+${e.value}`;
+      else if (e.value < 0) text = `−${-e.value}`;
       label(ctx, text, p.sx, p.sy - 26 * p.scale, 30 * p.scale + 6, e.value > 0 ? '#7CFC6A' : '#FF6B6B');
     }
     ctx.restore();
