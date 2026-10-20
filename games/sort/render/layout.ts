@@ -19,7 +19,8 @@ function widthFor(count: number, rows: number, w: number, h: number): number {
   const across = (w - 2 * SIDE) / (perRow + GAP * (perRow - 1));
   // A lifted tube in the top row rises into the space above it.
   const down = (h - TOP_BAND - BOTTOM_BAND) / (rows * RATIO + (rows - 1) * GAP + LIFT);
-  return Math.floor(Math.min(MAX_W, across, down));
+  // Never below a drawable width, even when the window is too small to fit the tubes.
+  return Math.max(8, Math.floor(Math.min(MAX_W, across, down)));
 }
 
 // Landscape: one row whenever the tubes can be MIN_W wide, else as few rows as

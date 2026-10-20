@@ -116,3 +116,28 @@ test('a pour mid-flow still draws every tube and a stream between them', () => {
   expect(writes(ctx, 'strokeStyle', GLASS_EDGE)).toBe(5);
   expect(ctx.calls.rotate?.length ?? 0).toBeGreaterThan(0);
 });
+
+// A real canvas throws on a negative radius; the stub accepts anything, so wrap it to throw too.
+function strictCtx() {
+  const ctx = stubCtx();
+  return new Proxy(ctx, {
+    get: (target, prop) => {
+      const member = target[prop as keyof typeof target] as unknown;
+      if (prop !== 'arc' && prop !== 'roundRect') return member;
+      return (...args: number[]) => {
+        const radius = prop === 'arc' ? args[2]! : args[4]!;
+        if (radius < 0) throw new RangeError(`${String(prop)} with a negative radius`);
+        return (member as (...a: number[]) => unknown)(...args);
+      };
+    },
+  });
+}
+
+test.each([
+  [400, 150],
+  [90, 600],
+])('a 12-tube board draws in a %ix%i window without a negative radius', (w, h) => {
+  const tubes = Array.from({ length: 12 }, (_, i) => (i < 10 ? [i, (i + 1) % 10, (i + 2) % 10, i] : []));
+  const rects = layoutTubes(12, w, h);
+  expect(() => drawScene(strictCtx(), model({ board: { tubes }, rects, view: { w, h } }))).not.toThrow();
+});

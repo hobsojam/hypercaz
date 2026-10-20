@@ -89,7 +89,7 @@ function tubePath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   const r = w / 2;
   ctx.moveTo(x + inset, y);
   ctx.lineTo(x + inset, y + h - r);
-  ctx.arc(x + r, y + h - r, r - inset, Math.PI, 0, true);
+  ctx.arc(x + r, y + h - r, Math.max(0, r - inset), Math.PI, 0, true);
   ctx.lineTo(x + w - inset, y);
 }
 
@@ -214,7 +214,7 @@ function drawTube(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   // A soft streak of reflection down the left side.
   ctx.fillStyle = 'rgba(255,255,255,0.16)';
   ctx.beginPath();
-  ctx.roundRect(x + w * 0.16, y + w * 0.3, w * 0.11, h - w * 0.95, w * 0.055);
+  ctx.roundRect(x + w * 0.16, y + w * 0.3, w * 0.11, Math.max(0, h - w * 0.95), w * 0.055);
   ctx.fill();
 
   if (look.done) {

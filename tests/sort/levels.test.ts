@@ -60,3 +60,29 @@ test('levelSpec follows the curve', () => {
   expect(levelSpec(61).spares).toBe(2);
   expect(levelSpec(59).spares).toBe(2);
 });
+
+// These pin the puzzle each level number gives. generateLevel keeps or rejects a
+// deal by what the solver finds, so a solver change can silently reshuffle levels.
+// Changing the expected values changes players' levels: only do it deliberately.
+describe('level snapshot', () => {
+  const pinned: Record<number, string> = {
+    1: '[[1,2,0,1],[2,0,0,2],[2,1,0,1],[],[]]',
+    6: '[[1,3,0,3],[2,1,0,1],[3,2,3,1],[0,2,0,2],[],[]]',
+    36: '[[2,4,1,3],[7,1,9,4],[2,6,3,5],[0,8,3,0],[4,1,6,8],[5,7,5,8],[5,0,6,0],[2,3,9,6],[7,4,8,7],[1,2,9,9],[],[]]',
+    // level 60 is 1-spare eligible but falls back to 2 spares
+    60: '[[0,1,2,7],[3,5,7,3],[9,4,4,7],[9,3,3,5],[5,6,8,6],[4,8,7,0],[8,6,1,0],[2,6,9,1],[8,2,4,9],[5,1,2,0],[],[]]',
+    63: '[[3,8,2,2],[0,4,1,5],[6,7,2,3],[1,9,3,5],[9,9,2,8],[9,7,1,4],[7,8,8,7],[6,6,5,6],[4,0,0,3],[4,1,0,5],[],[]]',
+  };
+
+  test.each(Object.keys(pinned).map(Number))('level %i deals the same tubes', (n) => {
+    expect(JSON.stringify(generateLevel(n).tubes)).toBe(pinned[n]);
+  });
+
+  test('levels 1..300 hash to the same value', { timeout: 60_000 }, () => {
+    // FNV-1a over the JSON of every level's tubes
+    const text = JSON.stringify(Array.from({ length: 300 }, (_, i) => generateLevel(i + 1).tubes));
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
+    expect(hash).toBe(1712358973);
+  });
+});

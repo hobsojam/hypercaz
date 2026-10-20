@@ -99,3 +99,13 @@ describe('tubeAt', () => {
     expect(tubeAt(rects, 20, 400)).toBeNull();
   });
 });
+
+test.each([
+  [12, 400, 150],
+  [5, 90, 600],
+])('%i tubes in a %ix%i window still get a finite, drawable width', (count, w, h) => {
+  for (const r of layoutTubes(count, w, h)) {
+    expect(Number.isFinite(r.w)).toBe(true);
+    expect(r.w).toBeGreaterThanOrEqual(8);
+  }
+});
