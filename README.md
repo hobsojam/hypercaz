@@ -11,6 +11,8 @@ Your squad fires automatically up a 2.5D road. Slide left and right to shoot ene
 - **Mouse / touch:** move left and right to steer; tap the Rapid Fire meter when it's full.
 - **Buttons:** pause and mute in the top-right corner (mute works on every screen). The game pauses itself if you switch app or tab.
 - **Keyboard:** ← → or A / D to steer, Space for Rapid Fire, Esc to pause, M to mute.
+- **On a phone:** use "Add to Home Screen" (Safari's share menu, or Chrome's menu) to get an app icon that opens the game full screen. Once opened, it also starts with no signal.
+- **Reporting a problem:** the title screen shows the build (date and commit) at the bottom; mention it.
 
 ## Development
 
@@ -33,6 +35,8 @@ npm run check-assets  # validate art against the manifest
 - `games/squad/scenes/`: the title, level select, play and results screens.
 - `games/squad/levels/*.json`: level data.
 - `games/squad/assets/`: art plus `manifest.json`.
+- `public/`: favicon, app icons and the web app manifest, copied into the build as they are.
+- `scripts/pwa.ts`: stamps the build and writes the service worker (`scripts/sw.js` plus the list of this build's files). Real builds only, so `npm run dev` always serves fresh files.
 
 ### Levels
 
