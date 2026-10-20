@@ -8,6 +8,7 @@ import { label } from './draw.ts';
 
 export interface Popup {
   text: string;
+  kind: 'gain' | 'lose';
   x: number;
   y: number;
   age: number;
@@ -23,6 +24,15 @@ const POPUP_RISE = 60;
 const GRAVITY = 900;
 const CONFETTI = ['#F5C242', '#2F7DE1', '#E04040', '#7CFC6A', '#FFFFFF', '#FF8A1F'];
 const TARGET_COLORS: Record<string, string> = { enemy: '#E04040', heavy: '#E04040', cage: '#F5C242', gate: '#F5C242', hazard: '#FF8A1F' };
+
+function popupScreenY(popup: Popup): number {
+  return popup.y - tweenValue(0, POPUP_RISE, popup.age / POPUP_LIFE, ease.outCubic);
+}
+
+function findPopupY(popups: readonly Popup[], x: number, y: number): number {
+  while (popups.some(p => Math.abs(p.x - x) < 80 && Math.abs(popupScreenY(p) - y) < 32)) y -= 34;
+  return y;
+}
 
 export class Effects {
   private audio: { play(s: Sfx): void };
@@ -53,28 +63,14 @@ export class Effects {
           if (e.target === 'boss') this.kick(4);
           break;
         }
-        case 'destroyed': {
-          const p = toScreen(e.x, e.z);
-          const color = TARGET_COLORS[e.target] ?? '#FFFFFF';
-          if (e.target === 'enemy' || e.target === 'heavy') {
-            this.routineBurst(p.sx, p.sy - 20, color);
-            this.crowdKills++;
-            if (this.crowdWindow === 0) this.crowdWindow = 0.25;
-            if (this.crowdKills >= 8 && this.celebrationCooldown <= 0) {
-              this.burst(p.sx, p.sy - 20, 12, (i) => CONFETTI[i % CONFETTI.length], 180, 0.6);
-              this.crowdKills = 0;
-              this.celebrationCooldown = 0.7;
-            }
-          } else {
-            this.burst(p.sx, p.sy - 20, 12, (i) => (i % 2 === 0 ? color : CONFETTI[i % CONFETTI.length]), 220, 0.8);
-          }
+        case 'destroyed':
+          this.handleDestroyed(e, toScreen);
           break;
-        }
         case 'gain':
         case 'lose': {
           const p = toScreen(e.x, e.z);
           const good = e.type === 'gain';
-          this.addPopup(e.amount, good, p.sx, p.sy - 50);
+          this.addPopup(e.amount, e.type, p.sx, p.sy - 50);
           if (!good) this.routineBurst(p.sx, p.sy - 20, '#2F7DE1');
           this.audio.play(e.type);
           break;
@@ -144,7 +140,7 @@ export class Effects {
     for (const p of this.list) {
       const t = p.age / POPUP_LIFE;
       ctx.globalAlpha = 1 - t * t;
-      label(ctx, p.text, p.x, p.y - tweenValue(0, POPUP_RISE, t, ease.outCubic), 30, p.color);
+      label(ctx, p.text, p.x, popupScreenY(p), 30, p.color);
     }
     ctx.globalAlpha = 1;
   }
@@ -157,23 +153,42 @@ export class Effects {
     return this.list;
   }
 
-  private addPopup(amount: number, good: boolean, x: number, y: number): void {
+  private addPopup(amount: number, kind: Popup['kind'], x: number, y: number): void {
     x = Math.max(48, Math.min(492, x));
     y = Math.max(180, Math.min(850, y));
+    const good = kind === 'gain';
     const color = good ? '#7CFC6A' : '#FF6B6B';
-    const nearby = this.list.filter(p => Math.abs(p.x - x) < 48 && Math.abs(p.anchorY - y) < 36);
-    const existing = nearby.find(p => p.color === color && p.age < 0.12);
+    const existing = this.list.find(p => p.kind === kind && p.age < 0.12
+      && Math.abs(p.x - x) < 48 && Math.abs(p.anchorY - y) < 36);
     if (existing) {
       existing.amount += amount;
       existing.text = `${good ? '+' : '−'}${existing.amount}`;
       return;
     }
     // Keep gains and losses separate and stagger simultaneous reward numbers.
-    const occupied = this.list.map(p => p.y - tweenValue(0, POPUP_RISE, p.age / POPUP_LIFE, ease.outCubic));
-    let displayY = y;
-    while (this.list.some((p, i) => Math.abs(p.x - x) < 80 && Math.abs(occupied[i] - displayY) < 32)) displayY -= 34;
+    const displayY = findPopupY(this.list, x, y);
     if (this.list.length >= 6) this.list.shift();
-    this.list.push({ text: `${good ? '+' : '−'}${amount}`, x, y: displayY, anchorY: y, amount, age: 0, color });
+    this.list.push({ text: `${good ? '+' : '−'}${amount}`, kind, x, y: displayY, anchorY: y, amount, age: 0, color });
+  }
+
+  private handleDestroyed(event: Extract<GameEvent, { type: 'destroyed' }>, toScreen: ToScreen): void {
+    const p = toScreen(event.x, event.z);
+    const color = TARGET_COLORS[event.target] ?? '#FFFFFF';
+    if (event.target === 'enemy' || event.target === 'heavy') {
+      this.routineBurst(p.sx, p.sy - 20, color);
+      this.recordCrowdKill(p.sx, p.sy - 20);
+      return;
+    }
+    this.burst(p.sx, p.sy - 20, 12, (i) => (i % 2 === 0 ? color : CONFETTI[i % CONFETTI.length]), 220, 0.8);
+  }
+
+  private recordCrowdKill(x: number, y: number): void {
+    this.crowdKills++;
+    if (this.crowdWindow === 0) this.crowdWindow = 0.25;
+    if (this.crowdKills < 8 || this.celebrationCooldown > 0) return;
+    this.burst(x, y, 12, (i) => CONFETTI[i % CONFETTI.length], 180, 0.6);
+    this.crowdKills = 0;
+    this.celebrationCooldown = 0.7;
   }
 
   private routineBurst(x: number, y: number, color: string): void {

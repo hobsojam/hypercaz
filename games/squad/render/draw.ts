@@ -2,7 +2,7 @@
 import { type AssetStore, drawSprite } from '../../../engine/assets.ts';
 import { type PerspectiveConfig, project } from '../../../engine/perspective.ts';
 import { BOSS_HALF_W, BURST_SECONDS, MAX_DRAWN, SPAWN_HORIZON } from '../sim/constants.ts';
-import type { Entity, GameState } from '../sim/state.ts';
+import type { Boss, Entity, GameState, Projectile } from '../sim/state.ts';
 import { projectPlayfieldPoint } from './projection.ts';
 import type { SquadView } from './squadView.ts';
 
@@ -34,7 +34,6 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   drawRoad(ctx, view.persp, state.distance, view.assets.image('road_tile'));
 
   const items: Draw[] = [];
-  const bossFit = (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / (320 / 2);
   addProps(items, ctx, state, view);
   for (const e of state.entities) {
     items.push({
@@ -51,46 +50,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
     const boss = state.boss;
     items.push({
       z: boss.z,
-      draw: () => {
-        const p = project(persp, boss.x, boss.z);
-        const id = boss.hp < boss.maxHp / 2 ? 'boss_damaged' : 'boss_idle';
-        const s = p.scale * bossFit;
-        // Enraged: a red aura. Charging a volley: a fast orange pulse, so the
-        // player knows to move.
-        const pulse = 0.5 + 0.5 * Math.sin(view.time * 30);
-        if (boss.enraged || boss.charging) {
-          ctx.save();
-          ctx.globalAlpha = boss.charging ? 0.35 + 0.35 * pulse : 0.3;
-          ctx.fillStyle = boss.charging ? '#FF8A1F' : '#E04040';
-          ctx.beginPath();
-          ctx.ellipse(p.sx, p.sy - 64 * s, 130 * s, 105 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
-        const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
-        drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
-      },
-    });
-  }
-  const threats: Draw[] = [];
-  for (const pr of state.projectiles) {
-    threats.push({
-      z: pr.z,
-      draw: () => {
-        // Fan out from the captured muzzle position, then descend to the
-        // existing landing lane. Boss movement cannot drag shells in flight.
-        const remaining = Math.min(1, Math.max(0, pr.z / pr.originZ));
-        const x = pr.x + (pr.originX - pr.x) * remaining;
-        const p = project(persp, x, pr.z);
-        const height = 10 + (BOSS_MUZZLE_HEIGHT * bossFit - 10) * remaining;
-        ctx.fillStyle = '#FF8A1F';
-        ctx.strokeStyle = '#1A1A2E';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(p.sx, p.sy - height * p.scale, 9 * p.scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      },
+      draw: () => drawBoss(ctx, boss, view),
     });
   }
   for (const b of state.bullets) {
@@ -120,11 +80,54 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   for (const item of items) item.draw();
   view.drawEffects?.(ctx);
   // Threats and target numbers stay readable over cosmetic particles.
-  for (const threat of threats) threat.draw();
+  drawBossProjectiles(ctx, state.projectiles, view);
   drawCombatLabels(ctx, state, view);
 
   ctx.restore();
   drawHud(ctx, state, view);
+}
+
+function bossArtScale(persp: PerspectiveConfig): number {
+  return (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / 160;
+}
+
+function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderView): void {
+  const p = project(view.persp, boss.x, boss.z);
+  const id = boss.hp < boss.maxHp / 2 ? 'boss_damaged' : 'boss_idle';
+  const s = p.scale * bossArtScale(view.persp);
+  // Enraged: a red aura. Charging a volley: a fast orange pulse.
+  const pulse = 0.5 + 0.5 * Math.sin(view.time * 30);
+  if (boss.enraged || boss.charging) {
+    ctx.save();
+    ctx.globalAlpha = boss.charging ? 0.35 + 0.35 * pulse : 0.3;
+    ctx.fillStyle = boss.charging ? '#FF8A1F' : '#E04040';
+    ctx.beginPath();
+    ctx.ellipse(p.sx, p.sy - 64 * s, 130 * s, 105 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
+  drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
+}
+
+function drawBossProjectiles(ctx: CanvasRenderingContext2D, projectiles: readonly Projectile[], view: RenderView): void {
+  const { persp } = view;
+  const muzzleHeight = BOSS_MUZZLE_HEIGHT * bossArtScale(persp);
+  for (const pr of projectiles) {
+    // Fan out from the captured muzzle, then descend to the landing lane.
+    // Boss movement cannot drag shells already in flight.
+    const remaining = Math.min(1, Math.max(0, pr.z / pr.originZ));
+    const x = pr.x + (pr.originX - pr.x) * remaining;
+    const p = project(persp, x, pr.z);
+    const height = 10 + (muzzleHeight - 10) * remaining;
+    ctx.fillStyle = '#FF8A1F';
+    ctx.strokeStyle = '#1A1A2E';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy - height * p.scale, 9 * p.scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
 }
 
 // Objects appear at the spawn horizon; fade them in rather than popping.
@@ -254,30 +257,38 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
 
 // Annotation pass: particles and player bullets cannot cover rescue goals.
 function drawCombatLabels(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
-  for (const e of state.entities) {
-    const p = projectPlayfieldPoint(view.persp, e.x, e.z);
-    ctx.save();
-    ctx.globalAlpha = fadeIn(e.z);
-    if (e.type === 'heavy') label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 100 * p.scale, 18 * p.scale + 6, '#FFFFFF');
-    if (e.type === 'cage') {
+  for (const e of state.entities) drawEntityLabels(ctx, e, view);
+  if (state.boss) drawBossLabels(ctx, state.boss, view);
+}
+
+function drawEntityLabels(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView): void {
+  const p = projectPlayfieldPoint(view.persp, e.x, e.z);
+  ctx.save();
+  ctx.globalAlpha = fadeIn(e.z);
+  switch (e.type) {
+    case 'heavy':
+      label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 100 * p.scale, 18 * p.scale + 6, '#FFFFFF');
+      break;
+    case 'cage':
       label(ctx, `+${e.value}`, p.sx, p.sy - 66 * p.scale, 22 * p.scale + 6, '#F5C242');
       label(ctx, String(Math.ceil(e.hp)), p.sx, p.sy - 28 * p.scale, 18 * p.scale + 6, '#FFFFFF');
-    }
-    if (e.type === 'gate') {
+      break;
+    case 'gate': {
       let text = '0';
       if (e.value > 0) text = `+${e.value}`;
       else if (e.value < 0) text = `−${-e.value}`;
       label(ctx, text, p.sx, p.sy - 26 * p.scale, 30 * p.scale + 6, e.value > 0 ? '#7CFC6A' : '#FF6B6B');
+      break;
     }
-    ctx.restore();
   }
-  if (state.boss) {
-    const boss = state.boss;
-    const p = project(view.persp, boss.x, boss.z);
-    const s = p.scale * (2 * BOSS_HALF_W * view.persp.roadHalfWidthPx) / 160;
-    label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
-    if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
-  }
+  ctx.restore();
+}
+
+function drawBossLabels(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderView): void {
+  const p = project(view.persp, boss.x, boss.z);
+  const s = p.scale * bossArtScale(view.persp);
+  label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
+  if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
 }
 
 export function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string): void {

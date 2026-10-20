@@ -1,6 +1,7 @@
 import type { Scene } from '../../../engine/scenes.ts';
 import { ease, tweenValue } from '../../../engine/tween.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
+import type { Level } from '../sim/level.ts';
 import type { LossCause, LossEvent } from '../sim/state.ts';
 import type { Stars } from '../progress.ts';
 import { drawMuteButton, takeClick } from '../controls.ts';
@@ -18,6 +19,22 @@ const LOSS_FEEDBACK: Record<LossCause, { name: string; tip: string }> = {
   bossShot: { name: 'Boss shot', tip: 'Move lanes when the boss winds up.' },
   bossContact: { name: 'Boss contact', tip: 'Recruit more; save Rapid Fire for the boss.' },
 };
+
+function defeatFeedback(finalHit?: LossEvent): { hit?: string; tip: string } {
+  if (!finalHit?.cause) return { tip: 'Aim at rescues to rebuild your squad.' };
+  const { name, tip } = LOSS_FEEDBACK[finalHit.cause];
+  return { hit: `Final hit: ${name} −${finalHit.amount}`, tip };
+}
+
+function victoryFeedback(level: Level, stars: Stars, count: number): { goal: string; target?: string } {
+  if (stars === 3) return { goal: 'All 3 stars earned!' };
+  const target = level.stars[stars - 1];
+  const gap = Math.max(0, target - count);
+  return {
+    goal: `${gap} more soldier${gap === 1 ? '' : 's'} for ${stars + 1} stars`,
+    target: `Finish with ${target} soldiers.`,
+  };
+}
 
 export class ResultsScene implements Scene {
   private game: Game;
@@ -61,25 +78,27 @@ export class ResultsScene implements Scene {
       if (appear > 0) drawStar(ctx, WIDTH / 2 + (i - 1) * 110, 320, 44 * appear, i < this.stars);
     }
     drawCenteredText(ctx, `${this.count} soldiers left`, WIDTH / 2, 410, 32);
-    if (!this.won) {
-      const feedback = this.finalHit?.cause ? LOSS_FEEDBACK[this.finalHit.cause] : undefined;
-      if (feedback && this.finalHit) {
-        drawCenteredText(ctx, `Final hit: ${feedback.name} −${this.finalHit.amount}`, WIDTH / 2, 454, 26, '#FF6B6B');
-        drawCenteredText(ctx, feedback.tip, WIDTH / 2, 490, 21);
-      } else {
-        drawCenteredText(ctx, 'Aim at rescues to rebuild your squad.', WIDTH / 2, 490, 22);
-      }
-      drawCenteredText(ctx, 'Win to earn your first star.', WIDTH / 2, 526, 22, '#F5C242');
-    } else if (this.stars < 3) {
-      const next = this.stars + 1;
-      const target = this.game.levels[this.index].level!.stars[this.stars - 1];
-      const gap = Math.max(0, target - this.count);
-      drawCenteredText(ctx, `${gap} more soldier${gap === 1 ? '' : 's'} for ${next} stars`, WIDTH / 2, 478, 27, '#F5C242');
-      drawCenteredText(ctx, `Finish with ${target} soldiers.`, WIDTH / 2, 518, 22);
-    } else {
-      drawCenteredText(ctx, 'All 3 stars earned!', WIDTH / 2, 490, 30, '#F5C242');
-    }
+    if (this.won) this.drawVictoryFeedback(ctx);
+    else this.drawDefeatFeedback(ctx);
     for (const { button } of this.buttons) drawButton(ctx, button, button.label === 'Next' ? '#4E9F3D' : '#2F7DE1');
     drawMuteButton(ctx, this.game.audio.muted);
   }
+
+  private drawDefeatFeedback(ctx: CanvasRenderingContext2D): void {
+    const feedback = defeatFeedback(this.finalHit);
+    if (feedback.hit) drawCenteredText(ctx, feedback.hit, WIDTH / 2, 454, 26, '#FF6B6B');
+    drawCenteredText(ctx, feedback.tip, WIDTH / 2, 490, feedback.hit ? 21 : 22);
+    drawCenteredText(ctx, 'Win to earn your first star.', WIDTH / 2, 526, 22, '#F5C242');
+  }
+
+  private drawVictoryFeedback(ctx: CanvasRenderingContext2D): void {
+    const feedback = victoryFeedback(this.game.levels[this.index].level!, this.stars, this.count);
+    if (!feedback.target) {
+      drawCenteredText(ctx, feedback.goal, WIDTH / 2, 490, 30, '#F5C242');
+      return;
+    }
+    drawCenteredText(ctx, feedback.goal, WIDTH / 2, 478, 27, '#F5C242');
+    drawCenteredText(ctx, feedback.target, WIDTH / 2, 518, 22);
+  }
+
 }
