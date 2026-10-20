@@ -17,6 +17,7 @@ export interface Entity {
   x: number;
   z: number;
   hp: number;
+  maxHp: number; // hp when spawned
   value: number;
   halfW: number;
   halfD: number;
@@ -141,6 +142,7 @@ export function spawnEntity(state: GameState, s: Spawn, z: number): Entity {
     x: s.x,
     z,
     hp: s.hp,
+    maxHp: s.hp,
     value: s.value,
     halfW,
     halfD: SIZES[s.type].halfD,

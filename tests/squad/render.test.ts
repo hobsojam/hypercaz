@@ -143,7 +143,7 @@ function squadFrame(count: number, x = 0, bullets: ReturnType<typeof createState
   expect(state).toEqual(before);
   const rectangles = (image: HTMLImageElement) => (ctx.calls.drawImage ?? [])
     .filter(call => call[0] === image)
-    .map(call => ({ x: call[5] as number, y: call[6] as number, w: call[7] as number, h: call[8] as number }));
+    .map(call => ({ x: call[5] as number, y: call[6] as number, w: call[7] as number, h: call[8] as number, sourceX: call[1] as number }));
   return { soldiers: rectangles(soldier), bullets: rectangles(bullet), cages: rectangles(cage), texts: (ctx.calls.fillText ?? []).map(call => call[0]) };
 }
 
@@ -180,6 +180,22 @@ test('shots carrying extra army damage look heavier without changing their path'
   expect(heavy.y + heavy.h / 2).toBeCloseTo(ordinary.y + ordinary.h / 2);
   expect(squadFrame(300).texts).toContain('HEAVY FIRE');
   expect(squadFrame(100).texts).not.toContain('HEAVY FIRE');
+});
+
+// The cage loses bars as it takes damage: one at a quarter, another at half,
+// the rest at three quarters.
+test.each([
+  { hp: 40, frame: 0 },
+  { hp: 31, frame: 0 },
+  { hp: 30, frame: 1 },
+  { hp: 20, frame: 2 },
+  { hp: 10, frame: 3 },
+  { hp: 1, frame: 3 },
+])('a cage with $hp of 40 hit points left shows frame $frame', ({ hp, frame }) => {
+  const state = createState(makeLevel({ spawns: [{ z: 10, x: 0, type: 'cage', hp: 40, value: 3 }] }), 1);
+  const cage = spawnEntity(state, state.level.spawns[0], 10);
+  cage.hp = hp;
+  expect(squadFrame(5, 0, [], [cage]).cages[0].sourceX).toBe(frame * 96);
 });
 
 test('rear-row shots and a rescue target behind the front share the same play area', () => {

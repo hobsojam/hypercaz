@@ -129,6 +129,7 @@ export interface DrawOpts {
   stretchX?: number;
   flash?: number;
   alpha?: number;
+  frame?: number; // a fixed frame instead of animating with time
 }
 
 export function drawSprite(
@@ -158,7 +159,7 @@ export function drawSprite(
   const img = store.image(id);
   if (img) {
     if (flash > 0) ctx.filter = `brightness(${1 + flash * 2})`;
-    ctx.drawImage(img, frameAt(entry, time) * entry.frameW, 0, entry.frameW, entry.frameH, x, y, w, h);
+    ctx.drawImage(img, (opts.frame ?? frameAt(entry, time)) * entry.frameW, 0, entry.frameW, entry.frameH, x, y, w, h);
   } else {
     drawPlaceholder(ctx, entry, x, y, w, h, flash);
   }

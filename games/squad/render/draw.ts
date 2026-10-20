@@ -305,9 +305,13 @@ function drawEntity(ctx: CanvasRenderingContext2D, e: Entity, view: RenderView):
     case 'heavy':
       drawSprite(ctx, assets, 'heavy_walk', time + e.id * 0.13, p.sx, p.sy, p.scale * UNIT_SCALE, { flash: e.flash });
       break;
-    case 'cage':
-      drawSprite(ctx, assets, 'cage', time, p.sx, p.sy, p.scale, { flash: e.flash });
+    case 'cage': {
+      // Bars come off as it takes damage: one per quarter, the last ones together.
+      const frames = assets.entry('cage')?.frames ?? 1;
+      const frame = Math.min(frames - 1, Math.floor((1 - e.hp / e.maxHp) * frames));
+      drawSprite(ctx, assets, 'cage', time, p.sx, p.sy, p.scale, { flash: e.flash, frame });
       break;
+    }
     case 'gate': {
       const good = e.value > 0;
       drawSprite(ctx, assets, good ? 'gate_positive' : 'gate_negative', time, p.sx, p.sy, p.scale, {
