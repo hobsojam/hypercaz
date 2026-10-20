@@ -11,26 +11,7 @@ import { validateLevel } from '../../games/squad/sim/level.ts';
 import { createState, spawnEntity } from '../../games/squad/sim/state.ts';
 import { step } from '../../games/squad/sim/step.ts';
 import { makeLevel } from './fixtures.ts';
-
-// A canvas context that accepts every call and property write, recording each
-// call's arguments by method name.
-function stubCtx() {
-  const calls: Record<string, unknown[][]> = {};
-  const proxy: object = new Proxy(
-    {},
-    {
-      get(_t, prop) {
-        if (prop === 'calls') return calls;
-        return (...args: unknown[]) => {
-          (calls[String(prop)] ??= []).push(args);
-          return proxy;
-        };
-      },
-      set: () => true,
-    },
-  );
-  return proxy as CanvasRenderingContext2D & { calls: Record<string, unknown[][]> };
-}
+import { stubCtx } from './stubCtx.ts';
 
 const root = join(import.meta.dirname, '../..');
 const assets = AssetStore.fromManifest(parseManifest(JSON.parse(readFileSync(join(root, 'games/squad/assets/manifest.json'), 'utf8'))));

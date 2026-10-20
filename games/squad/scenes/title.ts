@@ -1,5 +1,6 @@
 import { drawSprite } from '../../../engine/assets.ts';
 import type { Scene } from '../../../engine/scenes.ts';
+import { BUILD } from '../build.ts';
 import { drawMuteButton, takeClick } from '../controls.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
 import { drawCenteredText, drawMenuBackground } from '../ui.ts';
@@ -32,6 +33,7 @@ export class TitleScene implements Scene {
     }
     const pulse = 1 + Math.sin(this.t * 4) * 0.06;
     drawCenteredText(ctx, this.game.input.touch ? 'Tap to start' : 'Click to start', WIDTH / 2, 780, 36 * pulse);
+    drawCenteredText(ctx, `build ${BUILD}`, WIDTH / 2, HEIGHT - 24, 16, '#9AA0B8');
     drawMuteButton(ctx, this.game.audio.muted);
   }
 }
