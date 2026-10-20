@@ -122,4 +122,8 @@ async function boot(): Promise<void> {
   );
 }
 
-boot().catch((err) => showCrash('The game failed to start', err));
+try {
+  await boot();
+} catch (err) {
+  showCrash('The game failed to start', err);
+}
