@@ -28,6 +28,33 @@ describe('Effects', () => {
     expect(played).toContain('lose');
   });
 
+  it('a gain pops the squad count badge green, more for a bigger gain, then settles', () => {
+    const small = setup();
+    small.fx.handle([{ type: 'gain', amount: 2, x: 0, z: 10 }], small.toScreen);
+    const big = setup();
+    big.fx.handle([{ type: 'gain', amount: 20, x: 0, z: 10 }], big.toScreen);
+    expect(small.fx.badge.scale).toBeGreaterThan(1);
+    expect(big.fx.badge.scale).toBeGreaterThan(small.fx.badge.scale);
+    expect(big.fx.badge.color).toBe('#3CC85A');
+    big.fx.update(0.5);
+    expect(big.fx.badge).toEqual({ scale: 1, dx: 0, color: null });
+  });
+
+  it('a loss shakes the squad count badge red, then settles', () => {
+    const { fx, toScreen } = setup();
+    expect(fx.badge).toEqual({ scale: 1, dx: 0, color: null });
+    fx.handle([{ type: 'lose', amount: 3, x: 0, z: 0 }], toScreen);
+    expect(fx.badge.color).toBe('#E04040');
+    const offsets: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      fx.update(0.02);
+      offsets.push(fx.badge.dx);
+    }
+    expect(Math.max(...offsets.map(Math.abs))).toBeGreaterThan(2);
+    fx.update(0.5);
+    expect(fx.badge).toEqual({ scale: 1, dx: 0, color: null });
+  });
+
   it('pop-ups expire after 0.8 s', () => {
     const { fx, toScreen } = setup();
     fx.handle([{ type: 'gain', amount: 1, x: 0, z: 0 }], toScreen);

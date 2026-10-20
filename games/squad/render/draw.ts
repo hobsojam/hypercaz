@@ -4,6 +4,7 @@ import { type PerspectiveConfig, project } from '../../../engine/perspective.ts'
 import { BARRAGE_GAP, BARRAGE_WARN, BOSS_HALF_W, BURST_SECONDS, CHARGE_HALF_W, MAX_DRAWN, SPAWN_HORIZON } from '../sim/constants.ts';
 import type { Boss, Entity, GameState, Projectile } from '../sim/state.ts';
 import { projectPlayfieldPoint } from './projection.ts';
+import type { BadgePop } from './effects.ts';
 import type { SquadView } from './squadView.ts';
 
 export interface RenderView {
@@ -12,6 +13,7 @@ export interface RenderView {
   time: number;
   squadView: SquadView;
   shake: { x: number; y: number };
+  badge?: BadgePop;
   drawEffects?: (ctx: CanvasRenderingContext2D) => void;
 }
 
@@ -412,17 +414,18 @@ function drawKillMeter(ctx: CanvasRenderingContext2D, state: GameState, time: nu
 function drawHud(ctx: CanvasRenderingContext2D, state: GameState, view: RenderView): void {
   const { persp } = view;
   const front = project(persp, state.squad.x, 0);
-  const bx = front.sx;
+  const pop = view.badge ?? { scale: 1, dx: 0, color: null };
+  const bx = front.sx + pop.dx;
   const by = front.sy - 62;
   const heavyFire = state.squad.count > MAX_DRAWN;
-  ctx.fillStyle = heavyFire ? '#F5C242' : '#2F7DE1';
+  ctx.fillStyle = pop.color ?? (heavyFire ? '#F5C242' : '#2F7DE1');
   ctx.strokeStyle = '#1A1A2E';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(bx - 34, by - 18, 68, 36, 12);
+  ctx.roundRect(bx - 34 * pop.scale, by - 18 * pop.scale, 68 * pop.scale, 36 * pop.scale, 12 * pop.scale);
   ctx.fill();
   ctx.stroke();
-  label(ctx, String(state.squad.count), bx, by + 1, 24, '#FFFFFF');
+  label(ctx, String(state.squad.count), bx, by + 1, 24 * pop.scale, '#FFFFFF');
   if (heavyFire) label(ctx, 'HEAVY FIRE', bx, by - 32, 14, '#F5C242');
 
   // Top bar: progress along the road, or boss health.
