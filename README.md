@@ -14,6 +14,11 @@ Later bosses have a signature attack, announced on the road before it lands:
 - **Charger (levels 8–9):** marks your lane with a red stripe, then lunges down it. Get out of the way, then hit it while it's exposed for double damage.
 - **Fortress (level 10):** covers the road in shell shadows except one gap (outlined in green), then raises a shield. Rapid Fire breaks the shield fast.
 
+Level 6, Pincer, has reward forks, where you can't have everything:
+
+- **Twin cages:** two cages arrive side by side. You can break either one in time, but not both, unless you use Rapid Fire.
+- **Guarded cage:** a small free cage on one side and a big cage behind a crowd on the other. Shooting through the crowd costs soldiers; Rapid Fire punches through.
+
 - **Mouse / touch:** move left and right to steer; tap the Rapid Fire meter when it's full.
 - **Buttons:** pause and mute in the top-right corner (mute works on every screen). The game pauses itself if you switch app or tab.
 - **Keyboard:** ← → or A / D to steer, Space for Rapid Fire, Esc to pause, M to mute.
@@ -57,7 +62,7 @@ Each level is a JSON file in `games/squad/levels/`, validated on load. Fields:
   - `hazard`: `kind` (`blade` | `fire` | `barricade`), `width`
 - `boss`: `{ hp, pattern: single | volley3 | spread5, fireEvery }`
 
-After changing a level, run `npm test`. `tests/squad/levels.test.ts` checks that a scripted bot can still win every level with 2 stars, and that standing still can't win levels 3–10.
+After changing a level, run `npm test`. `tests/squad/levels.test.ts` checks that a scripted bot can still win every level with 2 stars, and that standing still can't win levels 3–10. `tests/squad/forks.test.ts` checks that each of level 6's forks is still a real choice.
 
 ### Art
 

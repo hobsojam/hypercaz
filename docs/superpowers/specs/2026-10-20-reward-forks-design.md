@@ -16,6 +16,9 @@ Today a good player collects every cage and fights every crowd, so a level's onl
 - **What a miss costs:** only the soldiers in that cage. That's how cages already work.
 
 ### Guarded cage
+
+> **Changed while building:** in this engine a crowd drifts only about half a road-width toward the squad. So a squad parked at a cage on the far side was *safer* than one fighting the crowd, in every measured run. The fork is built instead as the issue's own example: **a small free cage on one side, and a big cage behind a crowd on the other**. Shooting through the crowd costs soldiers and time; Rapid Fire punches through it. The original description follows for the record.
+
 - **Layout:** a crowd comes down one side of the road while a cage sits on the other side.
 - **Going for the cage** leaves the crowd unshot. Crowds already close in on the squad, so it costs soldiers when it arrives.
 - **Fighting the crowd** means the cage scrolls past.
