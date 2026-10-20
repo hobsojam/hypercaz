@@ -1,7 +1,7 @@
 // Tiny synthesized sound effects: no audio files. Silent until unlock() is
 // called from a user gesture (browser autoplay rules).
 
-export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst' | 'place' | 'perfect';
+export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst' | 'place' | 'perfect' | 'pour' | 'fill' | 'clear';
 
 interface Voice {
   type: OscillatorType;
@@ -42,6 +42,22 @@ const VOICES: Record<Sfx, Voice[]> = {
     { type: 'sine', from: 660, to: 660, dur: 0.6, vol: 0.14 },
     { type: 'sine', from: 1320, to: 1320, dur: 0.4, vol: 0.06 },
     { type: 'sine', from: 1850, to: 1850, dur: 0.2, vol: 0.03 },
+  ],
+  // A soft liquid glug.
+  pour: [
+    { type: 'sine', from: 280, to: 520, dur: 0.09, vol: 0.12 },
+    { type: 'sine', from: 240, to: 460, dur: 0.1, vol: 0.08 },
+  ],
+  // A chime.
+  fill: [
+    { type: 'sine', from: 880, to: 880, dur: 0.3, vol: 0.12 },
+    { type: 'sine', from: 1320, to: 1320, dur: 0.2, vol: 0.05 },
+  ],
+  // A little rising flourish.
+  clear: [
+    { type: 'triangle', from: 523, to: 659, dur: 0.1, vol: 0.12 },
+    { type: 'triangle', from: 659, to: 784, dur: 0.1, vol: 0.12 },
+    { type: 'triangle', from: 784, to: 1046, dur: 0.25, vol: 0.12 },
   ],
 };
 

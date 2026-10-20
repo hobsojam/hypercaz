@@ -2,14 +2,20 @@
 // window, the game loop, pausing when the tab is hidden, unlocking audio on
 // the first gesture, a crash screen, and the offline worker in real builds.
 import type { GameAudio } from './audio.ts';
-import { fitLetterbox, Input, type Letterbox } from './input.ts';
+import { Input, type Letterbox, viewFor } from './input.ts';
 import { startLoop } from './loop.ts';
 import { registerWorker } from './offline.ts';
 import type { Scene, SceneStack } from './scenes.ts';
 
 export interface BootOptions<G extends { stack: SceneStack; audio: GameAudio; input: Input }> {
+  // The logical size of the column. Ignored in window mode.
   width: number;
   height: number;
+  // 'letterbox' (default) keeps the width x height column and pads it with
+  // bars; 'window' draws in CSS pixels across the whole window.
+  fit?: 'letterbox' | 'window';
+  // Called once the game exists and again on every resize, with the window size.
+  onResize?(game: G, w: number, h: number): void;
   // Builds the game; it must use the given input, which knows the letterbox.
   createGame(input: Input): G | Promise<G>;
   firstScene(game: G): Scene;
@@ -41,10 +47,15 @@ export function showCrash(title: string, err: unknown): void {
 }
 
 export async function bootGame<G extends { stack: SceneStack; audio: GameAudio; input: Input }>(opts: BootOptions<G>): Promise<void> {
-  const { width, height } = opts;
+  const fit = opts.fit ?? 'letterbox';
+  const windowMode = fit === 'window';
+  // The logical size: the column, or the window itself.
+  const logicalSize = () => (windowMode ? { w: window.innerWidth, h: window.innerHeight } : { w: opts.width, h: opts.height });
   const canvas = document.getElementById('game') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
-  let letterbox: Letterbox = fitLetterbox(window.innerWidth, window.innerHeight, width, height);
+  const fitView = (): Letterbox => viewFor(fit, window.innerWidth, window.innerHeight, logicalSize().w, logicalSize().h);
+  let letterbox: Letterbox = fitView();
+  let current: G | null = null;
   let sizedFor = 0; // the devicePixelRatio the canvas was last sized for
 
   function resize(): void {
@@ -54,7 +65,8 @@ export async function bootGame<G extends { stack: SceneStack; audio: GameAudio; 
     canvas.style.height = `${window.innerHeight}px`;
     canvas.width = Math.round(window.innerWidth * dpr);
     canvas.height = Math.round(window.innerHeight * dpr);
-    letterbox = fitLetterbox(window.innerWidth, window.innerHeight, width, height);
+    letterbox = fitView();
+    if (current) opts.onResize?.(current, window.innerWidth, window.innerHeight);
   }
   window.addEventListener('resize', resize);
   resize();
@@ -62,6 +74,8 @@ export async function bootGame<G extends { stack: SceneStack; audio: GameAudio; 
   try {
     const game = await opts.createGame(new Input(() => letterbox));
     const { audio } = game;
+    current = game;
+    opts.onResize?.(game, window.innerWidth, window.innerHeight);
     // Unlock audio inside the real gesture handlers, not later in the game
     // loop, so Safari allows it.
     const unlockAudio = () => audio.unlock();
@@ -96,7 +110,7 @@ export async function bootGame<G extends { stack: SceneStack; audio: GameAudio; 
         }
         ctx.save();
         ctx.beginPath();
-        ctx.rect(0, 0, width, height);
+        ctx.rect(0, 0, logicalSize().w, logicalSize().h);
         ctx.clip();
         game.stack.top?.render(ctx, alpha);
         ctx.restore();

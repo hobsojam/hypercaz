@@ -18,20 +18,30 @@ export interface ControlsGame {
   audio: Pick<GameAudio, 'muted'>;
 }
 
-const WIDTH = 540; // the width of every game's column
+const WIDTH = 540; // the width of the fixed-column games
 const SIZE = 40;
 const SLOP = 10; // generous hit area for thumbs
-export const MUTE_BUTTON: Rect = { x: WIDTH - SIZE - 8, y: 4, w: SIZE, h: SIZE };
-export const PAUSE_BUTTON: Rect = { x: WIDTH - 2 * SIZE - 14, y: 4, w: SIZE, h: SIZE };
-// Back to the game picker, top-left opposite the mute button.
-export const ALL_GAMES_BUTTON: Rect = { x: 8, y: 4, w: 112, h: 40 };
+
+// The buttons for a screen of the given width: mute and pause at the top
+// right, and "All games" (back to the game picker) top-left opposite them.
+export function controlRects(width: number): { mute: Rect; pause: Rect; allGames: Rect } {
+  return {
+    mute: { x: width - SIZE - 8, y: 4, w: SIZE, h: SIZE },
+    pause: { x: width - 2 * SIZE - 14, y: 4, w: SIZE, h: SIZE },
+    allGames: { x: 8, y: 4, w: 112, h: 40 },
+  };
+}
+const FIXED = controlRects(WIDTH);
+export const MUTE_BUTTON: Rect = FIXED.mute;
+export const PAUSE_BUTTON: Rect = FIXED.pause;
+export const ALL_GAMES_BUTTON: Rect = FIXED.allGames;
 
 export function hitRect(r: Rect, p: { x: number; y: number }, slop = SLOP): boolean {
   return p.x >= r.x - slop && p.x <= r.x + r.w + slop && p.y >= r.y - slop && p.y <= r.y + r.h + slop;
 }
 
-export function hitAllGames(click: { x: number; y: number } | null): boolean {
-  return click !== null && hitRect(ALL_GAMES_BUTTON, click, 0);
+export function hitAllGames(click: { x: number; y: number } | null, rect: Rect = ALL_GAMES_BUTTON): boolean {
+  return click !== null && hitRect(rect, click, 0);
 }
 
 // What a title screen should do with this frame's click: go back to the
@@ -52,11 +62,11 @@ export function toggleMute(game: ControlsGame, remember: (muted: boolean) => voi
 
 // This frame's click, after the mute button and the M key have had their
 // turn: a tap on the mute button is used up and returns null.
-export function takeClick(game: ControlsGame, remember: (muted: boolean) => void): { x: number; y: number } | null {
+export function takeClick(game: ControlsGame, remember: (muted: boolean) => void, width = WIDTH): { x: number; y: number } | null {
   const { input } = game;
   if (input.consumeKey('m')) toggleMute(game, remember);
   const click = input.consumeClick();
-  if (click && hitRect(MUTE_BUTTON, click, 6)) {
+  if (click && hitRect(controlRects(width).mute, click, 6)) {
     toggleMute(game, remember);
     return null;
   }
@@ -70,8 +80,7 @@ function drawDisc(ctx: CanvasRenderingContext2D, r: Rect): void {
   ctx.fill();
 }
 
-export function drawMuteButton(ctx: CanvasRenderingContext2D, muted: boolean): void {
-  const r = MUTE_BUTTON;
+export function drawMuteButton(ctx: CanvasRenderingContext2D, muted: boolean, r: Rect = MUTE_BUTTON): void {
   drawDisc(ctx, r);
   const cx = r.x + r.w / 2 - 4;
   const cy = r.y + r.h / 2;
@@ -102,8 +111,7 @@ export function drawMuteButton(ctx: CanvasRenderingContext2D, muted: boolean): v
   ctx.stroke();
 }
 
-export function drawPauseButton(ctx: CanvasRenderingContext2D): void {
-  const r = PAUSE_BUTTON;
+export function drawPauseButton(ctx: CanvasRenderingContext2D, r: Rect = PAUSE_BUTTON): void {
   drawDisc(ctx, r);
   ctx.fillStyle = '#FFFFFF';
   const cx = r.x + r.w / 2;
@@ -112,8 +120,7 @@ export function drawPauseButton(ctx: CanvasRenderingContext2D): void {
   ctx.fillRect(cx + 2, cy - 9, 6, 18);
 }
 
-export function drawAllGamesButton(ctx: CanvasRenderingContext2D): void {
-  const b = ALL_GAMES_BUTTON;
+export function drawAllGamesButton(ctx: CanvasRenderingContext2D, b: Rect = ALL_GAMES_BUTTON): void {
   ctx.fillStyle = 'rgba(26,26,46,0.55)';
   ctx.beginPath();
   ctx.roundRect(b.x, b.y, b.w, b.h, b.h / 2);

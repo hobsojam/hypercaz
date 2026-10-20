@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_GAMES_BUTTON, hitAllGames, hitRect, MUTE_BUTTON, PAUSE_BUTTON, takeClick, titleAction, toggleMute } from '../../engine/controls.ts';
+import { ALL_GAMES_BUTTON, controlRects, hitAllGames, hitRect, MUTE_BUTTON, PAUSE_BUTTON, takeClick, titleAction, toggleMute } from '../../engine/controls.ts';
 
 function fakeGame() {
   const keys = new Set<string>();
@@ -71,6 +71,26 @@ describe('takeClick', () => {
     tap(100, 500);
     expect(takeClick(game, () => undefined)).toEqual({ x: 100, y: 500 });
     expect(game.audio.muted).toBe(true);
+  });
+});
+
+describe('controlRects', () => {
+  it('at 540 equals the fixed buttons', () => {
+    expect(controlRects(540)).toEqual({ mute: MUTE_BUTTON, pause: PAUSE_BUTTON, allGames: ALL_GAMES_BUTTON });
+  });
+
+  it('follows the width', () => {
+    expect(controlRects(1280).mute.x).toBe(1280 - 48);
+  });
+
+  it('takeClick honours a wider screen', () => {
+    const { game, tap } = fakeGame();
+    const saved: boolean[] = [];
+    tap(...centre(controlRects(1280).mute));
+    expect(takeClick(game, (m) => saved.push(m), 1280)).toBeNull();
+    expect(saved).toEqual([true]);
+    tap(...centre(MUTE_BUTTON));
+    expect(takeClick(game, (m) => saved.push(m), 1280)).toEqual({ x: centre(MUTE_BUTTON)[0], y: centre(MUTE_BUTTON)[1] });
   });
 });
 
