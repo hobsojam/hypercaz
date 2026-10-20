@@ -5,21 +5,8 @@
 //   B  bars 9-16  heroic long notes (borrowed Bb chord)
 //   C  bars 17-24 staccato riff in A minor over a busier snare
 //   D  bars 25-32 the hook again, doubled an octave down, rolling back to A
-import { transpose, type Song } from '../../../engine/music.ts';
-
-type Chord = 'C' | 'F' | 'G' | 'Bb' | 'Am' | 'Dm';
-
-const REST = '. . . . . . . . . . . . . . . .';
-
-const ROOT: Record<Chord, string> = { C: 'C2', F: 'F2', G: 'G2', Bb: 'Bb1', Am: 'A1', Dm: 'D2' };
-const VOICING: Record<Chord, string> = {
-  C: 'C4+E4+G4',
-  F: 'C4+F4+A4',
-  G: 'B3+D4+G4',
-  Bb: 'Bb3+D4+F4',
-  Am: 'A3+C4+E4',
-  Dm: 'A3+D4+F4',
-};
+import type { Song } from '../../../engine/music.ts';
+import { bassNotes, type Chord, octaveDown, REST, section, VOICING } from './parts.ts';
 
 // prettier-ignore
 const CHORDS: Chord[] = [
@@ -31,9 +18,7 @@ const CHORDS: Chord[] = [
 
 // Root, octave, fifth, octave on the eighths.
 function bassBar(chord: Chord): string {
-  const r = ROOT[chord];
-  const o = transpose(r, 12);
-  const f = transpose(r, 7);
+  const { r, o, f } = bassNotes(chord);
   return `${r} . ${o} . ${f} . ${o} . ${r} . ${o} . ${f} . ${o} .`;
 }
 
@@ -41,13 +26,6 @@ function bassBar(chord: Chord): string {
 function stabBar(chord: Chord): string {
   const c = VOICING[chord];
   return `. . ${c} . . . ${c} . . . ${c} . . . ${c} .`;
-}
-
-function octaveDown(bar: string): string {
-  return bar
-    .split(' ')
-    .map((t) => (t === '.' || t === '-' ? t : transpose(t, -12)))
-    .join(' ');
 }
 
 const HOOK_1 = 'G4 . C5 . E5 - G5 - . . E5 . C5 - - .';
@@ -107,8 +85,6 @@ const MARCH = 'k+h g h g s+h g h g k+h g k+h g s+h g s g';
 const MARCH_CRASH = 'x+k g h g s+h g h g k+h g k+h g s+h g s g';
 const TURN = 'k+h . h . s+h . h g k+h . s . s s s s';
 const ROLL = 'k . s . s . s . s s s s s s s s';
-
-const section = (first: string, middle: string, last: string) => [first, ...new Array<string>(6).fill(middle), last];
 
 export const GAMEPLAY_SONG: Song = {
   bpm: 136,

@@ -6,8 +6,8 @@
  "length": 560,
  "burstKills": 243,
  "stars": [
-  252,
-  378
+  238,
+  358
  ],
  "spawns": [
   {
@@ -307,12 +307,12 @@
   }
  ],
  "boss": {
-  "hp": 12260,
+  "hp": 17880,
   "pattern": "spread5",
   "fireEvery": 3.5,
   "advance": 0.672,
-  "summonEvery": 3.5,
-  "summonCount": 75,
+  "summonEvery": 5.25,
+  "summonCount": 37,
   "summonHp": 25
  }
 }

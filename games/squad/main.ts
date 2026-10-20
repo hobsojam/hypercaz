@@ -7,6 +7,7 @@ import { createStorage } from '../../engine/storage.ts';
 import manifestJson from './assets/manifest.json';
 import { type Game, HEIGHT, WIDTH } from './game.ts';
 import { levels } from './levels/index.ts';
+import type { RenderedSong } from './music/worker.ts';
 import { loadProgress } from './progress.ts';
 import { TitleScene } from './scenes/title.ts';
 
@@ -52,10 +53,8 @@ function showCrash(title: string, err: unknown): void {
 function loadMusic(audio: GameAudio): void {
   try {
     const worker = new Worker(new URL('./music/worker.ts', import.meta.url), { type: 'module' });
-    worker.onmessage = (e: MessageEvent<{ samples: Float32Array<ArrayBuffer>; sampleRate: number }>) => {
-      audio.setMusic(e.data.samples, e.data.sampleRate);
-      worker.terminate();
-    };
+    // One message per song, as each finishes; the worker closes itself after the last.
+    worker.onmessage = (e: MessageEvent<RenderedSong>) => audio.setMusic(e.data.name, e.data.samples, e.data.sampleRate);
     worker.onerror = (e) => console.warn('music failed to render:', e.message);
   } catch (err) {
     console.warn('music unavailable:', err);
