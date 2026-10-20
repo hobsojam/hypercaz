@@ -1,6 +1,6 @@
-export interface Point { x: number; y: number }
-export interface Rect extends Point { w: number; h: number }
-export interface Collision { time: number; nx: number; ny: number }
+export interface Point { readonly x: number; readonly y: number }
+export interface Rect extends Point { readonly w: number; readonly h: number }
+export interface Collision { readonly time: number; nx: number; ny: number }
 const EPS = 1e-8;
 
 // Slab intersection. Obstacles are expanded by the ball radius by the caller.

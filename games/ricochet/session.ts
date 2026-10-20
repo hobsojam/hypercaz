@@ -6,7 +6,7 @@ import { createState, preview, shoot, starsFor, step, type GameEvent, type State
 import type { Point } from './sim/geometry.ts';
 
 type Storage = ReturnType<typeof createStorage>;
-export interface Effect extends Point { kind: 'rescue' | 'bank'; age: number }
+export interface Effect extends Point { readonly kind: 'rescue' | 'bank'; age: number }
 
 function savedProgress(raw: unknown): { best: Record<number, number>; muted: boolean } {
   const out = { best: {} as Record<number, number>, muted: false };
@@ -29,13 +29,13 @@ export class Session {
   screen: 'play' | 'levels' = 'play';
   paused = false;
   angle = -Math.PI / 2;
-  guide: Point[] = preview(this.state, this.angle);
+  guide: readonly Point[] = preview(this.state, this.angle);
   effects: Effect[] = [];
-  best: Record<number, number>;
+  readonly best: Record<number, number>;
   muted: boolean;
   time = 0;
   private sounds: Sfx[] = [];
-  private storage?: Storage;
+  private readonly storage?: Storage;
 
   constructor(storage?: Storage) {
     this.storage = storage;

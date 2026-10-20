@@ -3,7 +3,7 @@ import { HEIGHT, WIDTH } from './sim/constants.ts';
 
 export class Viewport {
   readonly ctx: CanvasRenderingContext2D;
-  private canvas: HTMLCanvasElement;
+  private readonly canvas: HTMLCanvasElement;
   private box: Letterbox = { scale: 1, offsetX: 0, offsetY: 0 };
   private dpr = 1;
 

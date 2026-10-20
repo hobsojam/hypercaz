@@ -1,7 +1,7 @@
 import type { Controls } from './controls.ts';
 import type { Viewport } from './viewport.ts';
 
-interface Handlers { gesture(): void; change(): void; suspend(): void }
+interface Handlers { readonly gesture: () => void; readonly change: () => void; readonly suspend: () => void }
 
 export function bindInput(canvas: HTMLCanvasElement, viewport: Viewport, controls: Controls, handlers: Handlers, signal: AbortSignal): void {
   const touchAction = canvas.style.touchAction, tabIndex = canvas.tabIndex;

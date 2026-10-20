@@ -11,11 +11,11 @@ import { starsFor } from './sim/game.ts';
 import { Viewport } from './viewport.ts';
 
 export interface MountOptions {
-  assets?: AssetStore;
-  audio?: Pick<GameAudio, 'muted' | 'unlock' | 'hide' | 'play'>;
-  storage?: ReturnType<typeof createStorage>;
-  onStatus?: (message: string) => void;
-  onError?: (error: unknown) => void;
+  readonly assets?: AssetStore;
+  readonly audio?: Pick<GameAudio, 'muted' | 'unlock' | 'hide' | 'play'>;
+  readonly storage?: ReturnType<typeof createStorage>;
+  readonly onStatus?: (message: string) => void;
+  readonly onError?: (error: unknown) => void;
 }
 
 function status(s: Session): string {

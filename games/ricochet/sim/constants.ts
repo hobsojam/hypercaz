@@ -1,7 +1,7 @@
 export const WIDTH = 540;
 export const HEIGHT = 960;
-export const BOARD = { x: 28, y: 170, w: 484, h: 620 };
-export const LAUNCHER = { x: 270, y: 764 };
+export const BOARD = { x: 28, y: 170, w: 484, h: 620 } as const;
+export const LAUNCHER = { x: 270, y: 764 } as const;
 export const BALL_RADIUS = 8;
 export const CAGE_RADIUS = 25;
 export const SHOT_SPEED = 540;

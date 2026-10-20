@@ -1,15 +1,15 @@
 import { BOARD, CAGE_RADIUS, LAUNCHER, BALL_RADIUS } from './sim/constants.ts';
 import { contains, expand, type Point, type Rect } from './sim/geometry.ts';
 
-export interface Cage extends Point { id: string }
+export interface Cage extends Point { readonly id: string }
 export interface Level {
-  id: number;
-  name: string;
-  lesson: string;
-  par: number;
-  shots: number;
-  walls: Rect[];
-  cages: Cage[];
+  readonly id: number;
+  readonly name: string;
+  readonly lesson: string;
+  readonly par: number;
+  readonly shots: number;
+  readonly walls: readonly Rect[];
+  readonly cages: readonly Cage[];
 }
 
 export function validateLevel(level: Level): Level {

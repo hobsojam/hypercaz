@@ -3,8 +3,8 @@ import { Session } from './session.ts';
 import { BOARD, LAUNCHER } from './sim/constants.ts';
 import { contains, type Point, type Rect } from './sim/geometry.ts';
 
-export interface Button extends Rect { id: string; label: string; enabled: boolean }
-export function buttonsFor(session: Session): Button[] {
+export interface Button extends Rect { readonly id: string; readonly label: string; readonly enabled: boolean }
+export function buttonsFor(session: Session): readonly Button[] {
   const mute: Button = { id: 'mute', label: session.muted ? 'SOUND' : 'MUTE', x: 444, y: 24, w: 68, h: 52, enabled: true };
   if (session.screen === 'levels') return [mute,
     ...LEVELS.map((l, i) => ({ id: `level:${i}`, label: l.name, x: 44 + (i % 2) * 240, y: 202 + Math.floor(i / 2) * 144, w: 212, h: 128, enabled: true })),
@@ -23,7 +23,7 @@ export function buttonsFor(session: Session): Button[] {
 }
 
 export class Controls {
-  private session: Session;
+  private readonly session: Session;
   private pointer: number | null = null;
   private button: string | null = null;
   constructor(session: Session) { this.session = session; }

@@ -2,20 +2,20 @@ import type { Cage, Level } from '../levels.ts';
 import { BALL_RADIUS, BOARD, CAGE_RADIUS, LAUNCHER, MAX_ANGLE, MAX_BANKS, MIN_ANGLE, SHOT_SPEED } from './constants.ts';
 import { expand, sweepCircle, sweepRect, type Collision, type Point } from './geometry.ts';
 
-export interface Ball extends Point { vx: number; vy: number; banks: number }
+export interface Ball { x: number; y: number; vx: number; vy: number; banks: number }
 export type Phase = 'aiming' | 'flying' | 'won' | 'lost';
 export type GameEvent =
-  | { type: 'shot' | 'bank' | 'rescue'; x: number; y: number }
-  | { type: 'return' | 'won' | 'lost' };
+  | { readonly type: 'shot' | 'bank' | 'rescue'; readonly x: number; readonly y: number }
+  | { readonly type: 'return' | 'won' | 'lost' };
 export interface State {
-  level: Level;
+  readonly level: Level;
   phase: Phase;
   shotsUsed: number;
-  cages: (Cage & { rescued: boolean })[];
+  readonly cages: readonly (Cage & { rescued: boolean })[];
   ball: Ball | null;
   events: GameEvent[];
 }
-interface Impact extends Collision { kind: 'wall' | 'drain' | 'cage'; cage?: number }
+interface Impact extends Collision { readonly kind: 'wall' | 'drain' | 'cage'; readonly cage?: number }
 const EPS = 1e-7;
 
 export function createState(level: Level): State {
@@ -109,7 +109,7 @@ export function step(state: State, dt: number): void {
   }
 }
 
-export function preview(state: State, angle: number): Point[] {
+export function preview(state: State, angle: number): readonly Point[] {
   const copy: State = { ...state, cages: state.cages.map(c => ({ ...c })), events: [], ball: null };
   if (!shoot(copy, angle)) return [];
   const points: Point[] = [{ ...LAUNCHER }];
