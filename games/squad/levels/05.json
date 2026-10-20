@@ -6,8 +6,8 @@
  "length": 420,
  "burstKills": 224,
  "stars": [
-  109,
-  164
+  92,
+  138
  ],
  "spawns": [
   {
@@ -278,12 +278,12 @@
   }
  ],
  "boss": {
-  "hp": 3670,
+  "hp": 7730,
   "pattern": "volley3",
   "fireEvery": 3.1,
   "advance": 0.516,
-  "summonEvery": 4.6,
-  "summonCount": 75,
+  "summonEvery": 6.9,
+  "summonCount": 37,
   "summonHp": 10
  }
 }
