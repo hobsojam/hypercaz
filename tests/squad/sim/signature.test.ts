@@ -281,6 +281,15 @@ describe('fortress', () => {
     expect(absorbHit(s, 10)).toBe(10);
   });
 
+  it('holds its ground while the shield is up', () => {
+    const s = fortress({ advance: 0.3 });
+    run(s, 20, inGap);
+    expect(s.boss!.attack?.kind).toBe('shield');
+    const z = s.boss!.z;
+    run(s, 2, 0);
+    expect(s.boss!.z).toBe(z);
+  });
+
   it('summons only while shielded or stunned', () => {
     const s = fortress({ summonEvery: 1, summonCount: 1, summonHp: 1 });
     run(s, 30, inGap, (st) => {

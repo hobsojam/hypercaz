@@ -5,10 +5,7 @@
  "startSquad": 4,
  "length": 420,
  "burstKills": 224,
- "stars": [
-  92,
-  138
- ],
+ "stars": [95, 143],
  "spawns": [
   {
    "z": 25,
@@ -278,12 +275,11 @@
   }
  ],
  "boss": {
-  "hp": 7730,
+  "hp": 10080,
   "pattern": "volley3",
   "fireEvery": 3.1,
   "advance": 0.516,
   "summonEvery": 6.9,
   "summonCount": 37,
-  "summonHp": 10
- }
+  "summonHp": 10, "signature": "strafe" }
 }

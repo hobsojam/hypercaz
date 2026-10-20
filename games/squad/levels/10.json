@@ -5,10 +5,7 @@
  "startSquad": 9,
  "length": 600,
  "burstKills": 240,
- "stars": [
-  167,
-  251
- ],
+ "stars": [210, 315],
  "spawns": [
   {
    "z": 25,
@@ -308,12 +305,11 @@
   }
  ],
  "boss": {
-  "hp": 12260,
+  "hp": 13700,
   "pattern": "spread5",
   "fireEvery": 3.4,
   "advance": 0.727,
   "summonEvery": 5.25,
   "summonCount": 37,
-  "summonHp": 23
- }
+  "summonHp": 23, "signature": "fortress", "shieldHp": 7000 }
 }

@@ -37,6 +37,11 @@ export function updateSignature(state: GameState, dt: number): void {
   if (signature === 'fortress') fortress(state, dt);
 }
 
+// A Fortress holds its ground while its shield is up.
+export function holdsGround(state: GameState): boolean {
+  return state.boss?.attack?.kind === 'shield';
+}
+
 // The Fortress only summons crowds while its shield is up or broken.
 export function summonsNow(state: GameState): boolean {
   if (state.level.boss.signature !== 'fortress') return true;

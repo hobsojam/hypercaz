@@ -21,7 +21,7 @@ import {
 import { changeCount, soldiersHit } from './contact.ts';
 import { formationSlots } from './formation.ts';
 import { expandHorde } from './level.ts';
-import { signatureBusy, summonsNow, updateSignature } from './signature.ts';
+import { holdsGround, signatureBusy, summonsNow, updateSignature } from './signature.ts';
 import { spawnEntity, type GameState } from './state.ts';
 
 export function updateBoss(state: GameState, dt: number): void {
@@ -70,7 +70,7 @@ function fight(state: GameState, dt: number): void {
   // A charge takes over the boss: it neither creeps forward nor fires.
   if (signatureBusy(state)) return;
 
-  boss.z -= cfg.advance * dt;
+  if (!holdsGround(state)) boss.z -= cfg.advance * dt;
   if (boss.z - BOSS_HALF_D <= 0) {
     boss.z = BOSS_HALF_D;
     changeCount(state, -state.squad.count, boss.x, 0, 'bossContact');
