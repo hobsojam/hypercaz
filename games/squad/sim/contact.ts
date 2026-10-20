@@ -26,6 +26,14 @@ export function soldiersHit(state: GameState, slots: Slot[], x: number, halfW: n
   return hit === 0 ? 0 : Math.ceil((hit * state.squad.count) / slots.length);
 }
 
+// Soldiers outside the gap [gapX - halfGap, gapX + halfGap], scaled to the
+// real count as soldiersHit does.
+export function soldiersOutside(state: GameState, slots: Slot[], gapX: number, halfGap: number): number {
+  let hit = 0;
+  for (const s of slots) if (Math.abs(state.squad.x + s.dx - gapX) > halfGap) hit++;
+  return hit === 0 ? 0 : Math.ceil((hit * state.squad.count) / slots.length);
+}
+
 export function updateContacts(state: GameState): void {
   const removed = new Set<Entity>();
   for (const e of state.entities) {

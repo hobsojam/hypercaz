@@ -18,6 +18,7 @@ const LOSS_FEEDBACK: Record<LossCause, { name: string; tip: string }> = {
   barricade: { name: 'Barricade', tip: 'Steer around the barricade.' },
   bossShot: { name: 'Boss shot', tip: 'Move lanes when the boss winds up.' },
   bossContact: { name: 'Boss contact', tip: 'Recruit more; save Rapid Fire for the boss.' },
+  bossCharge: { name: 'Boss charge', tip: 'Leave the red stripe before the boss charges.' },
 };
 
 function defeatFeedback(finalHit?: LossEvent): { hit?: string; tip: string } {

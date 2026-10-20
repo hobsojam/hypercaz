@@ -1,5 +1,6 @@
 // A simple scripted player used by tests to prove every level is winnable.
 // Not used by the game itself.
+import { BARRAGE_WARN, CHARGE_HALF_W } from './constants.ts';
 import { formationHalfWidth, formationSlots } from './formation.ts';
 import type { Level } from './level.ts';
 import { createState, type Entity, type GameState, type Input } from './state.ts';
@@ -14,6 +15,8 @@ export function botInput(state: GameState): Input {
 // the squad is lined up on but can't break in time.
 function wantsBurst(state: GameState, targetX: number): boolean {
   if (state.meter < state.level.burstKills || state.burstTime > 0) return false;
+  // A Fortress's shield is worth saving it for.
+  if (state.boss && state.level.boss.signature === 'fortress') return state.boss.attack?.kind === 'shield';
   if (state.boss) return true;
   const close = state.entities.filter((e) => (e.type === 'enemy' || e.type === 'heavy') && e.z > 0 && e.z < 20);
   if (close.length >= 12) return true;
@@ -30,7 +33,21 @@ function steer(state: GameState): Input {
   const ahead = (e: Entity, maxZ: number) => e.z > 0 && e.z <= maxZ;
   const nearest = (list: Entity[]) => list.reduce<Entity | null>((a, e) => (!a || e.z < a.z ? e : a), null);
 
-  // 0. Dodge incoming boss projectiles: pick the reachable position that the
+  // 0. Get out of a charge stripe, or into a barrage's gap.
+  const attack = state.boss?.attack;
+  if (attack?.kind === 'charge' && (attack.stage === 'warn' || attack.stage === 'lunge')) {
+    // Hold the escape spot until the lunge is over: the boss sits in the lane,
+    // so aiming at it would walk straight back in.
+    const margin = CHARGE_HALF_W + hw + 0.05;
+    if (Math.abs(squad.x - attack.laneX) >= margin) return { targetX: squad.x };
+    const options = [attack.laneX - margin, attack.laneX + margin].filter((x) => Math.abs(x) <= limit);
+    if (options.length === 0) return { targetX: attack.laneX > 0 ? -limit : limit };
+    options.sort((a, b) => Math.abs(a - squad.x) - Math.abs(b - squad.x));
+    return { targetX: options[0] };
+  }
+  if (attack?.kind === 'barrage' && attack.t <= BARRAGE_WARN) return { targetX: attack.gapX };
+
+  // 0b. Dodge incoming boss projectiles: pick the reachable position that the
   // fewest projectiles overlap, preferring the one closest to where we are.
   const incoming = state.projectiles.filter((p) => p.z < 12);
   const overlaps = (x: number) => incoming.filter((p) => Math.abs(p.x - x) <= hw + 0.13).length;

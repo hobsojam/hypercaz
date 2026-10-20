@@ -29,7 +29,7 @@ describe('validateLevel', () => {
     expect(enemy).toEqual({ z: 50, x: 0.2, type: 'enemy', hp: 2, value: 0, width: 0, kind: null, kills: 1, max: 0 });
     expect(level.spawns.find((s) => s.type === 'heavy')!.kills).toBe(3);
     expect(level.spawns.find((s) => s.type === 'hazard')!.kind).toBe('blade');
-    expect(level.boss).toEqual({ hp: 400, pattern: 'volley3', fireEvery: 2.5, advance: 0, summonEvery: 0, summonCount: 0, summonHp: 1 });
+    expect(level.boss).toEqual({ hp: 400, pattern: 'volley3', fireEvery: 2.5, advance: 0, summonEvery: 0, summonCount: 0, summonHp: 1, signature: null, chargeEvery: 0, shieldHp: 0 });
   });
 
   it('gates get a value cap: explicit, or max(5, 2 * |value|)', () => {
@@ -45,6 +45,28 @@ describe('validateLevel', () => {
     expect(validateLevel(raw(), 't.json').boss).toMatchObject({ advance: 0, summonEvery: 0, summonCount: 0, summonHp: 1 });
     const b = validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, advance: 0.5, summonEvery: 4, summonCount: 12, summonHp: 3 } }), 't.json').boss;
     expect(b).toMatchObject({ advance: 0.5, summonEvery: 4, summonCount: 12, summonHp: 3 });
+  });
+
+  it('boss signature defaults to none', () => {
+    expect(validateLevel(raw(), 't.json').boss).toMatchObject({ signature: null, chargeEvery: 0, shieldHp: 0 });
+    const boss = (extra: Record<string, unknown>) => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, ...extra } }), 't.json').boss;
+    expect(boss({ signature: 'strafe' })).toMatchObject({ signature: 'strafe', chargeEvery: 0, shieldHp: 0 });
+    expect(boss({ signature: 'charge', chargeEvery: 7 })).toMatchObject({ signature: 'charge', chargeEvery: 7 });
+    expect(boss({ signature: 'fortress', shieldHp: 900 })).toMatchObject({ signature: 'fortress', shieldHp: 900 });
+  });
+
+  it('charge needs chargeEvery > 0', () => {
+    expect(() => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, signature: 'charge' } }), 't.json')).toThrow(/boss\.chargeEvery/);
+    expect(() => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, signature: 'charge', chargeEvery: 0 } }), 't.json')).toThrow(/boss\.chargeEvery/);
+  });
+
+  it('fortress needs shieldHp >= 1', () => {
+    expect(() => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, signature: 'fortress' } }), 't.json')).toThrow(/boss\.shieldHp/);
+    expect(() => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, signature: 'fortress', shieldHp: 0 } }), 't.json')).toThrow(/boss\.shieldHp/);
+  });
+
+  it('unknown signature is rejected', () => {
+    expect(() => validateLevel(raw({ boss: { hp: 10, pattern: 'single', fireEvery: 1, signature: 'laser' } }), 't.json')).toThrow(/boss\.signature/);
   });
 
   it('sorts spawns by z', () => {

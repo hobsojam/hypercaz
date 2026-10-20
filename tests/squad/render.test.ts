@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 import { AssetStore, parseManifest } from '../../engine/assets.ts';
 import { DEFAULT_VIEW, project } from '../../engine/perspective.ts';
 import { drawRoad, renderGame } from '../../games/squad/render/draw.ts';
@@ -8,7 +8,7 @@ import { SquadView } from '../../games/squad/render/squadView.ts';
 import { botInput } from '../../games/squad/sim/bot.ts';
 import { formationSlots } from '../../games/squad/sim/formation.ts';
 import { validateLevel } from '../../games/squad/sim/level.ts';
-import { createState, spawnEntity } from '../../games/squad/sim/state.ts';
+import { type Boss, createState, spawnEntity } from '../../games/squad/sim/state.ts';
 import { step } from '../../games/squad/sim/step.ts';
 import { makeLevel } from './fixtures.ts';
 import { stubCtx } from './stubCtx.ts';
@@ -93,7 +93,7 @@ test('a cage shows its remaining hit points as well as its reward', () => {
 test('the boss shows its remaining health as a number', () => {
   const state = createState(makeLevel({ startSquad: 5 }), 1);
   state.phase = 'boss';
-  state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  state.boss = { hp: 1234.4, maxHp: 5000, x: 0, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0, attack: null, signatureTimer: 5, strafeT: 0 };
   expect(textsDrawn(state)).toContain('1235');
 });
 
@@ -105,7 +105,7 @@ test.each([
   const state = createState(makeLevel(), 1);
   // The tank has since moved: an in-flight shell must retain its own origin.
   state.phase = 'boss';
-  state.boss = { hp: 100, maxHp: 100, x: -0.4, z: 8, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0 };
+  state.boss = { hp: 100, maxHp: 100, x: -0.4, z: 8, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0, attack: null, signatureTimer: 5, strafeT: 0 };
   state.projectiles = [{ x: 0.8, z, originX: 0.2, originZ: 20 }];
   const before = structuredClone(state);
   const ctx = stubCtx();
@@ -219,4 +219,45 @@ test('rescue labels and boss shots remain above cosmetic effects', () => {
   expect(texts.indexOf('37')).toBeGreaterThan(texts.indexOf('effects'));
   expect(texts.indexOf('+8')).toBeGreaterThan(texts.indexOf('effects'));
   expect(ctx.calls.arc).toHaveLength(1);
+});
+
+describe('boss signature attacks are drawn', () => {
+  const withAttack = (attack: Boss['attack']) => {
+    const state = createState(makeLevel({ startSquad: 20 }), 1);
+    state.phase = 'boss';
+    state.boss = { hp: 500, maxHp: 1000, x: 0.2, z: 18, fireTimer: 5, summonTimer: 5, enraged: false, charging: false, flash: 0, attack, signatureTimer: 5, strafeT: 0 };
+    const ctx = stubCtx();
+    renderGame(ctx, state, { persp: DEFAULT_VIEW, assets, time: 0, squadView: new SquadView(), shake: { x: 0, y: 0 } });
+    const written = (prop: string) => (ctx.calls[`=${prop}`] ?? []).map(([v]) => v);
+    return { written, texts: (ctx.calls.fillText ?? []).map(([t]) => t) };
+  };
+
+  it.each([
+    { kind: 'charge', stage: 'warn', t: 0.5, laneX: 0.2, fromX: 0, fromZ: 18 },
+    { kind: 'charge', stage: 'lunge', t: 0.1, laneX: 0.2, fromX: 0, fromZ: 18 },
+    { kind: 'charge', stage: 'exposed', t: 1, laneX: 0.2, fromX: 0, fromZ: 18 },
+    { kind: 'charge', stage: 'return', t: 0.5, laneX: 0.2, fromX: 0, fromZ: 18 },
+    { kind: 'barrage', t: 1, gapX: 0.75, left: 2, spacing: 2.5 },
+    { kind: 'barrage', t: 2, gapX: -0.75, left: 1, spacing: 2.5 },
+    { kind: 'shield', hp: 300, maxHp: 400 },
+    { kind: 'stunned', t: 2 },
+  ] as Boss['attack'][])('%o renders', (attack) => {
+    expect(() => withAttack(attack)).not.toThrow();
+  });
+
+  it('a charge warning paints a red stripe on the road', () => {
+    // The HUD uses the same red, so count: the stripe adds one more.
+    const reds = (attack: Boss['attack']) => withAttack(attack).written('fillStyle').filter((v) => v === '#E04040').length;
+    expect(reds({ kind: 'charge', stage: 'warn', t: 0.5, laneX: 0.2, fromX: 0, fromZ: 18 })).toBe(reds(null) + 1);
+  });
+
+  it('a showing barrage outlines its safe gap in green', () => {
+    expect(withAttack({ kind: 'barrage', t: 1, gapX: 0.5, left: 1, spacing: 2.5 }).written('strokeStyle')).toContain('#5BE37A');
+    // Not yet showing: more than the warning time to go.
+    expect(withAttack({ kind: 'barrage', t: 2, gapX: 0.5, left: 1, spacing: 2.5 }).written('strokeStyle')).not.toContain('#5BE37A');
+  });
+
+  it('a shield shows its remaining strength', () => {
+    expect(withAttack({ kind: 'shield', hp: 299.2, maxHp: 400 }).texts).toContain('300');
+  });
 });

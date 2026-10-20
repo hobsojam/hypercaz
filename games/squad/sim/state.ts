@@ -51,9 +51,19 @@ export interface Boss {
   enraged: boolean;
   charging: boolean; // in the warning window before a volley
   flash: number;
+  attack: BossAttack | null; // the signature attack in progress
+  signatureTimer: number; // seconds until the next charge or barrage phase
+  strafeT: number; // strafer: phase of the side-to-side slide, in radians
 }
 
-export type LossCause = 'enemy' | 'heavy' | 'gate' | HazardKind | 'bossShot' | 'bossContact';
+// A boss's signature attack in progress (see signature.ts).
+export type BossAttack =
+  | { kind: 'charge'; stage: 'warn' | 'lunge' | 'exposed' | 'return'; t: number; laneX: number; fromX: number; fromZ: number }
+  | { kind: 'barrage'; t: number; gapX: number; left: number; spacing: number } // t counts down to landing; left includes this one; spacing is fixed for the phase
+  | { kind: 'shield'; hp: number; maxHp: number }
+  | { kind: 'stunned'; t: number };
+
+export type LossCause = 'enemy' | 'heavy' | 'gate' | HazardKind | 'bossShot' | 'bossContact' | 'bossCharge';
 export type LossEvent = { type: 'lose'; amount: number; x: number; z: number; cause?: LossCause };
 
 export type GameEvent =
@@ -67,6 +77,10 @@ export type GameEvent =
   | { type: 'bossWindup' }
   | { type: 'bossSummon'; x: number }
   | { type: 'bossEnrage' }
+  | { type: 'bossCharge'; x: number }
+  | { type: 'bossBarrage' }
+  | { type: 'shieldUp' }
+  | { type: 'shieldBreak' }
   | { type: 'burstReady' }
   | { type: 'burstStart' }
   | { type: 'bossDead'; x: number; z: number }

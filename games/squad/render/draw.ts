@@ -1,7 +1,7 @@
 // Draws the game state. Read-only: never changes gameplay.
 import { type AssetStore, drawSprite } from '../../../engine/assets.ts';
 import { type PerspectiveConfig, project } from '../../../engine/perspective.ts';
-import { BOSS_HALF_W, BURST_SECONDS, MAX_DRAWN, SPAWN_HORIZON } from '../sim/constants.ts';
+import { BARRAGE_GAP, BARRAGE_WARN, BOSS_HALF_W, BURST_SECONDS, CHARGE_HALF_W, MAX_DRAWN, SPAWN_HORIZON } from '../sim/constants.ts';
 import type { Boss, Entity, GameState, Projectile } from '../sim/state.ts';
 import { projectPlayfieldPoint } from './projection.ts';
 import type { SquadView } from './squadView.ts';
@@ -32,6 +32,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, view
   ctx.translate(view.shake.x, view.shake.y);
   drawBackground(ctx, persp);
   drawRoad(ctx, view.persp, state.distance, view.assets.image('road_tile'));
+  if (state.boss) drawAttackWarnings(ctx, state.boss, view);
 
   const items: Draw[] = [];
   addProps(items, ctx, state, view);
@@ -91,6 +92,57 @@ function bossArtScale(persp: PerspectiveConfig): number {
   return (2 * BOSS_HALF_W * persp.roadHalfWidthPx) / 160;
 }
 
+// A quad on the road surface between two lanes and two distances.
+function roadQuad(ctx: CanvasRenderingContext2D, persp: PerspectiveConfig, x0: number, x1: number, z0: number, z1: number): void {
+  const a = project(persp, x0, z0);
+  const b = project(persp, x1, z0);
+  const c = project(persp, x1, z1);
+  const d = project(persp, x0, z1);
+  ctx.beginPath();
+  ctx.moveTo(a.sx, a.sy);
+  ctx.lineTo(b.sx, b.sy);
+  ctx.lineTo(c.sx, c.sy);
+  ctx.lineTo(d.sx, d.sy);
+  ctx.closePath();
+}
+
+// Signature attack warnings, painted on the road under everything else: the
+// Charger's red stripe down the squad's lane, and the Fortress's shell shadows
+// with the one safe gap outlined in green.
+function drawAttackWarnings(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderView): void {
+  const attack = boss.attack;
+  const { persp } = view;
+  const pulse = 0.5 + 0.5 * Math.sin(view.time * 18);
+  ctx.save();
+  if (attack?.kind === 'charge' && (attack.stage === 'warn' || attack.stage === 'lunge')) {
+    ctx.globalAlpha = attack.stage === 'lunge' ? 0.55 : 0.25 + 0.25 * pulse;
+    ctx.fillStyle = '#E04040';
+    roadQuad(ctx, persp, attack.laneX - CHARGE_HALF_W, attack.laneX + CHARGE_HALF_W, -3, boss.z);
+    ctx.fill();
+  }
+  if (attack?.kind === 'barrage' && attack.t <= BARRAGE_WARN) {
+    const left = attack.gapX - BARRAGE_GAP / 2;
+    const right = attack.gapX + BARRAGE_GAP / 2;
+    // Darker as the shells get closer to landing.
+    ctx.globalAlpha = 0.3 + 0.35 * (1 - attack.t / BARRAGE_WARN);
+    ctx.fillStyle = '#1A1A2E';
+    if (left > -1) {
+      roadQuad(ctx, persp, -1, left, -3, 2);
+      ctx.fill();
+    }
+    if (right < 1) {
+      roadQuad(ctx, persp, right, 1, -3, 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 0.6 + 0.4 * pulse;
+    ctx.strokeStyle = '#5BE37A';
+    ctx.lineWidth = 4;
+    roadQuad(ctx, persp, left, right, -3, 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderView): void {
   const p = project(view.persp, boss.x, boss.z);
   const id = boss.hp < boss.maxHp / 2 ? 'boss_damaged' : 'boss_idle';
@@ -106,8 +158,33 @@ function drawBoss(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderView): 
     ctx.fill();
     ctx.restore();
   }
+  // Exposed after a charge, or stunned once its shield breaks: a gold glow
+  // that says "hit it now".
+  const attack = boss.attack;
+  if ((attack?.kind === 'charge' && attack.stage === 'exposed') || attack?.kind === 'stunned') {
+    ctx.save();
+    ctx.globalAlpha = 0.3 + 0.2 * pulse;
+    ctx.fillStyle = '#F5C242';
+    ctx.beginPath();
+    ctx.ellipse(p.sx, p.sy - 64 * s, 140 * s, 115 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   const flash = boss.charging ? Math.max(boss.flash, 0.04 * pulse) : boss.flash;
   drawSprite(ctx, view.assets, id, view.time, p.sx, p.sy, s, { flash });
+  if (attack?.kind === 'shield') {
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#7FD8FF';
+    ctx.beginPath();
+    ctx.ellipse(p.sx, p.sy - 64 * s, 125 * s, 100 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = '#7FD8FF';
+    ctx.lineWidth = Math.max(2, 8 * s);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawBossProjectiles(ctx: CanvasRenderingContext2D, projectiles: readonly Projectile[], view: RenderView): void {
@@ -289,6 +366,7 @@ function drawBossLabels(ctx: CanvasRenderingContext2D, boss: Boss, view: RenderV
   const s = p.scale * bossArtScale(view.persp);
   label(ctx, String(Math.ceil(boss.hp)), p.sx, p.sy - 150 * s, 30 * s + 12, '#FFFFFF');
   if (boss.charging) label(ctx, '!', p.sx, p.sy - 200 * s, 44 * s + 12, '#FF8A1F');
+  if (boss.attack?.kind === 'shield') label(ctx, String(Math.ceil(boss.attack.hp)), p.sx, p.sy - 20 * s, 26 * s + 10, '#7FD8FF');
 }
 
 export function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string): void {

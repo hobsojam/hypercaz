@@ -49,6 +49,31 @@ export const BOSS_ENRAGE_FIRE = 0.6; // fire interval multiplier once enraged
 export const BOSS_ENRAGE_SUMMON = 0.7; // summon interval multiplier once enraged
 export const BOSS_SUMMON_WIDTH = 0.9;
 
+// Signature attacks (signature.ts). No warning is shorter than 1 s.
+export const STRAFE_RANGE = 0.6; // strafer slides between -0.6 and +0.6
+export const STRAFE_PERIOD = 6; // seconds for one full side-to-side cycle
+export const STRAFE_PERIOD_ENRAGED = 4;
+export const CHARGE_WARN = 1.2; // seconds the stripe shows before the lunge
+export const CHARGE_SLIDE = 0.3; // seconds to slide into the squad's lane, within the warning
+export const CHARGE_LUNGE = 0.4;
+export const CHARGE_EXPOSED = 2.5;
+export const CHARGE_RETURN = 1;
+export const CHARGE_HALF_W = 0.35; // half the stripe's width
+export const CHARGE_REACH_Z = 2.5; // where the lunge stops: the boss's front just short of the squad
+export const CHARGE_ENRAGED = 0.7; // charge interval multiplier once enraged
+export const EXPOSED_DAMAGE = 2;
+export const BARRAGE_WARN = 1.5; // seconds the shadows show before the shells land
+export const BARRAGE_GAP = 0.5; // width of the safe gap
+export const BARRAGE_MAX_SHIFT = 0.9; // furthest one gap is from the last
+export const BARRAGE_COUNT = 3;
+export const BARRAGE_COUNT_ENRAGED = 2;
+export const BARRAGE_SPACING = 2.5; // seconds between barrages
+export const BARRAGE_SPACING_ENRAGED = 2;
+export const SHIELD_DAMAGE = 0.2; // share of damage that reaches a shielded boss
+export const SHIELD_BURST = 3; // Rapid Fire's damage multiplier against the shield
+export const STUN_SECONDS = 4;
+export const FORTRESS_FIRST_BARRAGE = 3.5; // seconds after settling: after the opening volley has landed
+
 export const PROJECTILE_SPEED = 10;
 export const PROJECTILE_RADIUS = 0.12;
 export const PROJECTILE_BLAST_DEPTH = 1; // metres back from the front line a shell reaches (two rows)
