@@ -46,9 +46,17 @@ Pour coloured liquid between tubes until every tube holds a single colour. Each 
 - **Buttons:** Undo and Restart at the bottom, and pause, symbols and mute in the top-right corner. The symbols button shows a different shape on each colour, for colour-blind players.
 - **Keyboard:** Z or Backspace to undo, R to restart, S for symbols, Esc to pause, M to mute.
 
+### Arrow Escape
+
+Clear 12 arrow puzzles by removing pieces in the right order. An arrow slides straight out in its marked direction when its whole path is clear; the tip and shaft of other arrows can block it. Clear an exit to open the next one. Tap any part of an arrow, use a free Hint when you want a starting point, and retry without a timer or lives. Every puzzle is selectable and completed puzzles are remembered.
+
+- **Mouse / touch:** tap an arrow to try its exit. A blocked arrow shows the first piece in its way.
+- **Keyboard:** arrows move the cell cursor, Enter or Space tries its arrow, H hints, R retries, L opens puzzles, Esc pauses and M mutes.
+- **Buttons:** Puzzles, Hint, Retry, pause, mute and All games. Hiding the tab pauses play; resume explicitly.
+
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level). Squad Shooter lives at `/squad/`, Stack at `/stack/` and Water Sort at `/sort/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, and Arrow Escape at `/arrows/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -66,6 +74,7 @@ npm run check-assets  # validate art against the manifest
 ### Layout
 
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
+- `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
 - `games/picker/`: the front-page game picker.
 - `games/sort/`: Water Sort: `sim/` (board rules, solver, level generator), `render/`, `scenes/` and `controls.ts`, built the same way as the others.
 - `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.
