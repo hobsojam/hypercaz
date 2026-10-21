@@ -14,6 +14,7 @@ export default defineConfig({
         main: resolve(import.meta.dirname, 'index.html'),
         squad: resolve(import.meta.dirname, 'squad/index.html'),
         stack: resolve(import.meta.dirname, 'stack/index.html'),
+        sort: resolve(import.meta.dirname, 'sort/index.html'),
         arrows: resolve(import.meta.dirname, 'arrows/index.html'),
       },
     },

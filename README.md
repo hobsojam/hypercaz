@@ -38,6 +38,14 @@ A drop within 4 px of the slab below is **perfect**: it snaps into place and not
 - **Mouse / touch / keyboard:** click, tap or press Space to drop.
 - **Buttons:** pause and mute in the top-right corner, and "All games" on the title and game-over screens. Esc pauses and M mutes. The game pauses itself if you switch app or tab.
 
+### Water Sort
+
+Pour coloured liquid between tubes until every tube holds a single colour. Each tube holds four layers, you can only pour onto the same colour or into an empty tube, and a pour moves every matching layer on top at once. Levels are generated from the level number and checked with a solver, so each one is winnable. Your level is saved on this device. If you get stuck, a card says so; undo and restart are always free.
+
+- **Mouse / touch:** tap a tube to lift it, then tap another to pour. Tap the same tube to put it back.
+- **Buttons:** Undo and Restart at the bottom, and pause, symbols and mute in the top-right corner. The symbols button shows a different shape on each colour, for colour-blind players.
+- **Keyboard:** Z or Backspace to undo, R to restart, S for symbols, Esc to pause, M to mute.
+
 ### Arrow Escape
 
 Clear 12 arrow puzzles by removing pieces in the right order. An arrow slides straight out in its marked direction when its whole path is clear; the tip and shaft of other arrows can block it. Clear an exit to open the next one. Tap any part of an arrow, use a free Hint when you want a starting point, and retry without a timer or lives. Every puzzle is selectable and completed puzzles are remembered.
@@ -48,7 +56,7 @@ Clear 12 arrow puzzles by removing pieces in the right order. An arrow slides st
 
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Arrow Escape's cleared puzzles). Squad Shooter lives at `/squad/` and Stack at `/stack/`, and Arrow Escape at `/arrows/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, and Arrow Escape at `/arrows/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -68,6 +76,7 @@ npm run check-assets  # validate art against the manifest
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
 - `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
 - `games/picker/`: the front-page game picker.
+- `games/sort/`: Water Sort: `sim/` (board rules, solver, level generator), `render/`, `scenes/` and `controls.ts`, built the same way as the others.
 - `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.
 - `games/squad/sim/`: pure game logic (`step(state, input, dt)`), with no DOM access, tested headlessly.
 - `games/squad/render/`: draws the sim state. It is read-only.

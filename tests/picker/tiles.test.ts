@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, ARROWS_STORAGE, arrowsTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, ARROWS_STORAGE, arrowsTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -57,5 +57,23 @@ describe('Arrow Escape tile', () => {
     expect(arrowsTile(storage).progress).toBe('Complete · 12/12');
     storage.set('progress', { completed: 'all' });
     expect(arrowsTile(storage).progress).toBe('New');
+  });
+});
+
+describe('sortTile', () => {
+  it('reads "New" on empty storage', () => {
+    expect(sortTile(createStorage('hypercaz.sort', memoryBackend()))).toEqual({ name: 'Water Sort', href: 'sort/', progress: 'New' });
+  });
+
+  it('shows the saved level', () => {
+    const storage = createStorage('hypercaz.sort', memoryBackend());
+    storage.set('level', 12);
+    expect(sortTile(storage).progress).toBe('Level 12');
+  });
+
+  it('ignores a saved level that is not a sane number', () => {
+    const storage = createStorage('hypercaz.sort', memoryBackend());
+    storage.set('level', 'x');
+    expect(sortTile(storage).progress).toBe('New');
   });
 });

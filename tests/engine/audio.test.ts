@@ -123,6 +123,14 @@ test('place has a voice', () => {
   expect(ctx.oscillators).toBeGreaterThan(0);
 });
 
+test.each(['pour', 'fill', 'clear'] as const)('%s has a voice', (sfx) => {
+  const ctx = fakeContext();
+  const audio = new GameAudio(() => ctx as unknown as AudioContext);
+  audio.unlock();
+  expect(() => audio.play(sfx)).not.toThrow();
+  expect(ctx.oscillators).toBeGreaterThan(0);
+});
+
 test('nothing plays before unlock', () => {
   const ctx = fakeContext();
   const audio = new GameAudio(() => ctx as unknown as AudioContext);

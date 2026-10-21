@@ -11,6 +11,11 @@ export function fitLetterbox(winW: number, winH: number, logicalW: number, logic
   return { offsetX: (winW - logicalW * scale) / 2, offsetY: (winH - logicalH * scale) / 2, scale };
 }
 
+// Window mode draws in CSS pixels, so a click needs no mapping.
+export function viewFor(fit: 'letterbox' | 'window', winW: number, winH: number, logicalW: number, logicalH: number): Letterbox {
+  return fit === 'window' ? { offsetX: 0, offsetY: 0, scale: 1 } : fitLetterbox(winW, winH, logicalW, logicalH);
+}
+
 export function toLogical(lb: Letterbox, clientX: number, clientY: number): { x: number; y: number } {
   return { x: (clientX - lb.offsetX) / lb.scale, y: (clientY - lb.offsetY) / lb.scale };
 }

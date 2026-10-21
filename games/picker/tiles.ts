@@ -1,5 +1,6 @@
 // What each game's tile on the picker says, read from that game's own saved progress.
 import type { createStorage } from '../../engine/storage.ts';
+import { loadLevel } from '../sort/game.ts';
 import { loadProgress } from '../squad/progress.ts';
 
 import { PUZZLES } from '../arrows/levels.ts';
@@ -16,6 +17,7 @@ export interface Tile {
 
 export const SQUAD_STORAGE = 'hypercaz.squad';
 export const STACK_STORAGE = 'hypercaz.stack';
+export { SORT_STORAGE } from '../sort/game.ts';
 
 export function squadTile(storage: Storage, levelCount = Infinity): Tile & { name: 'Squad Shooter'; href: 'squad/' } {
   const { best } = loadProgress(storage);
@@ -38,4 +40,10 @@ export function arrowsTile(storage: Storage): Tile & { name: 'Arrow Escape'; hre
   let progress = 'New';
   if (count > 0) progress = count === PUZZLES.length ? `Complete · ${count}/${PUZZLES.length}` : `${count}/${PUZZLES.length} cleared`;
   return { name: 'Arrow Escape', href: 'arrows/', progress };
+}
+
+export function sortTile(storage: Storage): Tile & { name: 'Water Sort'; href: 'sort/' } {
+  const saved = storage.get<unknown>('level', null);
+  const valid = typeof saved === 'number' && Number.isFinite(saved) && saved >= 1;
+  return { name: 'Water Sort', href: 'sort/', progress: valid ? `Level ${loadLevel(storage)}` : 'New' };
 }
