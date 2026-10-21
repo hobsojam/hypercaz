@@ -113,7 +113,7 @@ function mergePair(state: MergeState, a: Ball, b: Ball): Ball | null {
 // inside the walls and floor it may now overhang.
 function mergedBall(id: number, size: number, a: Ball, b: Ball): Ball {
   const r = RADII[size];
-  const x = Math.min(CRATE.right - r, Math.max(CRATE.left + r, (a.x + b.x) / 2));
+  const x = clampAim((a.x + b.x) / 2, size);
   const y = Math.min(CRATE.floor - r, (a.y + b.y) / 2);
   const ball = makeBall(id, size, x, y);
   ball.px = x - (a.x - a.px + b.x - b.px) / 2;

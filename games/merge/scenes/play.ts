@@ -3,6 +3,7 @@ import type { Scene } from '../../../engine/scenes.ts';
 import { drawCenteredText, drawPausedOverlay } from '../../../engine/ui.ts';
 import {
   ALL_GAMES_BUTTON,
+  drawAllGamesButton,
   drawGameOver,
   gameOverAction,
   drawMuteButton,
@@ -90,6 +91,10 @@ export class PlayScene implements Scene {
 
     if (this.state.phase === 'over') {
       this.updateOver(dt, click);
+      return;
+    }
+    if (click && hitRect(ALL_GAMES_BUTTON, click, 0)) {
+      this.navigate('../');
       return;
     }
     if (click && hitRect(PAUSE_BUTTON, click, 6)) {
@@ -211,7 +216,10 @@ export class PlayScene implements Scene {
     ctx.globalAlpha = 1;
     if (this.state.phase === 'over') this.renderOver(ctx);
     else if (this.paused) drawPausedOverlay(ctx, WIDTH, HEIGHT, this.game.input.touch);
-    else drawPauseButton(ctx);
+    else {
+      drawAllGamesButton(ctx);
+      drawPauseButton(ctx);
+    }
     drawMuteButton(ctx, this.game.audio.muted);
   }
 

@@ -7,7 +7,7 @@ import { TITLE_SIZE, TitleScene } from '../../games/merge/scenes/title.ts';
 import { CRATE, RADII } from '../../games/merge/sim/constants.ts';
 import { makeBall } from '../../games/merge/sim/physics.ts';
 import type { MergeState } from '../../games/merge/sim/state.ts';
-import { MUTE_BUTTON, PAUSE_BUTTON } from '../../games/merge/controls.ts';
+import { ALL_GAMES_BUTTON, MUTE_BUTTON, PAUSE_BUTTON } from '../../games/merge/controls.ts';
 import { stubCtx } from '../squad/stubCtx.ts';
 
 const DT = 1 / 60;
@@ -140,6 +140,22 @@ test('a press on pause, released in a later frame, does not drop', () => {
   release(p.x, p.y);
   scene.update(DT);
   expect(stateOf(scene).balls).toHaveLength(0);
+});
+
+test('a press on All games during play goes to the picker and does not drop', () => {
+  const { game, down, release } = stubMerge();
+  const scene = new PlayScene(game);
+  const urls: string[] = [];
+  scene.navigate = (u) => urls.push(u);
+  const p = centre(ALL_GAMES_BUTTON);
+  down(p.x, p.y);
+  release(p.x, p.y);
+  scene.update(DT);
+  expect(urls).toEqual(['../']);
+  expect(stateOf(scene).balls).toHaveLength(0);
+  const ctx = stubCtx();
+  scene.render(ctx);
+  expect(textsOf(ctx)).toContain('All games');
 });
 
 test('a press on mute toggles it and does not drop', () => {
