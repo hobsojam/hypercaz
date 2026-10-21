@@ -5,6 +5,8 @@ import type { GameAudio } from './audio.ts';
 import type { Input } from './input.ts';
 import { drawCenteredText } from './ui.ts';
 
+export const OVER_DELAY = 0.6; // seconds before a tap plays again, so a frantic extra tap cannot skip the result
+
 export interface Rect {
   x: number;
   y: number;
@@ -52,6 +54,14 @@ export function titleAction(game: ControlsGame & { audio: Pick<GameAudio, 'unloc
     game.audio.unlock();
     return 'start';
   }
+  return null;
+}
+
+// What a game-over screen should do with this frame's click: go back to the
+// picker, play again (also on Enter or Space, once the delay has passed), or nothing.
+export function gameOverAction(game: Pick<ControlsGame, 'input'>, click: { x: number; y: number } | null, overFor: number): 'games' | 'again' | null {
+  if (hitAllGames(click)) return 'games';
+  if (overFor >= OVER_DELAY && (click || game.input.consumeKey(' ') || game.input.consumeKey('Enter'))) return 'again';
   return null;
 }
 
@@ -126,4 +136,24 @@ export function drawAllGamesButton(ctx: CanvasRenderingContext2D, b: Rect = ALL_
   ctx.roundRect(b.x, b.y, b.w, b.h, b.h / 2);
   ctx.fill();
   drawCenteredText(ctx, 'All games', b.x + b.w / 2, b.y + b.h / 2, 18);
+}
+
+export interface GameOverView {
+  scoreLabel: string; // e.g. "Floors" or "Score"
+  score: number;
+  best: number;
+  newBest: boolean;
+  showAgain: boolean; // the "play again" line
+}
+
+// The dimmed result screen, with the "All games" button.
+export function drawGameOver(ctx: CanvasRenderingContext2D, width: number, height: number, v: GameOverView): void {
+  ctx.fillStyle = 'rgba(26,26,46,0.55)';
+  ctx.fillRect(0, 0, width, height);
+  drawCenteredText(ctx, 'Game over', width / 2, 300, 72);
+  drawCenteredText(ctx, `${v.scoreLabel}: ${v.score}`, width / 2, 390, 48);
+  drawCenteredText(ctx, `Best: ${v.best}`, width / 2, 450, 36, '#F5C242');
+  if (v.newBest) drawCenteredText(ctx, 'New best!', width / 2, 505, 30, '#7CFFB2');
+  if (v.showAgain) drawCenteredText(ctx, 'Click, press Space or tap to play again', width / 2, 600, 24);
+  drawAllGamesButton(ctx);
 }

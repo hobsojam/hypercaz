@@ -3,11 +3,11 @@ import type { Scene } from '../../engine/scenes.ts';
 import { createStorage } from '../../engine/storage.ts';
 import { loadBest, type MergeGame } from '../../games/merge/game.ts';
 import { PlayScene, popPitch } from '../../games/merge/scenes/play.ts';
-import { TitleScene } from '../../games/merge/scenes/title.ts';
+import { TITLE_SIZE, TitleScene } from '../../games/merge/scenes/title.ts';
 import { CRATE, RADII } from '../../games/merge/sim/constants.ts';
 import { makeBall } from '../../games/merge/sim/physics.ts';
 import type { MergeState } from '../../games/merge/sim/state.ts';
-import { PAUSE_BUTTON } from '../../games/merge/controls.ts';
+import { MUTE_BUTTON, PAUSE_BUTTON } from '../../games/merge/controls.ts';
 import { stubCtx } from '../squad/stubCtx.ts';
 
 const DT = 1 / 60;
@@ -131,6 +131,29 @@ test('a press on the pause button does not drop on release', () => {
   expect(textsOf(ctx)).toContain('Paused');
 });
 
+test('a press on pause, released in a later frame, does not drop', () => {
+  const { game, down, release } = stubMerge();
+  const scene = new PlayScene(game);
+  const p = centre(PAUSE_BUTTON);
+  down(p.x, p.y);
+  scene.update(DT);
+  release(p.x, p.y);
+  scene.update(DT);
+  expect(stateOf(scene).balls).toHaveLength(0);
+});
+
+test('a press on mute toggles it and does not drop', () => {
+  const { game, down, release } = stubMerge();
+  const scene = new PlayScene(game);
+  const p = centre(MUTE_BUTTON);
+  down(p.x, p.y);
+  scene.update(DT);
+  release(p.x, p.y);
+  scene.update(DT);
+  expect(stateOf(scene).balls).toHaveLength(0);
+  expect(game.audio.muted).toBe(true);
+});
+
 test('merges pop with a rising pitch and families play the fanfare', () => {
   const { game, sounds } = stubMerge();
   const scene = new PlayScene(game);
@@ -239,9 +262,19 @@ describe('title', () => {
     const title = new TitleScene(stub.game);
     const ctx = stubCtx();
     title.render(ctx);
-    expect(textsOf(ctx)).toEqual(expect.arrayContaining(['SNOWMAN MERGE', 'Best: 12', 'Click, press Space or tap to start', 'All games']));
+    expect(textsOf(ctx)).toEqual(expect.arrayContaining(['SNOWMAN', 'MERGE', 'Best: 12', 'Click, press Space or tap to start', 'All games']));
     stub.press(' ');
     title.update(DT);
     expect(stub.scenes[0]).toBeInstanceOf(PlayScene);
   });
+});
+
+test('each title line fits the column with margins', () => {
+  const stub = stubMerge();
+  const ctx = stubCtx();
+  new TitleScene(stub.game).render(ctx);
+  const widest = Math.max(...['SNOWMAN', 'MERGE'].map((t) => t.length));
+  expect(widest * TITLE_SIZE * 0.75).toBeLessThanOrEqual(540 - 2 * 40);
+  const sizes = (ctx.calls['=font'] ?? []).map(([f]) => String(f));
+  expect(sizes).toContain(`bold ${TITLE_SIZE}px "Trebuchet MS", "Segoe UI", sans-serif`);
 });

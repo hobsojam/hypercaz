@@ -10,6 +10,7 @@ import { createMerge, type MergeState } from '../sim/state.ts';
 import { PlayScene } from './play.ts';
 
 const SHOW_SIZE = 7;
+export const TITLE_SIZE = 80; // "SNOWMAN" is 7 wide capitals at about 0.75 em each: ~420 px of the 540 column
 
 export class TitleScene implements Scene {
   private readonly game: MergeGame;
@@ -38,8 +39,10 @@ export class TitleScene implements Scene {
 
   render(ctx: CanvasRenderingContext2D): void {
     renderMerge(ctx, this.demo, { time: this.game.time, best: this.best, families: [], hud: false });
-    drawCenteredText(ctx, 'SNOWMAN MERGE', WIDTH / 2, 170, 68, '#FFFFFF');
-    drawCenteredText(ctx, `Best: ${this.best}`, WIDTH / 2, 260, 40, '#F5C242');
+    // Two lines: the whole name in one line would not fit the column.
+    drawCenteredText(ctx, 'SNOWMAN', WIDTH / 2, 120, TITLE_SIZE, '#FFFFFF');
+    drawCenteredText(ctx, 'MERGE', WIDTH / 2, 120 + TITLE_SIZE * 0.95, TITLE_SIZE, '#FFFFFF');
+    drawCenteredText(ctx, `Best: ${this.best}`, WIDTH / 2, 300, 40, '#F5C242');
     const pulse = 1 + Math.sin(this.t * 4) * 0.04;
     drawCenteredText(ctx, 'Click, press Space or tap to start', WIDTH / 2, HEIGHT - 340, 26 * pulse);
     drawAllGamesButton(ctx);

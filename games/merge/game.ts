@@ -16,8 +16,4 @@ export interface MergeGame {
   time: number;
 }
 
-// The saved best, or 0 when there is none or it is not a sane number.
-export function loadBest(storage: MergeGame['storage']): number {
-  const best = storage.get<unknown>('best', 0);
-  return typeof best === 'number' && Number.isFinite(best) && best > 0 ? Math.floor(best) : 0;
-}
+export { loadBest } from '../../engine/storage.ts';

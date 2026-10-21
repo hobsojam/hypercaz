@@ -1,8 +1,8 @@
 import type { Scene } from '../../../engine/scenes.ts';
-import { drawCenteredText, drawPausedOverlay } from '../../../engine/ui.ts';
+import { drawPausedOverlay } from '../../../engine/ui.ts';
 import {
-  ALL_GAMES_BUTTON,
-  drawAllGamesButton,
+  drawGameOver,
+  gameOverAction,
   drawMuteButton,
   drawPauseButton,
   hitRect,
@@ -20,7 +20,6 @@ const RING_TIME = 0.5; // seconds
 const KICK_TIME = 0.25;
 const KICK_PX = 9;
 const CAMERA_RATE = 5; // per second
-const OVER_DELAY = 0.6; // seconds before a tap plays again, so a frantic extra tap cannot skip the result
 
 // The note for the nth perfect drop in a row: one step up the major scale each
 // time, as a multiplier on the base frequency.
@@ -70,11 +69,9 @@ export class PlayScene implements Scene {
       this.overFor += dt;
       step(this.state, { drop: false }, dt); // the debris keeps falling
       this.follow(dt);
-      if (click && hitRect(ALL_GAMES_BUTTON, click, 0)) {
-        this.navigate('../');
-      } else if (this.overFor >= OVER_DELAY && (click || input.consumeKey(' ') || input.consumeKey('Enter'))) {
-        this.game.stack.replace(new PlayScene(this.game));
-      }
+      const action = gameOverAction(this.game, click, this.overFor);
+      if (action === 'games') this.navigate('../');
+      else if (action === 'again') this.game.stack.replace(new PlayScene(this.game));
       return;
     }
 
@@ -124,14 +121,7 @@ export class PlayScene implements Scene {
     ctx.restore();
     const score = this.state.floors.length - 1;
     if (this.state.phase === 'over') {
-      ctx.fillStyle = 'rgba(26,26,46,0.55)';
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-      drawCenteredText(ctx, 'Game over', WIDTH / 2, 300, 72);
-      drawCenteredText(ctx, `Floors: ${score}`, WIDTH / 2, 390, 48);
-      drawCenteredText(ctx, `Best: ${this.best}`, WIDTH / 2, 450, 36, '#F5C242');
-      if (this.newBest) drawCenteredText(ctx, 'New best!', WIDTH / 2, 505, 30, '#7CFFB2');
-      drawCenteredText(ctx, 'Click, press Space or tap to play again', WIDTH / 2, 600, 24);
-      drawAllGamesButton(ctx);
+      drawGameOver(ctx, WIDTH, HEIGHT, { scoreLabel: 'Floors', score, best: this.best, newBest: this.newBest, showAgain: true });
     } else if (this.paused) {
       drawPausedOverlay(ctx, WIDTH, HEIGHT, this.game.input.touch);
     } else {
