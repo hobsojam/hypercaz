@@ -336,6 +336,7 @@ export interface MergeView {
   time: number;
   best: number;
   families: { x: number; y: number; t: number }[];
+  hud?: boolean; // score, best and next; default true
 }
 
 function drawBalls(ctx: Ctx, balls: readonly Ball[], time: number): void {
@@ -349,5 +350,5 @@ export function renderMerge(ctx: Ctx, state: MergeState, view: MergeView): void 
   drawDangerLine(ctx, state, view.time);
   drawHanging(ctx, state, view.time);
   for (const f of view.families) drawFamily(ctx, f.x, f.y, f.t);
-  drawHud(ctx, state, view.best, view.time);
+  if (view.hud !== false) drawHud(ctx, state, view.best, view.time);
 }
