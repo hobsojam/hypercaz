@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#edf5f2">
+    <title>Car Park · Hypercaz</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #000; }
+      body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      canvas { display: block; touch-action: none; outline: none; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <canvas id="game" tabindex="0" aria-label="Car Park. Drag cars along their direction to clear a path for the red car. Arrow keys move the cursor, Enter selects a car, and arrows move the selected car. H hints, U undoes, R resets, L opens puzzles, Escape pauses, M mutes." aria-describedby="status"></canvas>
+    <p id="status" class="sr-only" aria-live="polite"></p>
+    <script type="module" src="../games/car/main.ts"></script>
+  </body>
+</html>

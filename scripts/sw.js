@@ -45,7 +45,7 @@ async function page(request) {
 // Everything else has a content hash in its name (or is an icon), so a cached
 // copy is never stale.
 function file(request) {
-  return caches.match(request).then((hit) => hit ?? fetch(request));
+  return caches.match(request, { ignoreVary: true }).then((hit) => hit ?? fetch(request));
 }
 
 self.addEventListener('fetch', (e) => {

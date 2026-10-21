@@ -40,6 +40,32 @@ describe('Input', () => {
     expect(input.consumeClick()).toEqual({ x: 10, y: 20 });
   });
 
+  it('tracks a primary drag and exposes its release once', () => {
+    const { input, fire } = setup();
+    fire('pointerdown', { button: 0, clientX: 10, clientY: 20, pointerType: 'touch' });
+    expect(input.held).toBe(true);
+    fire('pointermove', { clientX: 44, clientY: 25 });
+    expect(input.pointerX).toBe(44);
+    fire('pointerup', { button: 0, clientX: 50, clientY: 30 });
+    expect(input.held).toBe(false);
+    expect(input.consumeRelease()).toEqual({ x: 50, y: 30 });
+    expect(input.consumeRelease()).toBeNull();
+  });
+
+  it('keeps the active drag with its first pointer when a second finger touches', () => {
+    const { input, fire } = setup();
+    fire('pointerdown', { button: 0, pointerId: 1, clientX: 10, clientY: 20, pointerType: 'touch' });
+    fire('pointerdown', { button: 0, pointerId: 2, clientX: 80, clientY: 90, pointerType: 'touch' });
+    fire('pointermove', { pointerId: 2, clientX: 100, clientY: 100 });
+    fire('pointerup', { button: 0, pointerId: 2, clientX: 100, clientY: 100 });
+    expect(input.pointerX).toBe(10);
+    expect(input.held).toBe(true);
+    expect(input.consumeRelease()).toBeNull();
+    fire('pointermove', { pointerId: 1, clientX: 40, clientY: 30 });
+    fire('pointerup', { button: 0, pointerId: 1, clientX: 45, clientY: 30 });
+    expect(input.consumeRelease()).toEqual({ x: 45, y: 30 });
+  });
+
   it('ignores right and middle clicks', () => {
     const { input, fire } = setup();
     fire('pointerdown', { button: 2, clientX: 10, clientY: 20, pointerType: 'mouse' });
@@ -57,6 +83,7 @@ describe('Input', () => {
     expect(input.touch).toBe(false);
     fire('pointerdown', { button: 0, clientX: 0, clientY: 0, pointerType: 'touch' });
     expect(input.touch).toBe(true);
+    fire('pointerup', { button: 0, clientX: 0, clientY: 0 });
     fire('pointerdown', { button: 0, clientX: 0, clientY: 0, pointerType: 'mouse' });
     expect(input.touch).toBe(false);
   });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, ARROWS_STORAGE, MERGE_STORAGE, arrowsTile, mergeTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, ARROWS_STORAGE, MERGE_STORAGE, CAR_STORAGE, arrowsTile, mergeTile, carTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -94,5 +94,16 @@ describe('mergeTile', () => {
     const storage = createStorage(MERGE_STORAGE, memoryBackend());
     storage.set('best', 'x');
     expect(mergeTile(storage).progress).toBe('New');
+  });
+});
+
+describe('Car Park tile', () => {
+  it('shows new and completed progress from its own storage', () => {
+    const storage = createStorage(CAR_STORAGE, memoryBackend());
+    expect(carTile(storage)).toEqual({ name: 'Car Park', href: 'car/', progress: 'New' });
+    storage.set('progress', { completed: [1, 2, 2, 99] });
+    expect(carTile(storage).progress).toBe('2/6 cleared');
+    storage.set('progress', { completed: [1, 2, 3, 4, 5, 6] });
+    expect(carTile(storage).progress).toBe('Complete · 6/6');
   });
 });
