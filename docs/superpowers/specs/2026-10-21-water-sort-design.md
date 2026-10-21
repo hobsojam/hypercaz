@@ -55,7 +55,7 @@ Hypercaz is **predominantly a web game**: desktop with a mouse comes first, phon
   - **HUD:** "Level N" at the top. Undo and Restart are easy to reach (my call: bottom centre). Pause and mute sit in the corner, as in the other games, plus an "All games" link.
 - **Tubes (my call):** glass tubes with a light outline and a faint shine, filled with bright, flat liquid colours. A lifted tube rises a little.
 - **Colours:** about 10 to 12 colours that are clearly different from each other, drawn from or extending the hypercaz palette.
-- **Symbols (my call):** each colour also carries a small symbol for colour-blind players. A setting turns the symbols off.
+- **Symbols:** each colour can also carry a small symbol for colour-blind players. They start off (the user's choice); a setting turns them on, and the choice is saved.
 - **Pouring:** the lifted tube tilts over the target, liquid flows across, then the tube returns. This is short (my call: under half a second). Input during a pour is queued or ignored, never lost in a way that corrupts the board.
 - **Background (my call):** a calm dark-blue gradient.
 - **Sound (my call):** short synthesised sounds only, no music: a pour, a done-tube chime, and a level-clear flourish. They use the shared audio engine.
