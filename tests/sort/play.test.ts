@@ -360,9 +360,8 @@ test('Review Focus 2: 30 random clicks across 0.5 s with pours in flight keep th
     stub.tap(r.x + rand() * r.w, r.y + rand() * r.h, scene, 0.5 / 30);
   }
   expect(stub.sounds.filter((s) => s === 'pour').length).toBeGreaterThanOrEqual(2); // so one landed mid-flight
-  const counts = colorCounts(scene.board);
-  for (const c of counts.values()) expect(c).toBe(CAPACITY);
-  expect(counts.size).toBe(10);
+  // nothing gained or lost: the same layers as level 40 starts with
+  expect(colorCounts(scene.board)).toEqual(colorCounts(generateLevel(40)));
   for (const t of scene.board.tubes) expect(t.length).toBeLessThanOrEqual(CAPACITY);
 });
 

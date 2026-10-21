@@ -8,15 +8,17 @@ describe('generateLevel', () => {
     expect(generateLevel(7)).toEqual(generateLevel(7));
   });
 
-  test('has 4 of each colour, no done or single-colour tube, right tube count', () => {
-    for (const n of [1, 7, 36, 60, 63, 200]) {
+  test('each colour fills whole tubes, spread evenly; no done or single-colour tube; right tube count', () => {
+    for (const n of [1, 7, 20, 36, 47, 60, 200]) {
       const board = generateLevel(n);
-      const { colors, spares } = levelSpec(n);
-      // a 1-spare level may fall back to 2 spares
-      const extra = board.tubes.length - colors;
-      expect(extra === spares || (spares === 1 && extra === 2)).toBe(true);
-      for (const c of colorCounts(board).values()) expect(c).toBe(CAPACITY);
-      expect(colorCounts(board).size).toBe(colors);
+      const { colors, filled, spares } = levelSpec(n);
+      expect(board.tubes.length).toBe(filled + spares);
+      expect(board.tubes.slice(filled).every((t) => t.length === 0)).toBe(true);
+      const counts = colorCounts(board);
+      expect(counts.size).toBe(colors);
+      // each colour fills floor(filled / colors) or one more tubes' worth
+      const each = Math.floor(filled / colors);
+      for (const c of counts.values()) expect([each * CAPACITY, (each + 1) * CAPACITY]).toContain(c);
       for (const t of board.tubes) {
         expect(isDone(t)).toBe(false);
         if (t.length > 0) expect(new Set(t).size).toBeGreaterThan(1);
@@ -34,14 +36,6 @@ describe('generateLevel', () => {
     }
   });
 
-  test('some 1-spare levels survive the comfort check', () => {
-    let found = false;
-    for (let n = 60; n <= 498 && !found; n += 3) {
-      found = generateLevel(n).tubes.length === levelSpec(n).colors + 1;
-    }
-    expect(found).toBe(true);
-  });
-
   test('a huge level number is fast and solvable', () => {
     const t = performance.now();
     const board = generateLevel(1_000_000);
@@ -50,15 +44,15 @@ describe('generateLevel', () => {
   });
 });
 
-test('levelSpec follows the curve', () => {
-  for (let n = 1; n <= 5; n++) expect(levelSpec(n).colors).toBe(3);
-  expect(levelSpec(6).colors).toBe(4);
-  expect(levelSpec(36).colors).toBe(10);
-  expect(levelSpec(10_000).colors).toBe(10);
-  expect(levelSpec(60).spares).toBe(1);
-  expect(levelSpec(63).spares).toBe(1);
-  expect(levelSpec(61).spares).toBe(2);
-  expect(levelSpec(59).spares).toBe(2);
+test('levelSpec follows the curve: a filled tube every 2 levels up to 26, new colours first up to 10, always 2 spares', () => {
+  expect(levelSpec(1)).toEqual({ colors: 3, filled: 3, spares: 2 });
+  expect(levelSpec(2)).toEqual({ colors: 3, filled: 3, spares: 2 });
+  expect(levelSpec(3)).toEqual({ colors: 4, filled: 4, spares: 2 });
+  expect(levelSpec(15)).toEqual({ colors: 10, filled: 10, spares: 2 });
+  expect(levelSpec(17)).toEqual({ colors: 10, filled: 11, spares: 2 });
+  expect(levelSpec(46)).toEqual({ colors: 10, filled: 25, spares: 2 });
+  expect(levelSpec(47)).toEqual({ colors: 10, filled: 26, spares: 2 });
+  expect(levelSpec(10_000)).toEqual({ colors: 10, filled: 26, spares: 2 });
 });
 
 // These pin the puzzle each level number gives. generateLevel keeps or rejects a
@@ -67,11 +61,10 @@ test('levelSpec follows the curve', () => {
 describe('level snapshot', () => {
   const pinned: Record<number, string> = {
     1: '[[1,2,0,1],[2,0,0,2],[2,1,0,1],[],[]]',
-    6: '[[1,3,0,3],[2,1,0,1],[3,2,3,1],[0,2,0,2],[],[]]',
-    36: '[[2,4,1,3],[7,1,9,4],[2,6,3,5],[0,8,3,0],[4,1,6,8],[5,7,5,8],[5,0,6,0],[2,3,9,6],[7,4,8,7],[1,2,9,9],[],[]]',
-    // level 60 is 1-spare eligible but falls back to 2 spares
-    60: '[[0,1,2,7],[3,5,7,3],[9,4,4,7],[9,3,3,5],[5,6,8,6],[4,8,7,0],[8,6,1,0],[2,6,9,1],[8,2,4,9],[5,1,2,0],[],[]]',
-    63: '[[3,8,2,2],[0,4,1,5],[6,7,2,3],[1,9,3,5],[9,9,2,8],[9,7,1,4],[7,8,8,7],[6,6,5,6],[4,0,0,3],[4,1,0,5],[],[]]',
+    6: '[[1,1,3,1],[3,4,1,3],[4,2,0,3],[4,4,0,2],[0,2,0,2],[],[]]',
+    36: '[[1,7,1,8],[0,0,6,9],[2,7,8,5],[4,3,5,8],[0,3,2,5],[9,5,1,6],[6,6,3,0],[8,0,6,2],[7,5,8,7],[2,7,7,1],[9,2,6,9],[4,4,2,3],[8,1,0,6],[0,9,2,3],[1,8,2,4],[4,4,7,5],[4,1,9,1],[6,9,3,3],[7,0,5,5],[3,4,8,9],[],[]]',
+    // the first full-size board: 26 filled tubes + 2 spares
+    47: '[[4,0,1,7],[6,1,7,9],[2,6,0,2],[7,9,5,8],[4,7,9,8],[2,0,1,9],[0,8,3,7],[7,4,1,9],[3,9,0,0],[8,1,7,6],[1,3,4,5],[4,5,0,4],[6,3,1,8],[9,1,4,3],[5,2,3,3],[8,1,2,2],[9,5,3,0],[5,0,2,6],[3,4,8,5],[0,3,4,5],[1,1,2,4],[5,5,5,7],[0,5,4,8],[1,2,3,0],[4,6,6,2],[3,2,2,6],[],[]]',
   };
 
   test.each(Object.keys(pinned).map(Number))('level %i deals the same tubes', (n) => {
@@ -83,6 +76,6 @@ describe('level snapshot', () => {
     const text = JSON.stringify(Array.from({ length: 300 }, (_, i) => generateLevel(i + 1).tubes));
     let hash = 0x811c9dc5;
     for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
-    expect(hash).toBe(1712358973);
+    expect(hash).toBe(3970606129);
   });
 });
