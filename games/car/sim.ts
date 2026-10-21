@@ -3,6 +3,7 @@ export interface Car { readonly id: string; readonly axis: Axis; readonly x: num
 export interface Puzzle { readonly id: number; readonly name: string; readonly lesson: string; readonly size: number; readonly cars: readonly Car[] }
 export interface State { readonly puzzle: Puzzle; readonly positions: number[] }
 export interface Move { readonly carId: string; readonly to: number }
+type Parent = { previous: string | null; step: Move | null };
 
 function startingPosition(car: Car): number {
   if (car.axis === 'H') return car.x;
@@ -58,54 +59,78 @@ export function isWon(state: State): boolean {
   return index >= 0 && state.positions[index] + state.puzzle.cars[index].length === state.puzzle.size;
 }
 
+function pathTo(key: string, parents: Map<string, Parent>): Move[] {
+  const answer: Move[] = [];
+  let current = key;
+  while (true) {
+    const link = parents.get(current)!;
+    if (!link.previous || !link.step) break;
+    answer.push(link.step);
+    current = link.previous;
+  }
+  return answer.reverse();
+}
+
+function enqueueMoves(node: State, key: string, queue: number[][], parents: Map<string, Parent>): boolean {
+  for (const [index, car] of node.puzzle.cars.entries()) {
+    const [low, high] = legalRange(node, index);
+    for (let to = low; to <= high; to++) {
+      if (to === node.positions[index]) continue;
+      const next = [...node.positions];
+      next[index] = to;
+      const nextKey = next.join(',');
+      if (parents.has(nextKey)) continue;
+      parents.set(nextKey, { previous: key, step: { carId: car.id, to } });
+      queue.push(next);
+      if (queue.length > 200_000) return false;
+    }
+  }
+  return true;
+}
+
 export function solve(state: State): readonly Move[] | null {
-  const { puzzle } = state, start = [...state.positions], startKey = start.join(',');
-  const queue: number[][] = [start], parents = new Map<string, { previous: string | null; step: Move | null }>();
-  parents.set(startKey, { previous: null, step: null });
-  for (let cursor = 0; cursor < queue.length; cursor++) {
-    const positions = queue[cursor], node: State = { puzzle, positions }, key = positions.join(',');
-    if (isWon(node)) {
-      const answer: Move[] = [];
-      for (let current = key; ; ) {
-        const link = parents.get(current)!;
-        if (!link.previous || !link.step) break;
-        answer.push(link.step); current = link.previous;
-      }
-      return answer.reverse();
-    }
-    for (let i = 0; i < puzzle.cars.length; i++) {
-      const [low, high] = legalRange(node, i);
-      for (let to = low; to <= high; to++) {
-        if (to === positions[i]) continue;
-        const next = [...positions]; next[i] = to;
-        const nextKey = next.join(',');
-        if (parents.has(nextKey)) continue;
-        parents.set(nextKey, { previous: key, step: { carId: puzzle.cars[i].id, to } });
-        queue.push(next);
-        if (queue.length > 200_000) return null;
-      }
-    }
+  const { puzzle } = state, start = [...state.positions];
+  const queue: number[][] = [start], parents = new Map<string, Parent>();
+  parents.set(start.join(','), { previous: null, step: null });
+  for (const positions of queue) {
+    const node: State = { puzzle, positions }, key = positions.join(',');
+    if (isWon(node)) return pathTo(key, parents);
+    if (!enqueueMoves(node, key, queue, parents)) return null;
   }
   return null;
 }
 
+function invalidPuzzle(puzzle: Puzzle): never {
+  throw new Error(`Invalid Car Park puzzle ${puzzle.id}`);
+}
+
+function validCar(car: Car): boolean {
+  return Boolean(car.id) && (car.axis === 'H' || car.axis === 'V') &&
+    (car.length === 2 || car.length === 3) && Number.isInteger(car.x) && Number.isInteger(car.y) &&
+    car.x >= 0 && car.y >= 0 && (!car.target || (car.axis === 'H' && car.y === 2));
+}
+
+function addCarCells(puzzle: Puzzle, car: Car, seen: Set<string>): void {
+  const start = startingPosition(car);
+  const end = laneCell(car, start + car.length - 1);
+  if (end.x >= puzzle.size || end.y >= puzzle.size) invalidPuzzle(puzzle);
+  for (let offset = 0; offset < car.length; offset++) {
+    const { x, y } = laneCell(car, start + offset), key = `${x},${y}`;
+    if (seen.has(key)) invalidPuzzle(puzzle);
+    seen.add(key);
+  }
+}
+
 export function validatePuzzle(puzzle: Puzzle): Puzzle {
-  const fail = (): never => { throw new Error(`Invalid Car Park puzzle ${puzzle.id}`); };
-  if (!Number.isInteger(puzzle.id) || puzzle.id < 1 || !puzzle.name || !puzzle.lesson || puzzle.size !== 6 || puzzle.cars.length < 2) fail();
-  if (puzzle.cars.filter(car => car.target).length !== 1) fail();
+  if (!Number.isInteger(puzzle.id) || puzzle.id < 1 || !puzzle.name || !puzzle.lesson || puzzle.size !== 6 || puzzle.cars.length < 2) invalidPuzzle(puzzle);
+  if (puzzle.cars.filter(car => car.target).length !== 1) invalidPuzzle(puzzle);
   const seen = new Set<string>(), ids = new Set<string>();
   for (const car of puzzle.cars) {
-    if (!car.id || ids.has(car.id) || (car.axis !== 'H' && car.axis !== 'V') || (car.length !== 2 && car.length !== 3) || !Number.isInteger(car.x) || !Number.isInteger(car.y) || car.x < 0 || car.y < 0 || (car.target && (car.axis !== 'H' || car.y !== 2))) fail();
-    const end = laneCell(car, startingPosition(car) + car.length - 1);
-    if (end.x >= puzzle.size || end.y >= puzzle.size) fail();
+    if (!validCar(car) || ids.has(car.id)) invalidPuzzle(puzzle);
     ids.add(car.id);
-    for (let k = 0; k < car.length; k++) {
-      const { x, y } = laneCell(car, startingPosition(car) + k), key = `${x},${y}`;
-      if (seen.has(key)) fail();
-      seen.add(key);
-    }
+    addCarCells(puzzle, car, seen);
   }
   const state = createState(puzzle);
-  if (isWon(state) || !solve(state)) fail();
+  if (isWon(state) || !solve(state)) invalidPuzzle(puzzle);
   return puzzle;
 }

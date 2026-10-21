@@ -60,6 +60,9 @@ export function mergeTile(storage: Storage): Tile & { name: 'Snowman Merge'; hre
 
 export function carTile(storage: Storage): Tile & { name: 'Car Park'; href: 'car/' } {
   const count = loadCarProgress(storage).completed.length;
-  const progress = count === 0 ? 'New' : count === CAR_PUZZLES.length ? `Complete · ${count}/${CAR_PUZZLES.length}` : `${count}/${CAR_PUZZLES.length} cleared`;
+  let progress = 'New';
+  if (count > 0) {
+    progress = count === CAR_PUZZLES.length ? `Complete · ${count}/${CAR_PUZZLES.length}` : `${count}/${CAR_PUZZLES.length} cleared`;
+  }
   return { name: 'Car Park', href: 'car/', progress };
 }

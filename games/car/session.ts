@@ -2,7 +2,12 @@ import type { Sfx } from '../../engine/audio.ts';
 import type { createStorage } from '../../engine/storage.ts';
 import { PUZZLES } from './levels.ts';
 import { loadProgress } from './progress.ts';
-import { createState, isWon, move, occupied, solve, type Move, type State } from './sim.ts';
+import { createState, isWon, move, occupied, solve, type Car, type Move, type State } from './sim.ts';
+
+function hintDirection(car: Car, distance: number): string {
+  if (car.axis === 'H') return distance > 0 ? 'right' : 'left';
+  return distance > 0 ? 'down' : 'up';
+}
 
 export class Session {
   readonly completed: Set<number>;
@@ -36,23 +41,34 @@ export class Session {
     if (this.screen === 'levels') return `Choose a puzzle. ${this.completed.size} of ${PUZZLES.length} cleared.`;
     if (this.paused) return 'Paused. Press Escape or Enter to resume.';
     if (this.screen === 'won') return `Puzzle ${this.index + 1} clear! The red car reached the exit.`;
-    if (this.hintMove) {
-      const car = this.state.puzzle.cars.find(c => c.id === this.hintMove!.carId)!;
-      const index = this.state.puzzle.cars.indexOf(car), distance = this.hintMove.to - this.state.positions[index];
-      const direction = car.axis === 'H' ? (distance > 0 ? 'right' : 'left') : (distance > 0 ? 'down' : 'up');
-      return `Hint: move car ${car.id} ${direction} ${Math.abs(distance)} ${Math.abs(distance) === 1 ? 'space' : 'spaces'}.`;
-    }
+    if (this.hintMove) return this.hintStatus(this.hintMove);
     if (this.hintUnavailable) return 'No route from here. Undo a move or reset the puzzle.';
-    if (this.selected !== null) {
-      const car = this.state.puzzle.cars[this.selected], position = this.state.positions[this.selected];
-      const place = car.axis === 'H' ? `row ${car.y + 1}, columns ${position + 1} through ${position + car.length}` : `column ${car.x + 1}, rows ${position + 1} through ${position + car.length}`;
-      return `Car ${car.id} selected at ${place}. Drag it or use ${car.axis === 'H' ? 'Left and Right' : 'Up and Down'}.`;
-    }
-    if (this.cursorVisible) {
-      const index = this.state.puzzle.cars.findIndex((car, i) => occupied(car, this.state.positions[i], this.focus.x, this.focus.y));
-      return `Cursor row ${this.focus.y + 1}, column ${this.focus.x + 1}. ${index < 0 ? 'Empty cell.' : `Car ${this.state.puzzle.cars[index].id}. Press Enter to select.`}`;
-    }
+    if (this.selected !== null) return this.selectedStatus(this.selected);
+    if (this.cursorVisible) return this.cursorStatus();
     return `Puzzle ${this.index + 1}: ${this.state.puzzle.name}. ${this.state.puzzle.lesson}`;
+  }
+
+  private hintStatus(step: Move): string {
+    const index = this.state.puzzle.cars.findIndex(car => car.id === step.carId);
+    const car = this.state.puzzle.cars[index];
+    const distance = step.to - this.state.positions[index];
+    const spaces = Math.abs(distance) === 1 ? 'space' : 'spaces';
+    return `Hint: move car ${car.id} ${hintDirection(car, distance)} ${Math.abs(distance)} ${spaces}.`;
+  }
+
+  private selectedStatus(index: number): string {
+    const car = this.state.puzzle.cars[index], position = this.state.positions[index];
+    if (car.axis === 'H') {
+      return `Car ${car.id} selected at row ${car.y + 1}, columns ${position + 1} through ${position + car.length}. Drag it or use Left and Right.`;
+    }
+    return `Car ${car.id} selected at column ${car.x + 1}, rows ${position + 1} through ${position + car.length}. Drag it or use Up and Down.`;
+  }
+
+  private cursorStatus(): string {
+    const index = this.state.puzzle.cars.findIndex((car, i) => occupied(car, this.state.positions[i], this.focus.x, this.focus.y));
+    let cell = 'Empty cell.';
+    if (index >= 0) cell = `Car ${this.state.puzzle.cars[index].id}. Press Enter to select.`;
+    return `Cursor row ${this.focus.y + 1}, column ${this.focus.x + 1}. ${cell}`;
   }
 
   select(index: number): boolean {
@@ -64,7 +80,10 @@ export class Session {
     return true;
   }
   reset(): void { this.select(this.index); }
-  showPuzzles(): void { if (this.screen !== 'levels') this.returnScreen = this.screen; this.screen = 'levels'; this.menuIndex = this.index; this.paused = false; }
+  showPuzzles(): void {
+    if (this.screen !== 'levels') this.returnScreen = this.screen;
+    this.screen = 'levels'; this.menuIndex = this.index; this.paused = false;
+  }
   returnToPuzzle(): void { if (this.screen === 'levels') this.screen = this.returnScreen; }
   next(): void { if (this.screen === 'won' && !this.select(this.index + 1)) this.showPuzzles(); }
   togglePause(): void { if (this.screen === 'play') this.paused = !this.paused; }

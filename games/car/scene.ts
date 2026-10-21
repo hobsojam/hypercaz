@@ -8,6 +8,7 @@ import { Session } from './session.ts';
 import { legalRange } from './sim.ts';
 
 interface Drag { readonly index: number; readonly from: number; readonly pointer: number; readonly low: number; readonly high: number; preview: number }
+interface Point { readonly x: number; readonly y: number }
 export class ParkScene implements Scene {
   readonly session: Session;
   private readonly game: CarGame;
@@ -27,21 +28,25 @@ export class ParkScene implements Scene {
     if (click && hitAllGames(click)) { this.navigate('../'); return; }
     if (input.consumeKey('Escape') || (click && hitRect(PAUSE_BUTTON, click, 6) && s.screen === 'play')) { this.drag = null; s.togglePause(); }
     else if (click) this.click(click);
-    if (this.drag) {
-      const pointer = release ?? (input.pointerX === null || input.pointerY === null ? null : { x: input.pointerX, y: input.pointerY });
-      if (pointer) {
-        const car = s.state.puzzle.cars[this.drag.index];
-        const coordinate = car.axis === 'H' ? pointer.x : pointer.y;
-        this.drag.preview = Math.max(this.drag.low, Math.min(this.drag.high, this.drag.from + (coordinate - this.drag.pointer) / BOARD.cell));
-      }
-      if (release) {
-        s.commit(this.drag.index, Math.round(this.drag.preview));
-        this.drag = null;
-      } else if (!input.held) this.drag = null;
-    }
+    this.updateDrag(release);
     this.keyboard();
     for (const sound of s.takeSounds()) this.game.audio.play(sound);
     this.announce();
+  }
+  private updateDrag(release: Point | null): void {
+    const drag = this.drag;
+    if (!drag) return;
+    const input = this.game.input;
+    const pointer = release ?? (input.pointerX === null || input.pointerY === null ? null : { x: input.pointerX, y: input.pointerY });
+    if (pointer) {
+      const car = this.session.state.puzzle.cars[drag.index];
+      const coordinate = car.axis === 'H' ? pointer.x : pointer.y;
+      drag.preview = Math.max(drag.low, Math.min(drag.high, drag.from + (coordinate - drag.pointer) / BOARD.cell));
+    }
+    if (release) {
+      this.session.commit(drag.index, Math.round(drag.preview));
+      this.drag = null;
+    } else if (!input.held) this.drag = null;
   }
   private click(point: { x: number; y: number }): void {
     const s = this.session;
@@ -64,17 +69,27 @@ export class ParkScene implements Scene {
     if (input.consumeKey('u')) { this.drag = null; s.undo(); }
     if (input.consumeKey('h')) s.hint();
     const keys = [['ArrowLeft', -1, 0], ['ArrowRight', 1, 0], ['ArrowUp', 0, -1], ['ArrowDown', 0, 1]] as const;
-    for (const [key, dx, dy] of keys) if (input.consumeKey(key)) {
-      if (s.screen === 'levels') s.menuIndex = Math.max(0, Math.min(PUZZLES.length - 1, s.menuIndex + dx + dy * 2));
-      else if (s.screen === 'play' && !s.paused && s.selected !== null) {
-        const car = s.state.puzzle.cars[s.selected], delta = car.axis === 'H' ? dx : dy;
-        if (delta) s.commit(s.selected, s.state.positions[s.selected] + delta);
-      } else if (s.screen === 'play' && !s.paused) {
-        s.focus = { x: Math.max(0, Math.min(5, s.focus.x + dx)), y: Math.max(0, Math.min(5, s.focus.y + dy)) };
-        s.cursorVisible = true;
-      }
-    }
+    for (const [key, dx, dy] of keys) if (input.consumeKey(key)) this.arrow(dx, dy);
     if (!input.consumeKey('Enter') && !input.consumeKey(' ')) return;
+    this.confirm();
+  }
+  private arrow(dx: number, dy: number): void {
+    const s = this.session;
+    if (s.screen === 'levels') {
+      s.menuIndex = Math.max(0, Math.min(PUZZLES.length - 1, s.menuIndex + dx + dy * 2));
+      return;
+    }
+    if (s.screen !== 'play' || s.paused) return;
+    if (s.selected !== null) {
+      const car = s.state.puzzle.cars[s.selected], delta = car.axis === 'H' ? dx : dy;
+      if (delta) s.commit(s.selected, s.state.positions[s.selected] + delta);
+      return;
+    }
+    s.focus = { x: Math.max(0, Math.min(5, s.focus.x + dx)), y: Math.max(0, Math.min(5, s.focus.y + dy)) };
+    s.cursorVisible = true;
+  }
+  private confirm(): void {
+    const s = this.session;
     if (s.paused) s.togglePause();
     else if (s.screen === 'levels') s.select(s.menuIndex);
     else if (s.screen === 'won') s.next();

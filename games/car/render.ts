@@ -15,12 +15,29 @@ function text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number
 function panel(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string, radius = 18): void {
   ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, w, h, radius); ctx.fill();
 }
-function carBody(ctx: CanvasRenderingContext2D, car: Car, position: number, color: string, selected: boolean, hintDirection: number): void {
+function carBounds(car: Car, position: number): { x: number; y: number; w: number; h: number } {
   const { cell } = BOARD;
-  const x = BOARD.x + (car.axis === 'H' ? position : car.x) * cell + 4;
-  const y = BOARD.y + (car.axis === 'V' ? position : car.y) * cell + 4;
-  const w = (car.axis === 'H' ? car.length : 1) * cell - 8;
-  const h = (car.axis === 'V' ? car.length : 1) * cell - 8;
+  if (car.axis === 'H') {
+    return { x: BOARD.x + position * cell + 4, y: BOARD.y + car.y * cell + 4, w: car.length * cell - 8, h: cell - 8 };
+  }
+  return { x: BOARD.x + car.x * cell + 4, y: BOARD.y + position * cell + 4, w: cell - 8, h: car.length * cell - 8 };
+}
+
+function hintArrow(car: Car, direction: number): string {
+  if (car.axis === 'H') return direction > 0 ? '→' : '←';
+  return direction > 0 ? '↓' : '↑';
+}
+
+function drawHintArrow(ctx: CanvasRenderingContext2D, car: Car, direction: number, x: number, y: number, w: number, h: number): void {
+  let ax = x + w / 2, ay = y + h / 2;
+  if (car.axis === 'H') ax = x + (direction > 0 ? w - 20 : 20);
+  else ay = y + (direction > 0 ? h - 20 : 20);
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(ax, ay, 13, 0, Math.PI * 2); ctx.fill();
+  text(ctx, hintArrow(car, direction), ax, ay, 20, GOLD);
+}
+
+function carBody(ctx: CanvasRenderingContext2D, car: Car, position: number, color: string, selected: boolean, hintDirection: number): void {
+  const { x, y, w, h } = carBounds(car, position);
   ctx.fillStyle = '#113b40'; ctx.beginPath(); ctx.roundRect(x + 2, y + 5, w, h, 13); ctx.fill();
   ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, w, h, 13); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.32)'; ctx.beginPath();
@@ -32,13 +49,7 @@ function carBody(ctx: CanvasRenderingContext2D, car: Car, position: number, colo
     ctx.beginPath(); ctx.roundRect(x + 2, y + 2, w - 4, h - 4, 12); ctx.stroke();
   }
   text(ctx, car.target ? '→' : car.id, x + w / 2, y + h / 2, car.target ? 36 : 25, '#ffffff');
-  if (hintDirection) {
-    const arrow = car.axis === 'H' ? (hintDirection > 0 ? '→' : '←') : (hintDirection > 0 ? '↓' : '↑');
-    const ax = car.axis === 'H' ? x + (hintDirection > 0 ? w - 20 : 20) : x + w / 2;
-    const ay = car.axis === 'V' ? y + (hintDirection > 0 ? h - 20 : 20) : y + h / 2;
-    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(ax, ay, 13, 0, Math.PI * 2); ctx.fill();
-    text(ctx, arrow, ax, ay, 20, GOLD);
-  }
+  if (hintDirection) drawHintArrow(ctx, car, hintDirection, x, y, w, h);
 }
 function drawBoard(ctx: CanvasRenderingContext2D, s: Session, preview: Preview | null): void {
   const { x, y, cell, size } = BOARD;
@@ -74,28 +85,36 @@ function lesson(ctx: CanvasRenderingContext2D, value: string): void {
   }
   text(ctx, line.trim(), 270, y, 19);
 }
+function drawButtons(ctx: CanvasRenderingContext2D, s: Session): void {
+  for (const button of buttonsFor(s)) drawButton(ctx, button, s);
+}
+
+function drawPuzzle(ctx: CanvasRenderingContext2D, s: Session, preview: Preview | null): void {
+  text(ctx, s.screen === 'won' ? 'EXIT REACHED!' : 'DRIVE RED TO THE EXIT', 270, 220, 19, TEAL);
+  drawBoard(ctx, s, preview);
+  if (s.screen === 'won') {
+    panel(ctx, 70, 692, 400, 56, '#fff3c8');
+    text(ctx, 'The lane is clear!', 270, 720, 31, TEAL);
+  } else lesson(ctx, s.hintMove || s.hintUnavailable ? s.status : s.state.puzzle.lesson);
+  drawButtons(ctx, s);
+}
+
+function drawPauseOverlay(ctx: CanvasRenderingContext2D, s: Session): void {
+  ctx.fillStyle = '#173d48bb'; ctx.fillRect(0, 60, WIDTH, HEIGHT - 60);
+  text(ctx, 'Paused', 270, 435, 54, '#ffffff');
+  text(ctx, 'Take your time. The cars can wait.', 270, 488, 22, '#ffffff');
+  drawButtons(ctx, s);
+}
+
 export function render(ctx: CanvasRenderingContext2D, s: Session, preview: Preview | null = null): void {
   ctx.fillStyle = PAPER; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   text(ctx, 'CAR PARK', 270, 136, 38);
   text(ctx, `${s.index + 1}  ${s.state.puzzle.name}`, 270, 188, 27);
   if (s.screen === 'levels') {
     text(ctx, 'Choose a puzzle', 270, 207, 22, TEAL);
-    for (const button of buttonsFor(s)) drawButton(ctx, button, s);
-  } else {
-    text(ctx, s.screen === 'won' ? 'EXIT REACHED!' : 'DRIVE RED TO THE EXIT', 270, 220, 19, TEAL);
-    drawBoard(ctx, s, preview);
-    if (s.screen === 'won') {
-      panel(ctx, 70, 692, 400, 56, '#fff3c8');
-      text(ctx, 'The lane is clear!', 270, 720, 31, TEAL);
-    } else lesson(ctx, s.hintMove || s.hintUnavailable ? s.status : s.state.puzzle.lesson);
-    for (const button of buttonsFor(s)) drawButton(ctx, button, s);
-  }
-  if (s.paused) {
-    ctx.fillStyle = '#173d48bb'; ctx.fillRect(0, 60, WIDTH, HEIGHT - 60);
-    text(ctx, 'Paused', 270, 435, 54, '#ffffff');
-    text(ctx, 'Take your time. The cars can wait.', 270, 488, 22, '#ffffff');
-    for (const button of buttonsFor(s)) drawButton(ctx, button, s);
-  }
+    drawButtons(ctx, s);
+  } else drawPuzzle(ctx, s, preview);
+  if (s.paused) drawPauseOverlay(ctx, s);
   text(ctx, 'Drag cars along their lane. Red drives right.', 270, 917, 17, TEAL);
   text(ctx, 'Arrows + Enter · H hint · U undo · R reset · L puzzles', 270, 945, 14, TEAL);
   drawAllGamesButton(ctx); drawMuteButton(ctx, s.muted);
