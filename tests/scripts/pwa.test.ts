@@ -17,6 +17,7 @@ describe('precacheList', () => {
       './',
       'squad/',
       'stack/',
+      'arrows/',
       'assets/index-abc.js',
       'favicon.svg',
       'icons/a.png',
@@ -27,7 +28,7 @@ describe('precacheList', () => {
 
 describe('precacheList pages', () => {
   it('lists the page directories the browser requests', () => {
-    expect(precacheList(['index.html'], [])).toEqual(expect.arrayContaining(['./', 'squad/', 'stack/']));
+    expect(precacheList(['index.html'], [])).toEqual(expect.arrayContaining(['./', 'squad/', 'stack/', 'arrows/']));
   });
 });
 

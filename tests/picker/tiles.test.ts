@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, ARROWS_STORAGE, arrowsTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -38,5 +38,24 @@ describe('tiles', () => {
     const storage = createStorage(STACK_STORAGE, memoryBackend());
     storage.set('best', 'lots');
     expect(stackTile(storage).progress).toBe('New');
+  });
+});
+
+
+describe('Arrow Escape tile', () => {
+  it('links to the game with New for empty progress', () => {
+    expect(arrowsTile(createStorage(ARROWS_STORAGE, memoryBackend()))).toEqual({ name: 'Arrow Escape', href: 'arrows/', progress: 'New' });
+  });
+  it('counts only known completed puzzles, once each', () => {
+    const storage = createStorage(ARROWS_STORAGE, memoryBackend());
+    storage.set('progress', { completed: [1, 3, 3, 99, '4'], muted: true });
+    expect(arrowsTile(storage).progress).toBe('2/12 cleared');
+  });
+  it('marks all twelve puzzles complete and tolerates malformed progress', () => {
+    const storage = createStorage(ARROWS_STORAGE, memoryBackend());
+    storage.set('progress', { completed: Array.from({ length: 12 }, (_, i) => i + 1) });
+    expect(arrowsTile(storage).progress).toBe('Complete · 12/12');
+    storage.set('progress', { completed: 'all' });
+    expect(arrowsTile(storage).progress).toBe('New');
   });
 });

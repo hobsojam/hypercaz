@@ -38,9 +38,17 @@ A drop within 4 px of the slab below is **perfect**: it snaps into place and not
 - **Mouse / touch / keyboard:** click, tap or press Space to drop.
 - **Buttons:** pause and mute in the top-right corner, and "All games" on the title and game-over screens. Esc pauses and M mutes. The game pauses itself if you switch app or tab.
 
+### Arrow Escape
+
+Clear 12 arrow puzzles by removing pieces in the right order. An arrow slides straight out in its marked direction when its whole path is clear; the tip and shaft of other arrows can block it. Clear an exit to open the next one. Tap any part of an arrow, use a free Hint when you want a starting point, and retry without a timer or lives. Every puzzle is selectable and completed puzzles are remembered.
+
+- **Mouse / touch:** tap an arrow to try its exit. A blocked arrow shows the first piece in its way.
+- **Keyboard:** arrows move the cell cursor, Enter or Space tries its arrow, H hints, R retries, L opens puzzles, Esc pauses and M mutes.
+- **Buttons:** Puzzles, Hint, Retry, pause, mute and All games. Hiding the tab pauses play; resume explicitly.
+
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best). Squad Shooter lives at `/squad/` and Stack at `/stack/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Arrow Escape's cleared puzzles). Squad Shooter lives at `/squad/` and Stack at `/stack/`, and Arrow Escape at `/arrows/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -58,6 +66,7 @@ npm run check-assets  # validate art against the manifest
 ### Layout
 
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
+- `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
 - `games/picker/`: the front-page game picker.
 - `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.
 - `games/squad/sim/`: pure game logic (`step(state, input, dt)`), with no DOM access, tested headlessly.
