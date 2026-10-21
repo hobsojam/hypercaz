@@ -13,6 +13,7 @@ const COAL = '#2A2A33';
 const CARROT = '#F28C28';
 const WOOD = '#8B5A2B';
 const WOOD_DARK = '#5E3B18';
+const WOOD_BACK = '#734A24'; // the crate's inside wall: lighter than its seams so snow still stands out
 const ACCENTS = ['#E04848', '#2F7DE1', '#3CC85A', '#9B5DE5', '#F5C242'];
 
 export interface PieceLook {
@@ -110,11 +111,14 @@ function drawNose(ctx: Ctx, x: number, y: number, r: number): void {
 }
 
 function drawScarf(ctx: Ctx, x: number, y: number, r: number, color: string): void {
-  ctx.fillStyle = color;
+  // A band wrapped round the lower face, with a tail hanging from it.
+  ctx.strokeStyle = color;
+  ctx.lineWidth = r * 0.24;
   ctx.beginPath();
-  ctx.ellipse(x, y + r * 0.62, r * 0.62, r * 0.17, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillRect(x + r * 0.15, y + r * 0.62, r * 0.2, r * 0.4);
+  ctx.arc(x, y, r * 0.86, Math.PI * 0.2, Math.PI * 0.8);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.fillRect(x + r * 0.2, y + r * 0.75, r * 0.2, r * 0.38);
 }
 
 function drawHat(ctx: Ctx, x: number, y: number, r: number, color: string): void {
@@ -232,8 +236,11 @@ export function drawBackdrop(ctx: Ctx, x: number, y: number, w: number, h: numbe
 // Crate ------------------------------------------------------------------
 
 function drawCrateBack(ctx: Ctx): void {
+  const { left, right, top, floor } = CRATE;
+  ctx.fillStyle = WOOD_BACK;
+  ctx.fillRect(left, top, right - left, floor - top);
   ctx.fillStyle = WOOD_DARK;
-  ctx.fillRect(CRATE.left, CRATE.top, CRATE.right - CRATE.left, CRATE.floor - CRATE.top);
+  for (let x = left + 70; x < right; x += 70) ctx.fillRect(x, top, 2, floor - top);
 }
 
 function drawCrateFront(ctx: Ctx): void {

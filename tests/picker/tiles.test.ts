@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, ARROWS_STORAGE, arrowsTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, ARROWS_STORAGE, MERGE_STORAGE, arrowsTile, mergeTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -75,5 +75,24 @@ describe('sortTile', () => {
     const storage = createStorage('hypercaz.sort', memoryBackend());
     storage.set('level', 'x');
     expect(sortTile(storage).progress).toBe('New');
+  });
+});
+
+describe('mergeTile', () => {
+  it('reads "New" from empty storage', () => {
+    expect(mergeTile(createStorage(MERGE_STORAGE, memoryBackend()))).toEqual({ name: 'Snowman Merge', href: 'merge/', progress: 'New' });
+  });
+
+  it('shows the best score', () => {
+    const storage = createStorage(MERGE_STORAGE, memoryBackend());
+    storage.set('best', 1234);
+    expect(MERGE_STORAGE).toBe('hypercaz.merge');
+    expect(mergeTile(storage).progress).toBe('Best: 1234');
+  });
+
+  it('ignores a junk best', () => {
+    const storage = createStorage(MERGE_STORAGE, memoryBackend());
+    storage.set('best', 'x');
+    expect(mergeTile(storage).progress).toBe('New');
   });
 });
