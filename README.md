@@ -63,9 +63,17 @@ Drop snowballs into a wooden crate. Two balls of the same size merge into the ne
 - **Keyboard:** ← → to aim, Space to drop, Esc to pause, M to mute.
 - **Buttons:** pause and mute at the top right of the game, and "All games" on the title and game-over screens. The game pauses itself if you switch app or tab.
 
+### Car Park
+
+Slide cars along their lanes to clear a route for the red car to the exit on the right. Cars stay in the 6×6 lot and can move again later, so making temporary parking space matters. Six fixed puzzles introduce one blocker, two blockers, and tighter layouts. Every puzzle has a checked solution; Hint suggests a move from the current arrangement. Undo and Reset are unlimited, and completed puzzles are saved on this device.
+
+- **Mouse / touch:** drag a car along its length. It stops at other cars and the lot wall, then snaps to a cell when released.
+- **Keyboard:** arrows move the cell cursor; Enter or Space selects a car, then arrows along its lane move it one cell. Enter or Space deselects. H hints, U undoes, R resets, L opens puzzles, Esc pauses and M mutes.
+- **Buttons:** Puzzles, Hint, Undo, Reset, pause, mute and All games. Hiding the tab pauses play.
+
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles, Snowman Merge's best). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, Arrow Escape at `/arrows/`, and Snowman Merge at `/merge/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles, Snowman Merge's best, Car Park's cleared puzzles). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, Arrow Escape at `/arrows/`, Snowman Merge at `/merge/`, and Car Park at `/car/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -85,6 +93,7 @@ npm run check-assets  # validate art against the manifest
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
 - `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
 - `games/merge/`: Snowman Merge: `sim/` (ball physics and merge rules, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Stack.
+- `games/car/`: Car Park movement, fixed puzzles, shortest-route hints, session, scene and canvas renderer.
 - `games/picker/`: the front-page game picker.
 - `games/sort/`: Water Sort: `sim/` (board rules, solver, level generator), `render/`, `scenes/` and `controls.ts`, built the same way as the others.
 - `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.

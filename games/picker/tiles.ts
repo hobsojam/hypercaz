@@ -5,6 +5,9 @@ import { loadLevel } from '../sort/game.ts';
 import { loadProgress } from '../squad/progress.ts';
 
 import { PUZZLES } from '../arrows/levels.ts';
+import { PUZZLES as CAR_PUZZLES } from '../car/levels.ts';
+import { loadProgress as loadCarProgress } from '../car/progress.ts';
+export { CAR_STORAGE } from '../car/progress.ts';
 import { loadProgress as loadArrowsProgress } from '../arrows/progress.ts';
 export { ARROWS_STORAGE } from '../arrows/progress.ts';
 
@@ -53,4 +56,13 @@ export function sortTile(storage: Storage): Tile & { name: 'Water Sort'; href: '
 export function mergeTile(storage: Storage): Tile & { name: 'Snowman Merge'; href: 'merge/' } {
   const best = loadBest(storage);
   return { name: 'Snowman Merge', href: 'merge/', progress: best > 0 ? `Best: ${best}` : 'New' };
+}
+
+export function carTile(storage: Storage): Tile & { name: 'Car Park'; href: 'car/' } {
+  const count = loadCarProgress(storage).completed.length;
+  let progress = 'New';
+  if (count > 0) {
+    progress = count === CAR_PUZZLES.length ? `Complete · ${count}/${CAR_PUZZLES.length}` : `${count}/${CAR_PUZZLES.length} cleared`;
+  }
+  return { name: 'Car Park', href: 'car/', progress };
 }

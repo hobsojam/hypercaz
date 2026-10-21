@@ -26,7 +26,8 @@ export class Input {
   pointerX: number | null = null;
   pointerY: number | null = null;
   touch = false; // whether the last press was a finger, for "tap"/"click" wording
-  held = false; // a primary pointer is down
+  held = false; // primary pointer is down
+  private activePointerId: number | null = null;
   private down = new Set<string>();
   private pressed = new Set<string>();
   private click: { x: number; y: number } | null = null;
@@ -35,21 +36,26 @@ export class Input {
 
   constructor(getLetterbox: () => Letterbox) {
     this.getLetterbox = getLetterbox;
-    window.addEventListener('pointermove', (e) => this.move(e));
+    window.addEventListener('pointermove', (e) => {
+      if (!this.held || this.activePointerId === (e.pointerId ?? 0)) this.move(e);
+    });
     window.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return; // right/middle clicks are not taps
+      if (e.button !== 0 || this.held) return; // one primary pointer at a time
+      this.activePointerId = e.pointerId ?? 0;
       this.touch = e.pointerType === 'touch';
       this.held = true;
       this.move(e);
       this.click = toLogical(this.getLetterbox(), e.clientX, e.clientY);
     });
     window.addEventListener('pointerup', (e) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || !this.held || this.activePointerId !== (e.pointerId ?? 0)) return;
       this.held = false;
+      this.activePointerId = null;
       this.release = toLogical(this.getLetterbox(), e.clientX, e.clientY);
     });
-    window.addEventListener('pointercancel', () => {
-      this.held = false;
+    window.addEventListener('pointercancel', (e) => {
+      if (this.activePointerId !== (e.pointerId ?? 0)) return;
+      this.held = false; this.activePointerId = null;
     });
     // Right-click and long-press menus would cover the game.
     window.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -59,7 +65,7 @@ export class Input {
       this.down.add(e.key.toLowerCase());
     });
     window.addEventListener('keyup', (e) => this.down.delete(e.key.toLowerCase()));
-    window.addEventListener('blur', () => this.down.clear());
+    window.addEventListener('blur', () => { this.down.clear(); this.held = false; this.activePointerId = null; });
   }
 
   private move(e: PointerEvent): void {
@@ -79,9 +85,9 @@ export class Input {
   }
 
   consumeRelease(): { x: number; y: number } | null {
-    const r = this.release;
+    const release = this.release;
     this.release = null;
-    return r;
+    return release;
   }
 
   consumeKey(key: string): boolean {

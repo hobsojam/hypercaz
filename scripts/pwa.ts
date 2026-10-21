@@ -10,7 +10,7 @@ export function buildStamp(date: Date, sha: string | null): string {
 
 export function precacheList(built: string[], publicFiles: string[]): string[] {
   const files = new Set([...built, ...publicFiles].filter((f) => !f.endsWith('.map') && f !== 'sw.js'));
-  return ['./', 'squad/', 'stack/', 'sort/', 'arrows/', 'merge/', ...[...files].sort((a, b) => a.localeCompare(b))];
+  return ['./', 'squad/', 'stack/', 'sort/', 'arrows/', 'merge/', 'car/', ...[...files].sort((a, b) => a.localeCompare(b))];
 }
 
 export function serviceWorkerSource(version: string, precache: string[]): string {
