@@ -56,7 +56,7 @@ function sizes(s: MergeState): number[] {
   return s.balls.map((b) => b.size).sort((a, b) => a - b);
 }
 
-test('createMerge rolls drops from sizes 1-4, the same for the same seed', () => {
+test('createMerge rolls drops evenly from sizes 1-4, the same for the same seed', () => {
   const counts = [0, 0, 0, 0, 0];
   let rng = 7;
   for (let i = 0; i < 1000; i++) {
@@ -66,8 +66,11 @@ test('createMerge rolls drops from sizes 1-4, the same for the same seed', () =>
     expect(size).toBeLessThanOrEqual(4);
     counts[size]++;
   }
-  expect(Math.max(...counts.slice(1))).toBe(counts[1]);
-  expect(Math.min(...counts.slice(1))).toBe(counts[4]);
+  // Even odds: each size gets roughly a quarter of the rolls.
+  for (const count of counts.slice(1)) {
+    expect(count).toBeGreaterThan(200);
+    expect(count).toBeLessThan(300);
+  }
 
   const dropped = (s: MergeState): number[] => {
     const out: number[] = [];

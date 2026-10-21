@@ -24,7 +24,7 @@ export const RESTITUTION = 0.1; // share of speed kept bouncing off a wall or th
 // Rules.
 export const POINTS: readonly number[] = [0, 0, 3, 6, 10, 15, 21, 28, 36, 45]; // for making that size
 export const FAMILY_POINTS = 500; // two snowmen leaving as a family
-export const DROP_WEIGHTS: readonly number[] = [4, 3, 2, 1]; // relative odds of dropping sizes 1..4
+export const DROP_WEIGHTS: readonly number[] = [1, 1, 1, 1]; // relative odds of dropping sizes 1..4; even, so the crate fills from the start
 export const COOLDOWN = 0.5; // between drops
 export const OVER_TIME = 2; // settled snow above DANGER_Y this long ends the round
 export const SETTLE_AGE = 1; // a ball younger than this is still falling in, not over the line
