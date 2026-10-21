@@ -98,3 +98,19 @@ test('Back to puzzle preserves the attempt instead of performing Retry', () => {
   expect(f.scene.session.screen).toBe('play');
   expect(f.scene.session.state.remaining.size).toBe(2);
 });
+
+test('a bent arrow can be selected from its tail, elbow or head, and flies once its head path clears', () => {
+  const f = fixture(); f.scene.session.select(2);
+  const arrow = f.scene.session.state.puzzle.arrows[0];
+  for (const c of arrow.path) {
+    tapCell(f, c.x, c.y);
+    expect(f.scene.session.feedback?.id).toBe(arrow.id);
+    expect(f.scene.session.state.remaining.size).toBe(4);
+  }
+  tapCell(f, 3, 0); f.scene.update(1);
+  tapCell(f, 2, 3);
+  expect(f.scene.session.flight?.arrow.id).toBe(arrow.id);
+  const ctx = stubCtx(), before = structuredClone(arrow);
+  f.scene.render(ctx); f.scene.update(0.12); f.scene.render(ctx);
+  expect(arrow).toEqual(before);
+});
