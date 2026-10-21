@@ -115,6 +115,19 @@ test('pitch multiplies every voice frequency', () => {
   expect(play(2)).toEqual(plain.map((f) => f * 2));
 });
 
+test('pop plays with a pitch', () => {
+  const play = (pitch?: number) => {
+    const ctx = fakeContext();
+    const audio = new GameAudio(() => ctx as unknown as AudioContext);
+    audio.unlock();
+    audio.play('pop', pitch);
+    return ctx;
+  };
+  const plain = play();
+  expect(plain.oscillators).toBeGreaterThan(0);
+  expect(play(2).frequencies).toEqual(plain.frequencies.map((f) => f * 2));
+});
+
 test('place has a voice', () => {
   const ctx = fakeContext();
   const audio = new GameAudio(() => ctx as unknown as AudioContext);

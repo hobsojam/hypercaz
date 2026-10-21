@@ -1,7 +1,7 @@
 // Tiny synthesized sound effects: no audio files. Silent until unlock() is
 // called from a user gesture (browser autoplay rules).
 
-export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst' | 'place' | 'perfect' | 'pour' | 'fill' | 'clear';
+export type Sfx = 'shot' | 'hit' | 'gain' | 'lose' | 'win' | 'fail' | 'boss' | 'warn' | 'ready' | 'burst' | 'place' | 'perfect' | 'pour' | 'fill' | 'clear' | 'pop';
 
 interface Voice {
   type: OscillatorType;
@@ -58,6 +58,11 @@ const VOICES: Record<Sfx, Voice[]> = {
     { type: 'triangle', from: 523, to: 659, dur: 0.1, vol: 0.12 },
     { type: 'triangle', from: 659, to: 784, dur: 0.1, vol: 0.12 },
     { type: 'triangle', from: 784, to: 1046, dur: 0.25, vol: 0.12 },
+  ],
+  // A short crunchy pop.
+  pop: [
+    { type: 'triangle', from: 520, to: 260, dur: 0.07, vol: 0.14 },
+    { type: 'square', from: 1400, to: 700, dur: 0.03, vol: 0.03 },
   ],
 };
 

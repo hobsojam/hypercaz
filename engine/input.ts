@@ -26,9 +26,11 @@ export class Input {
   pointerX: number | null = null;
   pointerY: number | null = null;
   touch = false; // whether the last press was a finger, for "tap"/"click" wording
+  held = false; // a primary pointer is down
   private down = new Set<string>();
   private pressed = new Set<string>();
   private click: { x: number; y: number } | null = null;
+  private release: { x: number; y: number } | null = null;
   private getLetterbox: () => Letterbox;
 
   constructor(getLetterbox: () => Letterbox) {
@@ -37,8 +39,17 @@ export class Input {
     window.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return; // right/middle clicks are not taps
       this.touch = e.pointerType === 'touch';
+      this.held = true;
       this.move(e);
       this.click = toLogical(this.getLetterbox(), e.clientX, e.clientY);
+    });
+    window.addEventListener('pointerup', (e) => {
+      if (e.button !== 0) return;
+      this.held = false;
+      this.release = toLogical(this.getLetterbox(), e.clientX, e.clientY);
+    });
+    window.addEventListener('pointercancel', () => {
+      this.held = false;
     });
     // Right-click and long-press menus would cover the game.
     window.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -67,6 +78,12 @@ export class Input {
     return c;
   }
 
+  consumeRelease(): { x: number; y: number } | null {
+    const r = this.release;
+    this.release = null;
+    return r;
+  }
+
   consumeKey(key: string): boolean {
     return this.pressed.delete(key.toLowerCase());
   }
@@ -75,5 +92,6 @@ export class Input {
   endFrame(): void {
     this.pressed.clear();
     this.click = null;
+    this.release = null;
   }
 }
