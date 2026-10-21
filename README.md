@@ -10,6 +10,8 @@ Your squad fires automatically up a 2.5D road. Slide left and right to shoot ene
 
 Level 1, First Steps, is a shorter introduction to steering, recruitment and Rapid Fire, with instructions for keyboard/mouse or touch. You start with three soldiers, and a second easy rescue gives you a chance to recover if you miss the first. Guidance follows your actions without pausing play and is skipped after your first level 1 victory.
 
+All ten levels are selectable from the level menu, so you can try any encounter immediately. Your best stars on each level are still saved.
+
 Later bosses have a signature attack, announced on the road before it lands:
 
 - **Strafer (levels 5–7):** slides from side to side, so you have to follow it.

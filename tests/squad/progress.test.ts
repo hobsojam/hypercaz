@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
-import { isUnlocked, loadProgress, recordResult, sanitizeProgress, saveProgress } from '../../games/squad/progress.ts';
+import { loadProgress, recordResult, sanitizeProgress, saveProgress } from '../../games/squad/progress.ts';
 
 const DEFAULTS = { best: {}, muted: false };
 
@@ -33,12 +33,5 @@ describe('progress', () => {
   it('keeps the best result', () => {
     const p = recordResult(recordResult(DEFAULTS, 1, 3), 1, 1);
     expect(p.best[1]).toBe(3);
-  });
-
-  it('unlocks levels one after another', () => {
-    expect(isUnlocked(DEFAULTS, 1)).toBe(true);
-    expect(isUnlocked(DEFAULTS, 2)).toBe(false);
-    expect(isUnlocked(recordResult(DEFAULTS, 1, 0), 2)).toBe(false);
-    expect(isUnlocked(recordResult(DEFAULTS, 1, 1), 2)).toBe(true);
   });
 });

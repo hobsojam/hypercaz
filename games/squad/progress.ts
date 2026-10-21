@@ -30,10 +30,6 @@ export function recordResult(p: Progress, levelId: number, stars: Stars): Progre
   return { ...p, best: { ...p.best, [levelId]: Math.max(prev, stars) as Stars } };
 }
 
-export function isUnlocked(p: Progress, levelId: number): boolean {
-  return levelId === 1 || (p.best[levelId - 1] ?? 0) >= 1;
-}
-
 export function loadProgress(storage: Storage): Progress {
   return sanitizeProgress(storage.get<unknown>(KEY, null));
 }

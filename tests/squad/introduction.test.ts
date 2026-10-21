@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { AssetStore, parseManifest } from '../../engine/assets.ts';
 import { PlayScene } from '../../games/squad/scenes/play.ts';
 import { BURST_BUTTON } from '../../games/squad/render/draw.ts';
@@ -12,7 +12,11 @@ function setup(touch = false) {
   stub.game.assets = AssetStore.fromManifest(parseManifest(JSON.parse(readFileSync(new URL('../../games/squad/assets/manifest.json', import.meta.url), 'utf8'))));
   stub.game.levels[0].level = makeLevel({ startSquad: 3, spawns: [{ type: 'cage', z: 4, x: 0, hp: 1, value: 4 }] });
   stub.input.touch = touch;
-  const open = () => new PlayScene(stub.game, 0);
+  const open = () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1);
+    try { return new PlayScene(stub.game, 0); }
+    finally { now.mockRestore(); }
+  };
   return { ...stub, open };
 }
 

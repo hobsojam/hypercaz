@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MUTE_BUTTON, takeClick } from '../../games/squad/controls.ts';
 import type { Game } from '../../games/squad/game.ts';
+import { levels } from '../../games/squad/levels/index.ts';
 import { ErrorScene } from '../../games/squad/scenes/error.ts';
 import { LevelSelectScene } from '../../games/squad/scenes/levelSelect.ts';
+import { PlayScene } from '../../games/squad/scenes/play.ts';
 import { ResultsScene } from '../../games/squad/scenes/results.ts';
 import { TitleScene } from '../../games/squad/scenes/title.ts';
 import { stubGame } from './stubGame.ts';
@@ -37,6 +39,18 @@ describe('takeClick', () => {
 });
 
 describe('menus', () => {
+  it.each([
+    [6, 375, 525],
+    [10, 375, 805],
+  ])('opens level %i on a fresh save', (_id, x, y) => {
+    const { game, tap, scenes } = stubGame();
+    game.levels = levels;
+    tap(x, y);
+    new LevelSelectScene(game).update();
+    expect(scenes[0]).toBeInstanceOf(PlayScene);
+    expect(game.progress.best).toEqual({});
+  });
+
   it('muting on the title screen does not start the game', () => {
     const { game, tap, scenes } = stubGame();
     const title = new TitleScene(game);
