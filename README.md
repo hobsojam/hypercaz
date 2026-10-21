@@ -43,7 +43,7 @@ A drop within 4 px of the slab below is **perfect**: it snaps into place and not
 Pour coloured liquid between tubes until every tube holds a single colour. Each tube holds four layers, you can only pour onto the same colour or into an empty tube, and a pour moves every matching layer on top at once. Levels are generated from the level number and checked with a solver, so each one is winnable. Your level is saved on this device. If you get stuck, a card says so; undo and restart are always free.
 
 - **Mouse / touch:** tap a tube to lift it, then tap another to pour. Tap the same tube to put it back.
-- **Buttons:** Undo and Restart at the bottom, and pause, symbols and mute in the top-right corner. The symbols button shows a different shape on each colour, for colour-blind players.
+- **Buttons:** Undo and Restart at the bottom, and pause, symbols and mute in the top-right corner. The symbols button (off by default) shows a different shape on each colour, for colour-blind players.
 - **Keyboard:** Z or Backspace to undo, R to restart, S for symbols, Esc to pause, M to mute.
 
 ### Arrow Escape

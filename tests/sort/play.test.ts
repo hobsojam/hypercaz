@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { controlRects } from '../../engine/controls.ts';
 import type { Scene } from '../../engine/scenes.ts';
 import { createStorage } from '../../engine/storage.ts';
-import { loadLevel, SORT_STORAGE, type SortGame } from '../../games/sort/game.ts';
+import { loadLevel, loadSymbols, SORT_STORAGE, type SortGame } from '../../games/sort/game.ts';
 import { buttonRects, layoutTubes, symbolsRect } from '../../games/sort/render/layout.ts';
 import { PlayScene } from '../../games/sort/scenes/play.ts';
 import { type Board, CAPACITY, colorCounts } from '../../games/sort/sim/board.ts';
@@ -78,6 +78,17 @@ const pourBy = (stub: ReturnType<typeof stubSort>, scene: PlayScene, from: numbe
 
 // One pour (tube 4 onto tube 3) away from a position with no legal moves.
 const NEARLY_STUCK: Board = { tubes: [[2, 0, 0, 3], [2, 0, 3, 3], [1, 2, 3, 2], [1], [1, 0, 1]] };
+
+describe('loadSymbols', () => {
+  test('symbols are off until turned on', () => {
+    expect(loadSymbols(createStorage(SORT_STORAGE, memoryBackend({})))).toBe(false);
+    expect(loadSymbols(createStorage(SORT_STORAGE, null))).toBe(false);
+  });
+  test('a saved choice is kept', () => {
+    expect(loadSymbols(createStorage(SORT_STORAGE, memoryBackend({ 'hypercaz.sort.symbols': 'true' })))).toBe(true);
+    expect(loadSymbols(createStorage(SORT_STORAGE, memoryBackend({ 'hypercaz.sort.symbols': 'false' })))).toBe(false);
+  });
+});
 
 describe('loadLevel', () => {
   test('reads the saved level', () => {

@@ -18,6 +18,11 @@ export interface SortGame {
   symbols: boolean;
 }
 
+// Colour symbols are off until the player turns them on.
+export function loadSymbols(storage: SortGame['storage']): boolean {
+  return storage.get<unknown>('symbols', false) === true;
+}
+
 // The next level to play: the saved one, or 1 when there is none or it is not
 // a sane number.
 export function loadLevel(storage: SortGame['storage']): number {
