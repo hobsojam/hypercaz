@@ -48,7 +48,7 @@ Pour coloured liquid between tubes until every tube holds a single colour. Each 
 
 ### Arrow Escape
 
-Clear 12 arrow puzzles by removing pieces in the right order. An arrow slides straight out in its marked direction when its whole path is clear; the tip and shaft of other arrows can block it. Clear an exit to open the next one. Tap any part of an arrow, use a free Hint when you want a starting point, and retry without a timer or lives. Every puzzle is selectable and completed puzzles are remembered.
+Clear 12 arrow puzzles by removing pieces in the right order. An arrow’s head exits straight in its marked direction while its tail follows the bends like a ribbon. The path ahead of the head must be clear; the tip, elbow and shaft of other arrows can block it. The first two puzzles stay straight, puzzle 3 introduces an L shape, and puzzle 4 adds a second bend. Clear an exit to open the next one. Tap any part of an arrow, use a free Hint when you want a starting point, and retry without a timer or lives. Every puzzle is selectable and completed puzzles are remembered.
 
 - **Mouse / touch:** tap an arrow to try its exit. A blocked arrow shows the first piece in its way.
 - **Keyboard:** arrows move the cell cursor, Enter or Space tries its arrow, H hints, R retries, L opens puzzles, Esc pauses and M mutes.

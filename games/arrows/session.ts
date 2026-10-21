@@ -1,6 +1,7 @@
 import type { Sfx } from '../../engine/audio.ts';
 import type { createStorage } from '../../engine/storage.ts';
 import { PUZZLES } from './levels.ts';
+import { exitDistance } from './motion.ts';
 import { loadProgress } from './progress.ts';
 import { blocker, cells, createState, removable, remove, type Arrow, type Cell, type State } from './sim.ts';
 
@@ -79,7 +80,8 @@ export class Session {
     }
     this.feedback = null;
     const arrow = this.state.puzzle.arrows.find(a => a.id === id)!;
-    this.flight = { arrow, age: 0, duration: 0.38 };
+    const duration = Math.max(0.38, Math.min(0.8, exitDistance(this.state.puzzle.size, arrow) * 0.035));
+    this.flight = { arrow, age: 0, duration };
     this.sounds.push('place');
     return true;
   }

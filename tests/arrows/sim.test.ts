@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { blocker, cells, createState, removable, remove, validatePuzzle, type Arrow, type Puzzle } from '../../games/arrows/sim.ts';
+import { blocker, cells, createState, removable, remove, validatePuzzle, VECTORS, type Arrow, type Puzzle } from '../../games/arrows/sim.ts';
 
 const puzzle = (arrows: readonly Arrow[]): Puzzle => ({ id: 1, name: 'Test', lesson: 'Find the exit.', size: 5, arrows });
-const arrow = (id: number, x: number, y: number, direction: Arrow['direction'], length = 1): Arrow => ({ id, x, y, direction, length });
+const arrow = (id: number, x: number, y: number, direction: Arrow['direction'], length = 1): Arrow => ({ id, direction, path: Array.from({ length }, (_, i) => ({ x: x + i * VECTORS[direction]?.x, y: y + i * VECTORS[direction]?.y })) });
 
 describe('exit rays', () => {
   test.each([

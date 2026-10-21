@@ -4,11 +4,11 @@ import { HEIGHT, WIDTH } from './game.ts';
 import { PUZZLES } from './levels.ts';
 import { boardFor, buttonsFor, type Button } from './layout.ts';
 import type { Session } from './session.ts';
-import { cells, VECTORS, type Arrow, type Cell } from './sim.ts';
+import { followingPath, exitDistance } from './motion.ts';
+import { cells, exitRay, VECTORS, type Arrow, type Cell } from './sim.ts';
 
 const INK = '#173d48', TEAL = '#287f84', GOLD = '#edae36', PAPER = '#fff9e8';
 const COLORS = { N: '#92552e', E: '#287f84', S: '#735b9c', W: '#336ca0' } as const;
-const ANGLES = { N: -Math.PI / 2, E: 0, S: Math.PI / 2, W: Math.PI } as const;
 function text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, size: number, color = INK, maxWidth = WIDTH): void {
   ctx.font = `bold ${size}px ${FONT}`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(value, x, y, maxWidth);
 }
@@ -24,17 +24,29 @@ function lesson(ctx: CanvasRenderingContext2D, value: string): void {
   text(ctx, line.trim(), 270, y, 20);
 }
 
-function drawArrow(ctx: CanvasRenderingContext2D, arrow: Arrow, cell: number, origin: Cell, highlighted: boolean, blocked: boolean): void {
-  ctx.save(); ctx.translate(origin.x + (arrow.x + 0.5) * cell, origin.y + (arrow.y + 0.5) * cell); ctx.rotate(ANGLES[arrow.direction]);
-  const length = (arrow.length - 1) * cell;
-  panel(ctx, -cell * 0.38, -cell * 0.28, length + cell * 0.76, cell * 0.56, blocked ? '#bc484b' : COLORS[arrow.direction], cell * 0.22);
-  if (highlighted) {
-    ctx.strokeStyle = GOLD; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.roundRect(-cell * 0.43, -cell * 0.33, length + cell * 0.86, cell * 0.66, cell * 0.25); ctx.stroke();
-  }
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.max(3, cell * 0.065); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(-cell * 0.16, 0); ctx.lineTo(length + cell * 0.18, 0);
-  ctx.moveTo(length + cell * 0.02, -cell * 0.14); ctx.lineTo(length + cell * 0.18, 0); ctx.lineTo(length + cell * 0.02, cell * 0.14); ctx.stroke();
+function strokePath(ctx: CanvasRenderingContext2D, points: readonly Cell[]): void {
+  ctx.beginPath(); ctx.moveTo(points[0].x + 0.5, points[0].y + 0.5);
+  for (const p of points.slice(1)) ctx.lineTo(p.x + 0.5, p.y + 0.5);
+  ctx.stroke();
+}
+
+function drawArrow(ctx: CanvasRenderingContext2D, arrow: Arrow, cell: number, origin: Cell, highlighted: boolean, blocked: boolean, distance = 0): void {
+  const points = followingPath(arrow, distance), tail = points[0], head = points.at(-1)!, v = VECTORS[arrow.direction];
+  let tangent = v;
+  if (points.length > 1) tangent = { x: Math.sign(points[1].x - tail.x), y: Math.sign(points[1].y - tail.y) };
+  const ribbon = [{ x: tail.x - tangent.x * 0.1, y: tail.y - tangent.y * 0.1 }, ...points, { x: head.x + v.x * 0.1, y: head.y + v.y * 0.1 }];
+  ctx.save(); ctx.translate(origin.x, origin.y); ctx.scale(cell, cell);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (highlighted) { ctx.strokeStyle = GOLD; ctx.lineWidth = 0.72; strokePath(ctx, ribbon); }
+  ctx.strokeStyle = blocked ? '#bc484b' : COLORS[arrow.direction]; ctx.lineWidth = 0.56; strokePath(ctx, ribbon);
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.065;
+  strokePath(ctx, [ribbon[0], ...points, { x: head.x + v.x * 0.18, y: head.y + v.y * 0.18 }]);
+  const normal = { x: -v.y, y: v.x };
+  strokePath(ctx, [
+    { x: head.x + v.x * 0.02 + normal.x * 0.14, y: head.y + v.y * 0.02 + normal.y * 0.14 },
+    { x: head.x + v.x * 0.18, y: head.y + v.y * 0.18 },
+    { x: head.x + v.x * 0.02 - normal.x * 0.14, y: head.y + v.y * 0.02 - normal.y * 0.14 },
+  ]);
   ctx.restore();
 }
 
@@ -42,8 +54,8 @@ function blockedPath(ctx: CanvasRenderingContext2D, s: Session): void {
   if (!s.feedback) return;
   const p = s.state.puzzle, b = boardFor(p);
   const arrow = p.arrows.find(a => a.id === s.feedback!.id)!, target = p.arrows.find(a => a.id === s.feedback!.blocker)!;
-  const head = cells(arrow).at(-1)!, v = VECTORS[arrow.direction];
-  const end = cells(target).find(c => (v.x ? c.y === head.y : c.x === head.x));
+  const head = cells(arrow).at(-1)!;
+  const end = exitRay(p, arrow).find(c => cells(target).some(t => t.x === c.x && t.y === c.y));
   if (!end) return;
   ctx.strokeStyle = '#bc484b'; ctx.lineWidth = 4; ctx.setLineDash([7, 7]);
   ctx.beginPath(); ctx.moveTo(b.x + (head.x + 0.5) * b.cell, b.y + (head.y + 0.5) * b.cell);
@@ -52,15 +64,9 @@ function blockedPath(ctx: CanvasRenderingContext2D, s: Session): void {
 
 function drawFlight(ctx: CanvasRenderingContext2D, s: Session): void {
   if (!s.flight) return;
-  const p = s.state.puzzle, b = boardFor(p);
-    const { arrow, age, duration } = s.flight, v = VECTORS[arrow.direction];
-    const t = Math.min(1, age / duration);
-    let distance = p.size - arrow.x;
-    if (v.x < 0) distance = arrow.x + 1;
-    if (v.y > 0) distance = p.size - arrow.y;
-    if (v.y < 0) distance = arrow.y + 1;
-    const offset = (distance + 0.6) * b.cell * t * t;
-    drawArrow(ctx, arrow, b.cell, { x: b.x + v.x * offset, y: b.y + v.y * offset }, false, false);
+  const p = s.state.puzzle, b = boardFor(p), { arrow, age, duration } = s.flight;
+  const t = Math.min(1, age / duration), distance = exitDistance(p.size, arrow) * t * t;
+  drawArrow(ctx, arrow, b.cell, b, false, false, distance);
 }
 
 function drawBoard(ctx: CanvasRenderingContext2D, s: Session): void {

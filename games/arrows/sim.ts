@@ -1,6 +1,6 @@
 export type Direction = 'N' | 'E' | 'S' | 'W';
 export interface Cell { readonly x: number; readonly y: number }
-export interface Arrow extends Cell { readonly id: number; readonly direction: Direction; readonly length: number }
+export interface Arrow { readonly id: number; readonly direction: Direction; readonly path: readonly Cell[] }
 export interface Puzzle {
   readonly id: number;
   readonly name: string;
@@ -13,17 +13,19 @@ export const VECTORS: Readonly<Record<Direction, Cell>> = {
   N: { x: 0, y: -1 }, E: { x: 1, y: 0 }, S: { x: 0, y: 1 }, W: { x: -1, y: 0 },
 };
 
-export function cells(arrow: Arrow): readonly Cell[] {
-  const v = VECTORS[arrow.direction];
-  return Array.from({ length: arrow.length }, (_, i) => ({ x: arrow.x + i * v.x, y: arrow.y + i * v.y }));
+export function cells(arrow: Arrow): readonly Cell[] { return arrow.path; }
+
+export function exitRay(puzzle: Puzzle, arrow: Arrow): readonly Cell[] {
+  const head = arrow.path.at(-1)!, v = VECTORS[arrow.direction], ray: Cell[] = [];
+  for (let x = head.x + v.x, y = head.y + v.y; x >= 0 && y >= 0 && x < puzzle.size && y < puzzle.size; x += v.x, y += v.y) ray.push({ x, y });
+  return ray;
 }
 
 export function blocker(puzzle: Puzzle, remaining: ReadonlySet<number>, id: number): Arrow | null {
   const arrow = puzzle.arrows.find(a => a.id === id);
   if (!arrow || !remaining.has(id)) return null;
-  const v = VECTORS[arrow.direction];
-  for (let x = arrow.x + v.x * arrow.length, y = arrow.y + v.y * arrow.length; x >= 0 && y >= 0 && x < puzzle.size && y < puzzle.size; x += v.x, y += v.y) {
-    const hit = puzzle.arrows.find(a => a.id !== id && remaining.has(a.id) && cells(a).some(c => c.x === x && c.y === y));
+  for (const cell of exitRay(puzzle, arrow)) {
+    const hit = puzzle.arrows.find(a => a.id !== id && remaining.has(a.id) && a.path.some(c => c.x === cell.x && c.y === cell.y));
     if (hit) return hit;
   }
   return null;
@@ -44,11 +46,24 @@ export function remove(state: State, id: number): 'removed' | 'blocked' | 'ignor
   return 'removed';
 }
 
+function validatePath(puzzle: Puzzle, arrow: Arrow, fail: () => never): void {
+  const path = arrow.path;
+  for (let i = 1; i < path.length; i++) {
+    if (Math.abs(path[i].x - path[i - 1].x) + Math.abs(path[i].y - path[i - 1].y) !== 1) fail();
+  }
+  if (path.length > 1) {
+    const head = path.at(-1)!, neck = path.at(-2)!, v = VECTORS[arrow.direction];
+    if (head.x - neck.x !== v.x || head.y - neck.y !== v.y) fail();
+  }
+  if (exitRay(puzzle, arrow).some(c => path.some(p => p.x === c.x && p.y === c.y))) fail();
+}
+
 function validateArrows(puzzle: Puzzle, fail: () => never): void {
   const occupied = new Set<string>(), ids = new Set<number>();
   for (const arrow of puzzle.arrows) {
-    if (!Number.isInteger(arrow.id) || ids.has(arrow.id) || !Object.hasOwn(VECTORS, arrow.direction) || !Number.isInteger(arrow.length) || arrow.length < 1 || arrow.length > puzzle.size) fail();
+    if (!Number.isInteger(arrow.id) || ids.has(arrow.id) || !Object.hasOwn(VECTORS, arrow.direction) || !Array.isArray(arrow.path) || !arrow.path.length || arrow.path.length > puzzle.size * puzzle.size) fail();
     ids.add(arrow.id);
+    validatePath(puzzle, arrow, fail);
     for (const c of cells(arrow)) {
       const key = `${c.x},${c.y}`;
       if (!Number.isInteger(c.x) || !Number.isInteger(c.y) || c.x < 0 || c.y < 0 || c.x >= puzzle.size || c.y >= puzzle.size || occupied.has(key)) fail();

@@ -8,13 +8,11 @@ function solve(p: Puzzle, removed: readonly number[] = []): number[] | null {
   const order: number[] = [];
   const vectors = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] };
   while (pending.length) {
-    const occupied = new Set(pending.flatMap(a => {
-      const [dx, dy] = vectors[a.direction];
-      return Array.from({ length: a.length }, (_, i) => `${a.x + i * dx},${a.y + i * dy}`);
-    }));
+    const occupied = new Set(pending.flatMap(a => a.path.map(c => `${c.x},${c.y}`)));
     const index = pending.findIndex(a => {
       const [dx, dy] = vectors[a.direction];
-      for (let x = a.x + a.length * dx, y = a.y + a.length * dy; x >= 0 && y >= 0 && x < p.size && y < p.size; x += dx, y += dy) {
+      const head = a.path[a.path.length - 1];
+      for (let x = head.x + dx, y = head.y + dy; x >= 0 && y >= 0 && x < p.size && y < p.size; x += dx, y += dy) {
         if (occupied.has(`${x},${y}`)) return false;
       }
       return true;
@@ -36,4 +34,15 @@ test.each(Array.from({ length: 12 }, (_, i) => i))('puzzle %i has an independent
   const p = PUZZLES[index];
   expect(solve(p)).toHaveLength(p.arrows.length);
   for (const first of removable(p, createState(p).remaining)) expect(solve(p, [first.id])).toHaveLength(p.arrows.length - 1);
+});
+
+test('the opening stays straight, then L shapes and two bends are taught before mixed boards', () => {
+  const bends = (path: readonly { x: number; y: number }[]) => path.slice(2).filter((p, i) => {
+    const a = path[i], b = path[i + 1];
+    return p.x - b.x !== b.x - a.x || p.y - b.y !== b.y - a.y;
+  }).length;
+  expect(PUZZLES.slice(0, 2).flatMap(p => p.arrows).every(a => bends(a.path) === 0)).toBe(true);
+  expect(PUZZLES[2].arrows.some(a => bends(a.path) === 1)).toBe(true);
+  expect(PUZZLES[3].arrows.some(a => bends(a.path) === 2)).toBe(true);
+  for (const p of PUZZLES.slice(2)) expect(p.arrows.some(a => bends(a.path) > 0)).toBe(true);
 });
