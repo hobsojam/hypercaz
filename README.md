@@ -58,9 +58,10 @@ Clear 12 arrow puzzles by removing pieces in the right order. An arrow’s head 
 
 Drop snowballs into a wooden crate. Two balls of the same size merge into the next size up, from a small snowball to a big snowman (nine sizes), and chain reactions score extra. When two of the biggest snowmen meet, they leave together as a snowman family for a big bonus. If settled snow stays above the line at the top of the crate for a couple of seconds, the round ends. Your best is saved on this device.
 
-- **Mouse / touch:** point to aim the hanging ball, then click or tap to drop it.
-- **Keyboard:** ← → or A / D to aim, Space to drop, Esc to pause, M to mute.
-- **Buttons:** pause and mute in the top-right corner, and "All games" on the title and game-over screens. The game pauses itself if you switch app or tab.
+- **Mouse:** move the mouse to aim the hanging ball, click to drop it.
+- **Phone:** drag to aim, let go to drop.
+- **Keyboard:** ← → to aim, Space to drop, Esc to pause, M to mute.
+- **Buttons:** pause and mute at the top right of the game, and "All games" on the title and game-over screens. The game pauses itself if you switch app or tab.
 
 ### Game picker
 
