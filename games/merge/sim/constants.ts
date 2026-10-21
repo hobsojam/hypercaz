@@ -17,5 +17,6 @@ export const STEP = 1 / 120; // fixed physics step
 export const GRAVITY = 1800; // px/s²
 export const ITERATIONS = 8; // collision passes per step
 export const MAX_PUSH = 3; // px a ball may move per pair per pass, so big overlaps ease apart
+export const MAX_PUSH_SPEED = 300; // px/s a collision can give a ball beyond its own speed: enough to roll, not to launch
 export const DAMPING = 0.995; // velocity kept per step
 export const RESTITUTION = 0.1; // share of speed kept bouncing off a wall or the floor

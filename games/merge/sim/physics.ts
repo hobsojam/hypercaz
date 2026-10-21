@@ -7,6 +7,7 @@ import {
   GRAVITY,
   ITERATIONS,
   MAX_PUSH,
+  MAX_PUSH_SPEED,
   RADII,
   RESTITUTION,
   STEP,
@@ -59,15 +60,16 @@ function integrate(b: Ball): number {
   return Math.hypot(b.x - b.px, b.y - b.py);
 }
 
-// Collisions may slow or turn a ball but never speed it up: overlap pushed
-// out this step moves the ball without becoming velocity, so a merged ball
-// shoulders its neighbours aside instead of launching them.
+// Collisions may speed a ball up only to MAX_PUSH_SPEED (or its own speed, if
+// faster): a struck ball rolls away, but overlap pushed out this step never
+// turns into enough velocity to launch a merged ball's neighbours.
 function limitSpeed(b: Ball, freeSpeed: number): void {
   const vx = b.x - b.px;
   const vy = b.y - b.py;
   const v = Math.hypot(vx, vy);
-  if (v <= freeSpeed) return;
-  const scale = freeSpeed / v;
+  const limit = Math.max(freeSpeed, MAX_PUSH_SPEED * STEP);
+  if (v <= limit) return;
+  const scale = limit / v;
   b.px = b.x - vx * scale;
   b.py = b.y - vy * scale;
 }

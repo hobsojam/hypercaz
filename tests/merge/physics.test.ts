@@ -46,6 +46,11 @@ test('a ball dropped into an empty crate rests on the floor', () => {
 test('a pile settles and stops jittering', () => {
   const balls = dropPile();
   for (const b of balls) expect(speed(b)).toBeLessThan(5);
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      expect(overlap(balls[i], balls[j])).toBeLessThanOrEqual(1.5);
+    }
+  }
   const before = balls.map((b) => ({ x: b.x, y: b.y }));
   run(balls, 1);
   balls.forEach((b, i) => {
@@ -81,6 +86,13 @@ test('a big overlap is pushed apart gently', () => {
   run(balls, 2);
   expect(small.y - RADII[1]).toBeGreaterThan(CRATE.top - 100);
   expect(overlap(big, small)).toBeLessThanOrEqual(1);
+});
+
+test('a falling ball knocks a resting one aside', () => {
+  const resting = makeBall(1, 3, 270, CRATE.floor - RADII[3]);
+  const falling = makeBall(2, 3, 270 + 8, DROP_Y);
+  run([resting, falling], 1);
+  expect(Math.abs(resting.x - 270)).toBeGreaterThan(10);
 });
 
 test('the same balls give the same result', () => {
