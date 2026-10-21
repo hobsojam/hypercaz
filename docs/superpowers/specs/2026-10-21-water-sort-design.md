@@ -19,7 +19,7 @@ Hypercaz is **predominantly a web game**: desktop with a mouse comes first, phon
 ## The game
 
 ### Rules
-- **Tubes:** each holds up to **4 layers**. A level has some filled tubes, each with 4 layers of mixed colours, and some empty spare tubes. Each colour appears exactly 4 times.
+- **Tubes:** each holds up to **4 layers**. A level has some filled tubes, each with 4 layers of mixed colours, and two empty spare tubes. Each colour fills a whole number of tubes: exactly 4 layers while there are no more tubes than colours, and on bigger boards a colour repeats across tubes (8 or 12 layers), as in the 28-tube boards of the genre (the user's choice: "thats ok").
 - **Picking a tube:** click or tap a tube to lift it. Click or tap it again, or click empty space, to put it down.
 - **Pouring:** with a tube lifted, click another tube to pour into it.
   - **What moves:** the whole run of the same colour at the top of the lifted tube, as much as fits.
@@ -38,13 +38,15 @@ Hypercaz is **predominantly a web game**: desktop with a mouse comes first, phon
 - **Not already solved:** a starting position has no done tubes, and no tube is a single colour.
 - **Difficulty:**
   - **Early:** the first levels are small, a few colours with two spare tubes, so a new player gets it at once.
-  - **The climb:** more colours, and so more tubes, arrive gradually. Fewer spare tubes come later.
+  - **The climb:** more tubes arrive gradually; new colours come first, then colours repeat.
   - **Plateau:** difficulty then **levels off** at a comfortable size rather than climbing forever.
-  - **Proposed curve (my call):**
-    - Levels 1–2: 3 colours + 2 spares.
-    - Then one more colour every few levels, up to about 10 colours by around level 40.
-    - From about level 60, some levels have 1 spare, but only where the solver finds the level comfortably solvable. The builder picks and documents the threshold for "comfortably", e.g. a solution within a move or search budget.
-  - The builder may tune these numbers; the shape is what's decided.
+  - **Curve (agreed with the user after the first release felt "a bit too simple"):**
+    - Levels 1–2: 3 filled tubes + 2 spares.
+    - One more filled tube every 2 levels, so a new colour every 2 levels up to **10 colours** (level 15).
+    - Past 10 colours, colours repeat across tubes, up to **26 filled tubes + 2 spares = 28 tubes** (level 47, and every level after).
+    - Always 2 spares. The earlier plan for occasional 1-spare levels is dropped: on 28 tubes the solver often can't settle them in time.
+    - Why 10 colours: more shades get hard to tell apart, and the solver slows sharply (12 colours took over a second on some boards).
+  - Changing the curve changed the puzzle behind each level number; a saved level number is kept.
 - **Progress:** progress is saved (the current level number). The picker tile shows "Level N", where N is the level you'll play next, or "New" before the first win.
 - **After a win:** a short celebration plays, then the next level loads automatically. A click skips the celebration.
 
@@ -107,7 +109,7 @@ Squad and Stack now share boot, controls and text drawing in `engine/` (`bootGam
 - **Stuck:** "no legal moves" is detected, and positions that still have legal moves are not reported as stuck.
 - **Generator:**
   - the same number gives the same level;
-  - each colour appears exactly 4 times;
+  - each colour fills whole tubes, spread evenly (counts differ by at most one tube);
   - no starting tube is already done or a single colour;
   - **the solver finds a solution for every level from 1 to at least 500**;
   - size and spare-tube counts follow the curve and level off.

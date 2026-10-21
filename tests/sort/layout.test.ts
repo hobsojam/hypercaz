@@ -109,3 +109,26 @@ test.each([
     expect(r.w).toBeGreaterThanOrEqual(8);
   }
 });
+
+test.each([
+  [1280, 800],
+  [1920, 1080],
+  [390, 844],
+])('28 tubes at %ix%i wrap into rows that fit, without overlapping, big enough to tap', (w, h) => {
+  const rects = layoutTubes(28, w, h);
+  expect(rects).toHaveLength(28);
+  expect(new Set(rects.map((r) => r.y)).size).toBeGreaterThan(1);
+  for (const r of rects) {
+    expect(r.x).toBeGreaterThanOrEqual(0);
+    expect(r.x + r.w).toBeLessThanOrEqual(w);
+    expect(r.y).toBeGreaterThanOrEqual(70);
+    expect(r.y + r.h).toBeLessThanOrEqual(h - 90);
+    expect(r.w).toBeGreaterThanOrEqual(30);
+  }
+  for (let i = 0; i < rects.length; i++)
+    for (let j = i + 1; j < rects.length; j++) {
+      const a = rects[i]!;
+      const b = rects[j]!;
+      expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true);
+    }
+});
