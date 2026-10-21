@@ -54,9 +54,18 @@ Clear 12 arrow puzzles by removing pieces in the right order. An arrow’s head 
 - **Keyboard:** arrows move the cell cursor, Enter or Space tries its arrow, H hints, R retries, L opens puzzles, Esc pauses and M mutes.
 - **Buttons:** Puzzles, Hint, Retry, pause, mute and All games. Hiding the tab pauses play; resume explicitly.
 
+### Snowman Merge
+
+Drop snowballs into a wooden crate. Two balls of the same size merge into the next size up, from a small snowball to a big snowman (nine sizes), and chain reactions score extra. When two of the biggest snowmen meet, they leave together as a snowman family for a big bonus. If settled snow stays above the line at the top of the crate for a couple of seconds, the round ends. Your best is saved on this device.
+
+- **Mouse:** move the mouse to aim the hanging ball, click to drop it.
+- **Phone:** drag to aim, let go to drop.
+- **Keyboard:** ← → to aim, Space to drop, Esc to pause, M to mute.
+- **Buttons:** pause and mute at the top right of the game, and "All games" on the title and game-over screens. The game pauses itself if you switch app or tab.
+
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, and Arrow Escape at `/arrows/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles, Snowman Merge's best). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, Arrow Escape at `/arrows/`, and Snowman Merge at `/merge/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -75,6 +84,7 @@ npm run check-assets  # validate art against the manifest
 
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
 - `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
+- `games/merge/`: Snowman Merge: `sim/` (ball physics and merge rules, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Stack.
 - `games/picker/`: the front-page game picker.
 - `games/sort/`: Water Sort: `sim/` (board rules, solver, level generator), `render/`, `scenes/` and `controls.ts`, built the same way as the others.
 - `games/stack/`: Stack: `sim/` (pure logic, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Squad Shooter.

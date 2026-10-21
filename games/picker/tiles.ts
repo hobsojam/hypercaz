@@ -1,5 +1,6 @@
 // What each game's tile on the picker says, read from that game's own saved progress.
 import type { createStorage } from '../../engine/storage.ts';
+import { loadBest } from '../merge/game.ts';
 import { loadLevel } from '../sort/game.ts';
 import { loadProgress } from '../squad/progress.ts';
 
@@ -18,6 +19,7 @@ export interface Tile {
 export const SQUAD_STORAGE = 'hypercaz.squad';
 export const STACK_STORAGE = 'hypercaz.stack';
 export { SORT_STORAGE } from '../sort/game.ts';
+export { MERGE_STORAGE } from '../merge/game.ts';
 
 export function squadTile(storage: Storage, levelCount = Infinity): Tile & { name: 'Squad Shooter'; href: 'squad/' } {
   const { best } = loadProgress(storage);
@@ -46,4 +48,9 @@ export function sortTile(storage: Storage): Tile & { name: 'Water Sort'; href: '
   const saved = storage.get<unknown>('level', null);
   const valid = typeof saved === 'number' && Number.isFinite(saved) && saved >= 1;
   return { name: 'Water Sort', href: 'sort/', progress: valid ? `Level ${loadLevel(storage)}` : 'New' };
+}
+
+export function mergeTile(storage: Storage): Tile & { name: 'Snowman Merge'; href: 'merge/' } {
+  const best = loadBest(storage);
+  return { name: 'Snowman Merge', href: 'merge/', progress: best > 0 ? `Best: ${best}` : 'New' };
 }

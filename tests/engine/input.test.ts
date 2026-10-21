@@ -60,4 +60,32 @@ describe('Input', () => {
     fire('pointerdown', { button: 0, clientX: 0, clientY: 0, pointerType: 'mouse' });
     expect(input.touch).toBe(false);
   });
+
+  it('reports a primary release where it happened', () => {
+    const { input, fire } = setup();
+    expect(input.held).toBe(false);
+    fire('pointerdown', { button: 0, clientX: 10, clientY: 20, pointerType: 'touch' });
+    expect(input.held).toBe(true);
+    fire('pointerup', { button: 0, clientX: 30, clientY: 40 });
+    expect(input.held).toBe(false);
+    expect(input.consumeRelease()).toEqual({ x: 30, y: 40 });
+    expect(input.consumeRelease()).toBeNull();
+  });
+
+  it('ignores non-primary releases and drops releases at end of frame', () => {
+    const { input, fire } = setup();
+    fire('pointerup', { button: 2, clientX: 30, clientY: 40 });
+    expect(input.consumeRelease()).toBeNull();
+    fire('pointerup', { button: 0, clientX: 30, clientY: 40 });
+    input.endFrame();
+    expect(input.consumeRelease()).toBeNull();
+  });
+
+  it('a cancelled pointer is no longer held and does not release', () => {
+    const { input, fire } = setup();
+    fire('pointerdown', { button: 0, clientX: 10, clientY: 20, pointerType: 'touch' });
+    fire('pointercancel');
+    expect(input.held).toBe(false);
+    expect(input.consumeRelease()).toBeNull();
+  });
 });
