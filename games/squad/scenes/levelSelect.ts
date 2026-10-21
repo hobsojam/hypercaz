@@ -1,7 +1,6 @@
 import type { Scene } from '../../../engine/scenes.ts';
 import { drawMuteButton, takeClick } from '../controls.ts';
 import { type Game, HEIGHT, WIDTH } from '../game.ts';
-import { isUnlocked } from '../progress.ts';
 import { type Button, drawButton, drawCenteredText, drawMenuBackground, drawStar, hitButton } from '../ui.ts';
 import { ErrorScene } from './error.ts';
 import { PlayScene } from './play.ts';
@@ -19,10 +18,9 @@ export class LevelSelectScene implements Scene {
       const col = index % 2;
       const row = Math.floor(index / 2);
       const id = entry.level?.id ?? index + 1;
-      const enabled = entry.error !== null || isUnlocked(this.game.progress, id);
       return {
         index,
-        button: { x: 70 + col * 210, y: 190 + row * 140, w: 190, h: 110, label: entry.error ? '!' : String(id), enabled },
+        button: { x: 70 + col * 210, y: 190 + row * 140, w: 190, h: 110, label: entry.error ? '!' : String(id), enabled: true },
       };
     });
   }

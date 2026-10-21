@@ -69,7 +69,7 @@ The core tension is **firepower allocation**: enemies must be shot before they r
 ### 2.7 Stars and progression
 
 - **1 star:** win. **2 stars:** finish with at least `stars[0]` soldiers. **3 stars:** finish with at least `stars[1]` soldiers. Thresholds are set per level.
-- Levels unlock one after another. Progress and best stars per level are saved in `localStorage` (wrapped in try/catch; the game still works without storage).
+- All levels are selectable from the start. Best stars per level are saved in `localStorage` (wrapped in try/catch; the game still works without storage).
 - No currencies, upgrades, timers, ads or meta-progression.
 
 ### 2.8 Juice

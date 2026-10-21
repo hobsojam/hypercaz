@@ -6,7 +6,7 @@ export interface LevelEntry {
   error: string | null;
 }
 
-// Levels are numbered by file order: progress, unlocking and "Next" all rely
+// Levels are numbered by file order: progress and "Next" both rely
 // on level N being the Nth file, so a level whose id disagrees is an error.
 export function loadLevels(modules: Record<string, unknown>): LevelEntry[] {
   return Object.keys(modules)
