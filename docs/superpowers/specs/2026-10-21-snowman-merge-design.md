@@ -32,7 +32,7 @@ Hypercaz is **predominantly a web game**: desktop with a mouse comes first, phon
 - **What you drop (my call):**
   - only sizes 1–4, chosen at random;
   - each round gets a fresh seed, and tests can fix the seed;
-  - smaller sizes are more likely;
+  - all four sizes are equally likely (first tuned towards smaller sizes, which made the start too easy);
   - a preview shows the next ball.
 - **Physics:** snowballs fall, bounce a little, roll and settle in a pile, against the crate's floor, its walls and each other.
 - **Merging:** two balls of the same size that touch become **one ball of the next size**.

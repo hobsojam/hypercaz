@@ -45,7 +45,7 @@ export function createMerge(seed: number): MergeState {
   };
 }
 
-// Picks a drop size 1..4 weighted by DROP_WEIGHTS.
+// Picks a drop size 1..4 by the odds in DROP_WEIGHTS.
 export function rollSize(rng: number): [size: number, rng: number] {
   const [r, next] = nextFloat(rng);
   const total = DROP_WEIGHTS.reduce((sum, w) => sum + w, 0);
