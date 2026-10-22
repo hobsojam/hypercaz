@@ -63,7 +63,7 @@ This is the heart of the game.
   - it prefers candidate hands with **fewer ways through**: at full pressure the dealer picks, among several solvable candidates, the one with the fewest solutions.
 - **Never generous:** the dealer never looks for the piece that would clear your lines. Its only use of the board is the solvability check and counting ways through.
 - **Seeded:** each run has a seed; tests can fix it. The same seed and the same moves give the same run.
-- **When no hand is possible:** if no solvable hand exists at all on the board (it is so full that even three single crates can't be placed), the run ends. Your own placements made that board, so the loss is still yours.
+- **A hand is always possible:** full lines clear at once, so every row always keeps an empty cell and three single crates always fit. If none of the dealer's candidates is solvable, it deals three single crates (the builder's call). So a run only ends mid-hand, when your own placements leave the rest of the hand nowhere to go.
 - **Speed:** dealing must feel instant on a phone (well under 100 ms). The builder may cap the solution count (it only needs to tell "few" from "many") and may use bitboards.
 
 ### The end
@@ -145,7 +145,7 @@ This is the heart of the game.
   - later hands contain more awkward pieces on average than early hands;
   - at full pressure the dealer picks a candidate with no more solutions than the others;
   - the same seed gives the same hands;
-  - a board with no solvable hand ends the run.
+  - when no candidate is solvable, the dealer falls back to three single crates.
 - **Scoring:** crate points; 1, 2 and 3 lines at once; the streak multiplier grows, caps and resets after a hand without a clear; the empty-bay bonus.
 - **Run:** placing all three pieces deals a new hand; a jam ends the run; best is saved and loaded; null storage plays with a best of 0.
 - **Input:** drag and release places at the snapped cell; release on a spot that doesn't fit returns the piece; the touch offset; keyboard placing.
