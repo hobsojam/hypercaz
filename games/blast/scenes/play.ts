@@ -137,6 +137,7 @@ export class PlayScene implements Scene {
     const piece = this.state.hand[slot];
     if (!piece || !placePiece(this.state, slot, col, row)) return;
     this.drag = null;
+    this.preview = null; // the board and hand changed
     // The crates still standing squash as they land; cleared ones sweep away.
     const landed = piece.cells.map(([c, r]) => ({ col: col + c, row: row + r, value: this.state.board[(row + r) * SIZE + col + c]! }));
     this.effects.land(landed.filter((c) => c.value !== 0));

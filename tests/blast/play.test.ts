@@ -159,6 +159,26 @@ describe('dragging', () => {
     expect(view?.glow).toEqual({ rows: [0], cols: [] });
   });
 
+  test('the ghost follows the board as it changes between drags', () => {
+    const t = setup(emptyBoard(), [single(), single(), single()]);
+    const dragView = () => (t.scene as unknown as { dragView(): { ghost: unknown } | null }).dragView();
+    const hover = (slot: number) => {
+      const from = traySlotCentre(slot);
+      t.down(from.x, from.y);
+      t.scene.update(DT);
+      const at = pointFor(single(), 3, 3);
+      t.move(at.x, at.y);
+      t.scene.update(DT);
+    };
+    hover(0);
+    expect(dragView()?.ghost).toEqual({ col: 3, row: 3 });
+    t.up(270, 120); // let go off the bay
+    t.scene.update(DT);
+    keyPlace(t, 1, 3, 3); // another single now fills (3,3)
+    hover(0);
+    expect(dragView()?.ghost).toBeNull();
+  });
+
   test('a press on a button does not pick up a piece', () => {
     for (const [x, y] of [[480, 24], [512, 24], [60, 24]] as const) {
       const t = setup(emptyBoard(), [p('sq2'), single(), single()]);

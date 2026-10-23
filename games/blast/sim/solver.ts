@@ -13,17 +13,23 @@ export function countWays(board: Board, hand: readonly Piece[], cap = WAYS_CAP):
   if (hand.length === 0) return 1;
   let ways = 0;
   const tried = new Set<string>();
-  for (let i = 0; i < hand.length; i++) {
+  for (let i = 0; i < hand.length && ways < cap; i++) {
     const piece = hand[i]!;
     if (tried.has(piece.id)) continue;
     tried.add(piece.id);
-    const rest = hand.filter((_, j) => j !== i);
-    for (let row = 0; row + piece.h <= SIZE; row++) {
-      for (let col = 0; col + piece.w <= SIZE; col++) {
-        if (!fits(board, piece, col, row)) continue;
-        ways += countWays(place(board, piece, col, row).board, rest, cap - ways);
-        if (ways >= cap) return cap;
-      }
+    ways += waysPlacingFirst(board, piece, hand.filter((_, j) => j !== i), cap - ways);
+  }
+  return Math.min(ways, cap);
+}
+
+// The ways through that start by placing `piece`, up to `cap`.
+function waysPlacingFirst(board: Board, piece: Piece, rest: readonly Piece[], cap: number): number {
+  let ways = 0;
+  for (let row = 0; row + piece.h <= SIZE; row++) {
+    for (let col = 0; col + piece.w <= SIZE; col++) {
+      if (!fits(board, piece, col, row)) continue;
+      ways += countWays(place(board, piece, col, row).board, rest, cap - ways);
+      if (ways >= cap) return cap;
     }
   }
   return ways;
