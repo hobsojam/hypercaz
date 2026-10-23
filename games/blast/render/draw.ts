@@ -15,6 +15,7 @@ const HAZARD = '#F5C242';
 const HAZARD_EDGE = 14;
 const SLAB = 120; // the floor's poured slabs
 const DIM = 0.35;
+export const JAM_RED = '#C62828'; // the pieces left in a jammed hand
 
 export interface BlastView {
   best: number;
@@ -134,7 +135,8 @@ function drawTray(ctx: Ctx, state: BlastState, dragSlot: number | null): void {
     if (!piece || slot === dragSlot) return;
     const c = traySlotCentre(slot);
     const alpha = fitsSomewhere(state, slot) ? 1 : DIM;
-    drawPiece(ctx, piece, c.x - (piece.w * TRAY_CELL) / 2, c.y - (piece.h * TRAY_CELL) / 2, TRAY_CELL, alpha);
+    const color = state.phase === 'over' ? JAM_RED : piece.color;
+    drawPiece(ctx, piece, c.x - (piece.w * TRAY_CELL) / 2, c.y - (piece.h * TRAY_CELL) / 2, TRAY_CELL, alpha, color);
   });
 }
 

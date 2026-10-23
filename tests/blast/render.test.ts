@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { BLAST_STORAGE, loadBest } from '../../games/blast/game.ts';
-import { renderBlast, type BlastView } from '../../games/blast/render/draw.ts';
+import { JAM_RED, renderBlast, type BlastView } from '../../games/blast/render/draw.ts';
 import { BAY, CELL, snapCell, TOUCH_LIFT, traySlotCentre, trayHit } from '../../games/blast/render/layout.ts';
 import { emptyBoard } from '../../games/blast/sim/board.ts';
 import { pieceById } from '../../games/blast/sim/pieces.ts';
@@ -57,6 +57,21 @@ describe('renderBlast', () => {
     const full = stubCtx();
     renderBlast(full, s, view());
     expect((full.calls['=globalAlpha'] ?? []).some(([a]) => (a as number) < 1)).toBe(true);
+  });
+
+  test('a jammed tray goes red', () => {
+    const s = createBlast(1);
+    s.board = emptyBoard();
+    s.hand = [p('h2'), null, null];
+    const fills = (ctx: ReturnType<typeof stubCtx>) => (ctx.calls['=fillStyle'] ?? []).map(([c]) => c);
+    const playing = stubCtx();
+    renderBlast(playing, s, view());
+    expect(fills(playing)).toContain(p('h2').color);
+    s.phase = 'over';
+    const over = stubCtx();
+    renderBlast(over, s, view());
+    expect(fills(over)).not.toContain(p('h2').color);
+    expect(fills(over)).toContain(JAM_RED);
   });
 
   test('draws the ghost and glow without throwing', () => {
