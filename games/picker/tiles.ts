@@ -23,6 +23,7 @@ export const SQUAD_STORAGE = 'hypercaz.squad';
 export const STACK_STORAGE = 'hypercaz.stack';
 export { SORT_STORAGE } from '../sort/game.ts';
 export { MERGE_STORAGE } from '../merge/game.ts';
+export { BLAST_STORAGE } from '../blast/game.ts';
 
 export function squadTile(storage: Storage, levelCount = Infinity): Tile & { name: 'Squad Shooter'; href: 'squad/' } {
   const { best } = loadProgress(storage);
@@ -53,9 +54,18 @@ export function sortTile(storage: Storage): Tile & { name: 'Water Sort'; href: '
   return { name: 'Water Sort', href: 'sort/', progress: valid ? `Level ${loadLevel(storage)}` : 'New' };
 }
 
-export function mergeTile(storage: Storage): Tile & { name: 'Snowman Merge'; href: 'merge/' } {
+// "Best: N" for a game that saves a best score, or "New" before the first run.
+function bestProgress(storage: Storage): string {
   const best = loadBest(storage);
-  return { name: 'Snowman Merge', href: 'merge/', progress: best > 0 ? `Best: ${best}` : 'New' };
+  return best > 0 ? `Best: ${best}` : 'New';
+}
+
+export function mergeTile(storage: Storage): Tile & { name: 'Snowman Merge'; href: 'merge/' } {
+  return { name: 'Snowman Merge', href: 'merge/', progress: bestProgress(storage) };
+}
+
+export function blastTile(storage: Storage): Tile & { name: 'Crate Blast'; href: 'blast/' } {
+  return { name: 'Crate Blast', href: 'blast/', progress: bestProgress(storage) };
 }
 
 export function carTile(storage: Storage): Tile & { name: 'Car Park'; href: 'car/' } {

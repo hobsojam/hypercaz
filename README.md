@@ -73,9 +73,18 @@ Slide cars along their lanes to clear a route for the red car to the exit on the
 - **Keyboard:** arrows move the cell cursor; Enter or Space selects a car, then arrows along its lane move it one cell. Enter or Space deselects. H hints, U undoes, R resets, L opens puzzles, Esc pauses and M mutes.
 - **Buttons:** Puzzles, Hint, Undo, Reset, pause, mute and All games. Hiding the tab pauses play.
 
+### Crate Blast
+
+Drag crate pieces onto an 8×8 loading bay. Fill a whole row or column and it clears; several lines at once score far more than one. You get a hand of three pieces at a time, placed in any order, and they can't be rotated. The dealer promises that every hand it deals can be placed — but it gets meaner as the run goes on, dealing more awkward pieces and tighter hands. The run ends when none of the pieces left in your hand fit. Your best is saved on this device.
+
+- **Scoring:** 1 point per crate; 10, 30, 60, 100… for 1, 2, 3, 4… lines in one placement; a streak multiplier (up to ×8) for consecutive hands that clear a line; and a 500 bonus for clearing the whole bay.
+- **Mouse / touch:** press a piece in the tray, drag it onto the bay and let go. A ghost shows where it will land and the lines it would complete glow. On a phone the piece floats above your finger.
+- **Keyboard:** 1, 2 and 3 pick up a piece; arrows move it; Enter or Space drops it; Esc puts it back (or pauses), M mutes.
+- **Buttons:** pause, mute and All games. The game pauses itself if you switch app or tab.
+
 ### Game picker
 
-The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles, Snowman Merge's best, Car Park's cleared puzzles). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, Arrow Escape at `/arrows/`, Snowman Merge at `/merge/`, and Car Park at `/car/`. Each game saves under its own storage name, so they never touch each other's progress.
+The front page (`/`) is a grid of tiles, one per game, each showing your progress (Squad Shooter's level and stars, Stack's best, Water Sort's level, Arrow Escape's cleared puzzles, Snowman Merge's best, Car Park's cleared puzzles, Crate Blast's best). Squad Shooter lives at `/squad/`, Stack at `/stack/`, Water Sort at `/sort/`, Arrow Escape at `/arrows/`, Snowman Merge at `/merge/`, Car Park at `/car/`, and Crate Blast at `/blast/`. Each game saves under its own storage name, so they never touch each other's progress.
 
 ## Development
 
@@ -95,6 +104,7 @@ npm run check-assets  # validate art against the manifest
 - `engine/`: shared, game-agnostic pieces (loop, input, scenes, perspective, assets, particles, audio, storage).
 - `games/arrows/`: Arrow Escape rules, fixed puzzles, session, scene and canvas renderer.
 - `games/merge/`: Snowman Merge: `sim/` (ball physics and merge rules, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Stack.
+- `games/blast/`: Crate Blast: `sim/` (pieces, board, solver, dealer and run state, no DOM), `render/`, `scenes/` and `controls.ts`, built the same way as Stack.
 - `games/car/`: Car Park movement, fixed puzzles, shortest-route hints, session, scene and canvas renderer.
 - `games/picker/`: the front-page game picker.
 - `games/sort/`: Water Sort: `sim/` (board rules, solver, level generator), `render/`, `scenes/` and `controls.ts`, built the same way as the others.

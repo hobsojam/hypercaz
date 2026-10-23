@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStorage } from '../../engine/storage.ts';
 import { saveProgress } from '../../games/squad/progress.ts';
-import { STACK_STORAGE, ARROWS_STORAGE, MERGE_STORAGE, CAR_STORAGE, arrowsTile, mergeTile, carTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
+import { STACK_STORAGE, ARROWS_STORAGE, MERGE_STORAGE, CAR_STORAGE, BLAST_STORAGE, arrowsTile, mergeTile, carTile, blastTile, sortTile, squadTile, stackTile } from '../../games/picker/tiles.ts';
 
 function memoryBackend() {
   const m = new Map<string, string>();
@@ -105,5 +105,24 @@ describe('Car Park tile', () => {
     expect(carTile(storage).progress).toBe('2/6 cleared');
     storage.set('progress', { completed: [1, 2, 3, 4, 5, 6] });
     expect(carTile(storage).progress).toBe('Complete · 6/6');
+  });
+});
+
+describe('Crate Blast tile', () => {
+  it('reads "New" from empty storage', () => {
+    expect(blastTile(createStorage(BLAST_STORAGE, memoryBackend()))).toEqual({ name: 'Crate Blast', href: 'blast/', progress: 'New' });
+  });
+
+  it('shows the best score', () => {
+    const storage = createStorage(BLAST_STORAGE, memoryBackend());
+    storage.set('best', 250);
+    expect(BLAST_STORAGE).toBe('hypercaz.blast');
+    expect(blastTile(storage).progress).toBe('Best: 250');
+  });
+
+  it('ignores a corrupt best', () => {
+    const storage = createStorage(BLAST_STORAGE, memoryBackend());
+    storage.set('best', 'x');
+    expect(blastTile(storage).progress).toBe('New');
   });
 });
