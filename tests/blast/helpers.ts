@@ -16,3 +16,7 @@ export function fullExcept(holes: [number, number][]): Board {
   for (const [col, row] of holes) b[row * SIZE + col] = 0;
   return b;
 }
+
+// Full but for a diagonal of holes, so no line is full and nothing bigger
+// than a single fits; a single completes a row and a column and clears both.
+export const DIAGONAL: Board = boardFrom(['.#######', '#.######', '##.#####', '###.####', '####.###', '#####.##', '######.#', '#######.']);

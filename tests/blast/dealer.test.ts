@@ -4,7 +4,7 @@ import { type Board, emptyBoard, fits, place, SIZE } from '../../games/blast/sim
 import { chooseHand, dealHand, drawCandidates, groupWeights, pressure } from '../../games/blast/sim/dealer.ts';
 import { type Piece, pieceById } from '../../games/blast/sim/pieces.ts';
 import { countWays, solvable } from '../../games/blast/sim/solver.ts';
-import { boardFrom } from './helpers.ts';
+import { boardFrom, DIAGONAL } from './helpers.ts';
 
 const p = pieceById;
 
@@ -92,10 +92,9 @@ test('same seed, same hands', () => {
 });
 
 test('a crowded bay falls back to singles', () => {
-  const crowded = boardFrom(['.#######', '#.######', '##.#####', '###.####', '####.###', '#####.##', '######.#', '#######.']);
   const sq3s = [p('sq3'), p('sq3'), p('sq3')];
-  expect(chooseHand(crowded, [sq3s], 1, 0)).toBeNull();
-  const dealt = dealHand(crowded, 30, 1, () => ({ hands: [sq3s], rng: 1 }));
+  expect(chooseHand(DIAGONAL, [sq3s], 1, 0)).toBeNull();
+  const dealt = dealHand(DIAGONAL, 30, 1, () => ({ hands: [sq3s], rng: 1 }));
   expect(dealt.hand.map((x) => x.id)).toEqual(['1x1', '1x1', '1x1']);
 });
 

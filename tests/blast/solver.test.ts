@@ -2,22 +2,9 @@ import { expect, test } from 'vitest';
 import { emptyBoard, fits } from '../../games/blast/sim/board.ts';
 import { pieceById } from '../../games/blast/sim/pieces.ts';
 import { countWays, solvable, WAYS_CAP } from '../../games/blast/sim/solver.ts';
-import { boardFrom } from './helpers.ts';
+import { DIAGONAL } from './helpers.ts';
 
 const p = pieceById;
-
-// Full but for a diagonal of holes, so no line is full and nothing bigger
-// than a single fits; a single completes a row and a column and clears both.
-const DIAGONAL = boardFrom([
-  '.#######',
-  '#.######',
-  '##.#####',
-  '###.####',
-  '####.###',
-  '#####.##',
-  '######.#',
-  '#######.',
-]);
 
 test('an empty hand has exactly one way', () => {
   expect(countWays(emptyBoard(), [])).toBe(1);
