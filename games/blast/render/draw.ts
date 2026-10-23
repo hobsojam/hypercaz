@@ -24,6 +24,7 @@ export interface BlastView {
   // the lines it would complete.
   drag: { slot: number; x: number; y: number; ghost: { col: number; row: number } | null; glow: { rows: number[]; cols: number[] } } | null;
   hidden: Set<string>; // "col,row" cells currently animating away
+  showHud?: boolean; // the score and best; off behind the title
 }
 
 // The concrete floor of the warehouse, with the seams between its slabs.
@@ -160,5 +161,5 @@ export function renderBlast(ctx: Ctx, state: BlastState, view: BlastView): void 
   if (drag && held) drawLanding(ctx, held, drag, view.time);
   drawTray(ctx, state, drag?.slot ?? null);
   if (drag && held) drawPiece(ctx, held, drag.x, drag.y, CELL);
-  drawHud(ctx, state, view.best);
+  if (view.showHud !== false) drawHud(ctx, state, view.best);
 }

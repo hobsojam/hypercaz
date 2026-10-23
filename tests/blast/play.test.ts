@@ -4,6 +4,7 @@ import { createStorage } from '../../engine/storage.ts';
 import type { BlastGame } from '../../games/blast/game.ts';
 import { BAY, CELL, TOUCH_LIFT, traySlotCentre } from '../../games/blast/render/layout.ts';
 import { PlayScene } from '../../games/blast/scenes/play.ts';
+import { TitleScene } from '../../games/blast/scenes/title.ts';
 import { type Board, emptyBoard, SIZE } from '../../games/blast/sim/board.ts';
 import { type Piece, pieceById, PIECES } from '../../games/blast/sim/pieces.ts';
 import type { BlastState } from '../../games/blast/sim/state.ts';
@@ -319,4 +320,37 @@ test('M mutes', () => {
   t.press('m');
   t.scene.update(DT);
   expect(t.game.audio.muted).toBe(true);
+});
+
+describe('title', () => {
+  test('title shows CRATE BLAST and best', () => {
+    const stub = stubBlast();
+    stub.game.storage.set('best', 42);
+    const ctx = stubCtx();
+    new TitleScene(stub.game).render(ctx);
+    expect(texts(ctx)).toEqual(expect.arrayContaining(['CRATE BLAST', 'Best: 42', 'Click, press Space or tap to start', 'All games']));
+    expect(texts(ctx).filter((s) => String(s).startsWith('Best'))).toHaveLength(1); // no game HUD behind it
+  });
+
+  test('a tap starts a PlayScene and All games navigates', () => {
+    const stub = stubBlast();
+    const title = new TitleScene(stub.game);
+    stub.tap(270, 600);
+    title.update(DT);
+    expect(stub.scenes[0]).toBeInstanceOf(PlayScene);
+    const other = stubBlast();
+    const t2 = new TitleScene(other.game);
+    const urls: string[] = [];
+    t2.navigate = (u) => urls.push(u);
+    other.tap(50, 24);
+    t2.update(DT);
+    expect(urls).toEqual(['../']);
+    expect(other.scenes).toHaveLength(0);
+  });
+
+  test('with no storage the title reads best 0', () => {
+    const ctx = stubCtx();
+    new TitleScene(stubBlast(null).game).render(ctx);
+    expect(texts(ctx)).toContain('Best: 0');
+  });
 });
