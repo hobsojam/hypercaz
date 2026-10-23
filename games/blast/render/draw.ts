@@ -124,11 +124,18 @@ function drawCrates(ctx: Ctx, state: BlastState, hidden: Set<string>): void {
   }
 }
 
-// The lines the dragged piece would complete, pulsing.
+// The lines the dragged piece would complete: a light wash and a bright,
+// pulsing outline.
 function drawGlow(ctx: Ctx, glow: { rows: number[]; cols: number[] }, time: number): void {
-  ctx.fillStyle = `rgba(255,236,150,${0.28 + 0.12 * Math.sin(time * 10)})`;
-  for (const r of glow.rows) ctx.fillRect(BAY.x, BAY.y + r * CELL, BAY.size, CELL);
-  for (const c of glow.cols) ctx.fillRect(BAY.x + c * CELL, BAY.y, CELL, BAY.size);
+  const lines = [
+    ...glow.rows.map((r) => [BAY.x, BAY.y + r * CELL, BAY.size, CELL] as const),
+    ...glow.cols.map((c) => [BAY.x + c * CELL, BAY.y, CELL, BAY.size] as const),
+  ];
+  ctx.fillStyle = 'rgba(255,236,150,0.16)';
+  for (const [x, y, w, h] of lines) ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = `rgba(255,224,102,${0.75 + 0.25 * Math.sin(time * 10)})`;
+  ctx.lineWidth = 4;
+  for (const [x, y, w, h] of lines) ctx.strokeRect(x, y, w, h);
 }
 
 function drawTray(ctx: Ctx, state: BlastState, dragSlot: number | null): void {
@@ -143,8 +150,8 @@ function drawTray(ctx: Ctx, state: BlastState, dragSlot: number | null): void {
 
 // Where the dragged piece would land, and the lines it would complete.
 function drawLanding(ctx: Ctx, piece: Piece, drag: NonNullable<BlastView['drag']>, time: number): void {
-  drawGlow(ctx, drag.glow, time);
   if (drag.ghost) drawPiece(ctx, piece, BAY.x + drag.ghost.col * CELL, BAY.y + drag.ghost.row * CELL, CELL, DIM);
+  drawGlow(ctx, drag.glow, time);
 }
 
 function drawHud(ctx: Ctx, state: BlastState, best: number): void {

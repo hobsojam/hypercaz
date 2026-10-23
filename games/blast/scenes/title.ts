@@ -42,7 +42,7 @@ export class TitleScene implements Scene {
 
   render(ctx: CanvasRenderingContext2D): void {
     renderBlast(ctx, this.demo, { best: this.best, time: this.t, drag: null, hidden: new Set(), showHud: false });
-    drawCenteredText(ctx, 'CRATE BLAST', WIDTH / 2, 400, 76);
+    drawCenteredText(ctx, 'CRATE BLAST', WIDTH / 2, 400, 64);
     drawCenteredText(ctx, `Best: ${this.best}`, WIDTH / 2, 490, 40, '#F5C242');
     const pulse = 1 + Math.sin(this.t * 4) * 0.04;
     drawCenteredText(ctx, 'Click, press Space or tap to start', WIDTH / 2, HEIGHT - 150, 26 * pulse);

@@ -330,6 +330,9 @@ describe('title', () => {
     new TitleScene(stub.game).render(ctx);
     expect(texts(ctx)).toEqual(expect.arrayContaining(['CRATE BLAST', 'Best: 42', 'Click, press Space or tap to start', 'All games']));
     expect(texts(ctx).filter((s) => String(s).startsWith('Best'))).toHaveLength(1); // no game HUD behind it
+    // The title fits the 540 px column: at most 64 px for its 11 letters.
+    const fonts = (ctx.calls['=font'] ?? []).map(([f]) => Number(/(\d+)px/.exec(String(f))?.[1]));
+    expect(Math.max(...fonts)).toBeLessThanOrEqual(64);
   });
 
   test('a tap starts a PlayScene and All games navigates', () => {

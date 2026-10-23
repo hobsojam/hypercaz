@@ -81,6 +81,16 @@ describe('renderBlast', () => {
     expect(() => renderBlast(ctx, s, view({ drag, hidden: new Set(['0,0']) }))).not.toThrow();
   });
 
+  test('the lines a drag would complete are outlined', () => {
+    const s = createBlast(1);
+    const ctx = stubCtx();
+    const drag = { slot: 0, x: 200, y: 300, ghost: { col: 2, row: 1 }, glow: { rows: [1], cols: [6] } };
+    renderBlast(ctx, s, view({ drag }));
+    const rects = ctx.calls.strokeRect ?? [];
+    expect(rects).toContainEqual([BAY.x, BAY.y + CELL, BAY.size, CELL]);
+    expect(rects).toContainEqual([BAY.x + 6 * CELL, BAY.y, CELL, BAY.size]);
+  });
+
   test('hides crates that are animating away', () => {
     const s = createBlast(1);
     s.board = emptyBoard();
