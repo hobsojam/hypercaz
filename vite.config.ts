@@ -18,6 +18,7 @@ export default defineConfig({
         sort: resolve(import.meta.dirname, 'sort/index.html'),
         arrows: resolve(import.meta.dirname, 'arrows/index.html'),
         car: resolve(import.meta.dirname, 'car/index.html'),
+        blast: resolve(import.meta.dirname, 'blast/index.html'),
       },
     },
   },
